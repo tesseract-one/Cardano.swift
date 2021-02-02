@@ -1,0 +1,22 @@
+[package]
+name = "cardano-c-bindings"
+version = "0.0.1"
+authors = ["Tesseract Systems, Inc. <info@tesseract.one>"]
+license = "Apache-2.0"
+description = "Cardano bindings for C."
+keywords = [ "Tesseract", "Cardano", "C" ]
+build = "build.rs"
+edition = "2018"
+
+[dependencies]
+cardano-serialization-lib = "5.0.0"
+enum-primitive-derive = "0.2"
+num-traits = "0.2"
+
+[build-dependencies]
+cbindgen = "0.17"
+
+[lib]
+name = "cardano_swift"
+path = "src/lib.rs"
+crate-type = ["staticlib", "cdylib"]
