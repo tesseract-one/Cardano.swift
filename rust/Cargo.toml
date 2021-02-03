@@ -17,6 +17,6 @@ num-traits = "0.2"
 cbindgen = "0.17"
 
 [lib]
-name = "cardano_swift"
+name = "cardano_c"
 path = "src/lib.rs"
 crate-type = ["staticlib", "cdylib"]

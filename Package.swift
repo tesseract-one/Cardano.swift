@@ -20,7 +20,13 @@ var package = Package(
         // Targets can depend on other targets in this package, and on products in packages which this package depends on.
         .target(
             name: "Cardano",
-            dependencies: [""]),
+            dependencies: ["CCardano"]),
+        .target(
+            name: "CCardano",
+            linkerSettings: [
+                .linkedLibrary("cardano_c"),
+                .unsafeFlags(["-LSources/CCardano"])
+            ]),
         .testTarget(
             name: "CardanoTests",
             dependencies: ["Cardano"])
