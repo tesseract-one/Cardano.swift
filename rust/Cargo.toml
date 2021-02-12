@@ -5,7 +5,7 @@ authors = ["Tesseract Systems, Inc. <info@tesseract.one>"]
 license = "Apache-2.0"
 description = "Cardano bindings for C."
 keywords = [ "Tesseract", "Cardano", "C" ]
-build = "build.rs"
+# build = "build.rs"
 edition = "2018"
 
 [dependencies]

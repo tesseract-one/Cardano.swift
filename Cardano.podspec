@@ -54,7 +54,7 @@ Pod::Spec.new do |s|
   s.subspec 'RustSources' do |ss|
     ss.script_phase = {
       :name => "Build Rust Binary",
-      :script => 'bash "${PODS_TARGET_SRCROOT}/scripts/build_rust_cocoapods.sh"',
+      :script => 'bash "${PODS_TARGET_SRCROOT}/xcode_build_step.sh"',
       :execution_position => :before_compile
     }
 

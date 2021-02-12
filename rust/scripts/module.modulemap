@@ -1,0 +1,5 @@
+module CCardano {
+    umbrella header "cardano.h"
+    link "cardano_c"
+    export *
+}

@@ -1,4 +1,4 @@
-// swift-tools-version:5.1
+// swift-tools-version:5.2
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -21,12 +21,9 @@ var package = Package(
         .target(
             name: "Cardano",
             dependencies: ["CCardano"]),
-        .target(
+        .binaryTarget(
             name: "CCardano",
-            linkerSettings: [
-                .linkedLibrary("cardano_c"),
-                .unsafeFlags(["-LSources/CCardano"])
-            ]),
+            path: "rust/binaries/CCardano.xcframework"),
         .testTarget(
             name: "CardanoTests",
             dependencies: ["Cardano"])
