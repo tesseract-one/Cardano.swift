@@ -1,12 +1,12 @@
 #!/bin/bash
 set -e
 
-LIB_NAME="cardano_c"
+LIB_NAME="ccardano"
 SOURCES_DIR="rust"
 OUTPUT_DIR="rust/binaries"
 FRAMEWORK_NAME="CCardano"
 MODULE_MAP="rust/scripts/module.modulemap"
-BUILD_TARGETS="ios::arm64:aarch64-apple-ios ios:simulator:x86_64:x86_64-apple-ios macos::x86_64:x86_64-apple-darwin"
+BUILD_TARGETS="ios::arm64:aarch64-apple-ios ios:simulator:arm64,x86_64:aarch64-apple-ios,x86_64-apple-ios macos::arm64,x86_64:aarch64-apple-darwin,x86_64-apple-darwin"
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 ROOT_DIR="${DIR}/../.."
@@ -35,8 +35,9 @@ function print_plist_footer() {
 
 function platform_identifier() {
   platform=$1
-  arch=$2
+  arch=${2//,/_}
   variant=$3
+  
   IDENTIFIER="${platform}-${arch}"
   if [ -n "${variant}" ]; then
     IDENTIFIER="${IDENTIFIER}-${variant}"
@@ -51,6 +52,9 @@ function print_plist_library() {
   arch=$4
   variant=$5
   IDENTIFIER=$(platform_identifier "${platform}" "$arch" "$variant")
+  OIFS="$IFS"
+  IFS=, archs=($arch)
+  IFS="$OIFS"
   echo -e "\t<dict>" >> $file
   echo -e "\t\t<key>HeadersPath</key>" >> $file
   echo -e "\t\t<string>Headers</string>" >> $file
@@ -60,7 +64,9 @@ function print_plist_library() {
   echo -e "\t\t<string>${name}</string>" >> $file
   echo -e "\t\t<key>SupportedArchitectures</key>" >> $file
   echo -e "\t\t<array>" >> $file
-  echo -e "\t\t\t<string>${arch}</string>" >> $file
+  for arch in "${archs[@]}" ; do
+    echo -e "\t\t\t<string>${arch}</string>" >> $file
+  done
   echo -e "\t\t</array>" >> $file
   echo -e "\t\t<key>SupportedPlatform</key>" >> $file
   echo -e "\t\t<string>${platform}</string>" >> $file
@@ -113,11 +119,19 @@ cp -f "${ROOT_DIR}/${MODULE_MAP}" target/include/
 
 for BTARGET in $BUILD_TARGETS; do
   IFS=: read -r platform variant arch target <<< "$BTARGET"
-  cargo build --lib $RELEASE --target $target
-  add_library_to_xcframework "${XCFRAMEWORK_PATH}" \
-    "${ROOT_DIR}/${SOURCES_DIR}/target/include" \
-    "${ROOT_DIR}/${SOURCES_DIR}/target/${target}/${CONFIGURATION}/lib${LIB_NAME}.a" \
-    "${platform}" "${arch}" "${variant}"
+  if [[ "$target" == *,* ]]; then
+    cargo lipo $RELEASE --targets $target
+    add_library_to_xcframework "${XCFRAMEWORK_PATH}" \
+        "${ROOT_DIR}/${SOURCES_DIR}/target/include" \
+        "${ROOT_DIR}/${SOURCES_DIR}/target/universal/${CONFIGURATION}/lib${LIB_NAME}.a" \
+        "${platform}" "${arch}" "${variant}"
+  else
+      cargo build --lib $RELEASE --target $target
+      add_library_to_xcframework "${XCFRAMEWORK_PATH}" \
+        "${ROOT_DIR}/${SOURCES_DIR}/target/include" \
+        "${ROOT_DIR}/${SOURCES_DIR}/target/${target}/${CONFIGURATION}/lib${LIB_NAME}.a" \
+        "${platform}" "${arch}" "${variant}"
+  fi
 done
 
 print_plist_footer "${XCFRAMEWORK_PATH}/Info.plist"
