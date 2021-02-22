@@ -92,15 +92,13 @@ version = "0.0.1"
 dependencies = [
  "cardano-serialization-lib",
  "cbindgen",
- "enum-primitive-derive",
- "num-traits",
 ]
 
 [[package]]
 name = "cardano-serialization-lib"
-version = "5.0.0"
+version = "6.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d074b16c3189ddc72165c7c7dff2ae5cacd84cab8986c7ebdd648b2f051dbd7a"
+checksum = "e4e331cddacff746036ed91ef60ece5a2a30958ce2c9d97b98115e0f86ad0194"
 dependencies = [
  "bech32",
  "cbor_event",
@@ -292,17 +290,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "enum-primitive-derive"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5f52288f9a7ebb08959188872b58e7eaa12af9cb47da8e94158e16da7e143340"
-dependencies = [
- "num-traits",
- "quote",
- "syn",
-]
-
-[[package]]
 name = "fake-simd"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -442,15 +429,6 @@ name = "noop_proc_macro"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0676bb32a98c1a483ce53e500a81ad9c3d5b3f7c920c28c24e9cb0980d0b5bc8"
-
-[[package]]
-name = "num-traits"
-version = "0.2.14"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9a64b1ec5cda2586e284722486d802acf1f7dbdc623e2bfc57e65ca1cd099290"
-dependencies = [
- "autocfg",
-]
 
 [[package]]
 name = "opaque-debug"

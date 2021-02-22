@@ -8,9 +8,13 @@
 import Foundation
 import CCardano
 
-public struct Cardano {
-    public func callRust() -> Bool {
-        return hello_from_rust()
+public class Cardano {
+    private static let _initialize: Void = {
+        cardano_initialize()
+    }()
+    
+    public init() {
+        let _ = Cardano._initialize
     }
 }
 

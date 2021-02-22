@@ -9,9 +9,7 @@ keywords = [ "Tesseract", "Cardano", "C" ]
 edition = "2018"
 
 [dependencies]
-cardano-serialization-lib = "5.0.0"
-enum-primitive-derive = "0.2"
-num-traits = "0.2"
+cardano-serialization-lib = "6.0.0"
 
 [build-dependencies]
 cbindgen = "0.17"
@@ -19,4 +17,4 @@ cbindgen = "0.17"
 [lib]
 name = "ccardano"
 path = "src/lib.rs"
-crate-type = ["staticlib", "cdylib"]
+crate-type = ["staticlib"]

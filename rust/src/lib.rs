@@ -1,7 +1,11 @@
-use cardano_serialization_lib;
+pub mod address;
+pub mod error;
+pub mod string;
+pub mod data;
+mod ptr;
+mod panic;
 
 #[no_mangle]
-pub extern "C" fn hello_from_rust() -> bool {
-  println!("Hello from Rust!");
-  return true;
+pub unsafe extern "C" fn cardano_initialize() {
+    panic::hide_exceptions();
 }
