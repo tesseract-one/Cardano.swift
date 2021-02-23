@@ -6,6 +6,9 @@ use crate::string::*;
 use crate::network_info::NetworkId;
 use super::addr_type::AddrType;
 use super::base::BaseAddress;
+use super::enterprise::EnterpriseAddress;
+use super::pointer::PointerAddress;
+use super::reward::RewardAddress;
 use super::byron::{ByronAddress, cardano_byron_address_free};
 use cardano_serialization_lib::address::{Address as RAddress};
 use std::convert::{TryInto, TryFrom};
@@ -14,6 +17,9 @@ use std::convert::{TryInto, TryFrom};
 #[derive(Copy, Clone)]
 pub enum Address {
   Base(BaseAddress),
+  Ptr(PointerAddress),
+  Enterprise(EnterpriseAddress),
+  Reward(RewardAddress),
   Byron(ByronAddress)
 }
 
@@ -25,7 +31,9 @@ impl TryFrom<RAddress> for Address {
     match t {
       AddrType::Base(base) => base.try_into().map(Address::Base),
       AddrType::Byron(byron) => Ok(Address::Byron(byron.into())),
-      _ => Err("Unsupported".into())
+      AddrType::Ptr(ptr) => ptr.try_into().map(Address::Ptr),
+      AddrType::Enterprise(ent) => ent.try_into().map(Address::Enterprise),
+      AddrType::Reward(rew) => rew.try_into().map(Address::Reward)
     }
   }
 }
@@ -37,6 +45,9 @@ impl TryFrom<Address> for RAddress {
     match address {
       Address::Base(base) => Ok(AddrType::Base(base.into()).into()),
       Address::Byron(byron) => byron.try_into().map(AddrType::Byron).map(|t| t.into()),
+      Address::Enterprise(ent) => Ok(AddrType::Enterprise(ent.into()).into()),
+      Address::Ptr(ptr) => Ok(AddrType::Ptr(ptr.into()).into()),
+      Address::Reward(rew) => Ok(AddrType::Reward(rew.into()).into()),
     }
   }
 }

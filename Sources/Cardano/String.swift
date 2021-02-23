@@ -10,10 +10,11 @@ import CCardano
 
 extension CharPtr {
     public func string() -> String {
-        let str = String(cString: self)
-        var out = Optional(self)
-        cardano_charptr_free(&out)
-        return str
+        defer {
+            var out = Optional(self)
+            cardano_charptr_free(&out)
+        }
+        return String(cString: self)
     }
 }
 

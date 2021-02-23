@@ -24,8 +24,7 @@ extension Data {
 
 extension CData {
     public mutating func data() -> Data {
-        let data = Data(bytes: self.ptr, count: Int(self.len))
-        cardano_data_free(&self)
-        return data
+        defer { cardano_data_free(&self) }
+        return Data(bytes: self.ptr, count: Int(self.len))
     }
 }

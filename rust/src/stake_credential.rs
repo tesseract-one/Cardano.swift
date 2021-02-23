@@ -86,6 +86,48 @@ impl From<StakeCredential> for RStakeCredential {
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn cardano_ed25519_key_hash_from_bytes(
+  data: CData, result: &mut Ed25519KeyHash, error: &mut CError
+) -> bool {
+  handle_exception_result(|| {
+    data.unowned()
+      .and_then(|bytes| REd25519KeyHash::from_bytes(bytes.into()).into_result())
+      .and_then(|hash| hash.try_into())
+  }).response(result, error)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_ed25519_key_hash_to_bytes(
+  hash: Ed25519KeyHash, result: &mut CData, error: &mut CError
+) -> bool {
+  handle_exception(|| {
+    let rhash: REd25519KeyHash = hash.into();
+    rhash.to_bytes().into()
+  }).response(result, error)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_script_hash_from_bytes(
+  data: CData, result: &mut ScriptHash, error: &mut CError
+) -> bool {
+  handle_exception_result(|| {
+    data.unowned()
+      .and_then(|bytes| RScriptHash::from_bytes(bytes.into()).into_result())
+      .and_then(|hash| hash.try_into())
+  }).response(result, error)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_script_hash_to_bytes(
+  hash: ScriptHash, result: &mut CData, error: &mut CError
+) -> bool {
+  handle_exception(|| {
+    let rhash: RScriptHash = hash.into();
+    rhash.to_bytes().into()
+  }).response(result, error)
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn cardano_stake_credential_from_bytes(
   data: CData, result: &mut StakeCredential, error: &mut CError
 ) -> bool {

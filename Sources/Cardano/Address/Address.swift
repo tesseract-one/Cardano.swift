@@ -23,8 +23,8 @@ public class Address {
         try self.init(address: CCardano.Address(bech32: bech32))
     }
     
-    public convenience init(kind: AddressKind) {
-        self.init(address: kind.cAddress)
+    public convenience init(kind: AddressKind) throws {
+        try self.init(address: kind.cAddress())
     }
     
     public func kind() throws -> AddressKind {
