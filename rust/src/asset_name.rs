@@ -64,3 +64,12 @@ pub unsafe extern "C" fn cardano_asset_name_new(
   })
   .response(result, error)
 }
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_asset_name_get_name(
+  asset_name: AssetName, result: &mut CData, error: &mut CError
+) -> bool {
+  handle_exception_result(|| {
+    asset_name.try_into().map(|name: RAssetName| name.name().into())
+  }).response(result, error)
+}
