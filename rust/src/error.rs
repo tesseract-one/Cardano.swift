@@ -3,9 +3,10 @@ use super::ptr::Ptr;
 use cardano_serialization_lib::error::*;
 
 #[repr(C)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum CError {
     NullPtr,
+    DataLengthMismatch,
     Panic(CharPtr),
     Utf8Error(CharPtr),
     DeserializeError(CharPtr),
@@ -39,6 +40,18 @@ impl From<DeserializeError> for CError {
 impl From<JsError> for CError {
     fn from(error: JsError) -> Self {
         Self::Error(format!("{}", error).into_cstr())
+    }
+}
+
+impl From<String> for CError {
+    fn from(string: String) -> Self {
+        Self::Error(string.into_cstr())
+    }
+}
+
+impl From<&str> for CError {
+    fn from(string: &str) -> Self {
+        Self::Error(string.into_cstr())
     }
 }
 

@@ -1,7 +1,10 @@
 pub mod address;
+pub mod asset_name;
+pub mod network_info;
 pub mod error;
 pub mod string;
 pub mod data;
+pub mod stake_credential;
 mod ptr;
 mod panic;
 

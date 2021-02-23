@@ -9,41 +9,73 @@ import Foundation
 import CCardano
 
 public class Address {
-    private var address: CAddress
+    private var address: CCardano.Address
     
-    private init(address: CAddress) {
+    private init(address: CCardano.Address) {
         self.address = address
     }
     
     public convenience init(bytes: Data) throws {
-        let address = try bytes.withCData { bytes in
-            RustResult<CAddress>.wrap { address, error in
-                cardano_address_from_bytes(bytes, address, error)
-            }
-        }.get()
-        self.init(address: address)
+        try self.init(address: CCardano.Address(bytes: bytes))
     }
     
     public convenience init(bech32: String) throws {
-        let address = try bech32.withCharPtr { bech32 in
-            RustResult<CAddress>.wrap { address, error in
+        try self.init(address: CCardano.Address(bech32: bech32))
+    }
+    
+    public convenience init(kind: AddressKind) {
+        self.init(address: kind.cAddress)
+    }
+    
+    public func kind() throws -> AddressKind {
+        try AddressKind(address: address)
+    }
+    
+    public func bytes() throws -> Data {
+        try address.bytes()
+    }
+    
+    public func bech32(prefix: Optional<String> = nil) throws -> String {
+        try address.bech32(prefix: prefix)
+    }
+    
+    public func networkId() throws -> NetworkId {
+        try address.networkId()
+    }
+    
+    deinit {
+        address.free()
+    }
+}
+
+extension CCardano.Address {
+    public init(bytes: Data) throws {
+        self = try bytes.withCData { bytes in
+            RustResult<CCardano.Address>.wrap { address, error in
+                cardano_address_from_bytes(bytes, address, error)
+            }
+        }.get()
+    }
+    
+    public init(bech32: String) throws {
+        self = try bech32.withCharPtr { bech32 in
+            RustResult<CCardano.Address>.wrap { address, error in
                 cardano_address_from_bech32(bech32, address, error)
             }
         }.get()
-        self.init(address: address)
     }
     
     public func bytes() throws -> Data {
         var data = try RustResult<CData>.wrap { data, error in
-            cardano_address_to_bytes(self.address, data, error)
+            cardano_address_to_bytes(self, data, error)
         }.get()
         return data.data()
     }
     
-    public func bech32(prefix: Optional<String>) throws -> String {
+    public func bech32(prefix: Optional<String> = nil) throws -> String {
         let chars = try prefix.withCharPtr { chPtr in
             RustResult<CharPtr>.wrap { out, error in
-                cardano_address_to_bech32(self.address, chPtr, out, error)
+                cardano_address_to_bech32(self, chPtr, out, error)
             }
         }.get()
         return chars!.string()
@@ -51,11 +83,17 @@ public class Address {
     
     public func networkId() throws -> NetworkId {
         try RustResult<NetworkId>.wrap { id, error in
-            cardano_address_network_id(self.address, id, error)
+            cardano_address_network_id(self, id, error)
         }.get()
     }
     
-    deinit {
-        cardano_address_free(&self.address)
+    public func clone() throws -> CCardano.Address {
+        try RustResult<CCardano.Address>.wrap { result, error in
+            cardano_address_clone(self, result, error)
+        }.get()
+    }
+    
+    public mutating func free() {
+        cardano_address_free(&self)
     }
 }

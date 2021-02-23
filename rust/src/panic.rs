@@ -9,7 +9,7 @@ pub trait IntoResult<T> {
   fn into_result(self) -> Result<T>;
 }
 
-pub trait CResult<T> {
+pub trait CResponse<T> {
     fn response(&self, val: &mut T, error: &mut CError) -> bool; 
 }
 
@@ -51,7 +51,7 @@ impl<T, E> IntoResult<T> for std::result::Result<T, E> where E: Into<CError> {
     }
 }
 
-impl<T: Copy> CResult<T> for Result<T> {
+impl<T: Copy> CResponse<T> for Result<T> {
     fn response(&self, val: &mut T, error: &mut CError) -> bool {
         match self {
           Err(err) => {

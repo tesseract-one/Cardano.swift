@@ -10,6 +10,7 @@ import CCardano
 
 public enum CardanoRustError: Error {
     case nullPtr
+    case dataLengthMismatch
     case panic(reason: String)
     case utf8(message: String)
     case deserialization(message: String)
@@ -20,6 +21,7 @@ public enum CardanoRustError: Error {
     public init(error: CError) {
         switch error.tag {
         case NullPtr: self = .nullPtr
+        case DataLengthMismatch: self = .dataLengthMismatch
         case Panic: self = .panic(reason: error.panic.string())
         case Utf8Error: self = .utf8(message: error.utf8_error.string())
         case DeserializeError:
