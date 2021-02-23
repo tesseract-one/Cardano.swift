@@ -40,4 +40,26 @@ extension AssetName {
         }.get()
         return data.data()
     }
+    
+    public var bytesArray: [UInt8] {
+        withUnsafeBytes(of: bytes) { ptr in
+            Array(ptr.bindMemory(to: UInt8.self).prefix(Int(self.len)))
+        }
+    }
 }
+
+extension AssetName: Equatable {
+    public static func == (lhs: AssetName, rhs: AssetName) -> Bool {
+        lhs.len == rhs.len && lhs.bytesArray == rhs.bytesArray
+    }
+}
+
+extension AssetName: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(len)
+        hasher.combine(bytesArray)
+    }
+}
+
+public typealias AssetNames = Array<AssetName>
+public typealias Assets = Dictionary<AssetName, UInt64>
