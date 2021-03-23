@@ -5,6 +5,8 @@ pub mod error;
 pub mod string;
 pub mod data;
 pub mod stake_credential;
+pub mod bip32_private_key;
+pub mod bip32_public_key;
 mod ptr;
 mod panic;
 

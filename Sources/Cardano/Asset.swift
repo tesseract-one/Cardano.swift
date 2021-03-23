@@ -28,14 +28,14 @@ extension AssetName {
     }
     
     public func name() throws -> Data {
-        var data = try RustResult<Self>.wrap { res, err in
+        var data = try RustResult<CData>.wrap { res, err in
             cardano_asset_name_get_name(self, res, err)
         }.get()
         return data.data()
     }
     
     public func data() throws -> Data {
-        var data = try RustResult<Self>.wrap { res, err in
+        var data = try RustResult<CData>.wrap { res, err in
             cardano_asset_name_to_bytes(self, res, err)
         }.get()
         return data.data()
