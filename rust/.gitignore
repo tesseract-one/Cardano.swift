@@ -1,4 +1,5 @@
 .DS_Store
+/binaries
 /target
 .history
 .vscode

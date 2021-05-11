@@ -5,16 +5,15 @@ authors = ["Tesseract Systems, Inc. <info@tesseract.one>"]
 license = "Apache-2.0"
 description = "Cardano bindings for C."
 keywords = [ "Tesseract", "Cardano", "C" ]
-# build = "build.rs"
 edition = "2018"
 
 [dependencies]
-cardano-serialization-lib = "6.0.0"
+cardano-serialization-lib = { git = "https://github.com/tesseract-one/cardano-serialization-lib.git", branch = "master" }
 
 [build-dependencies]
-cbindgen = "0.17"
+cbindgen = "0.19"
 
 [lib]
-name = "ccardano"
+name = "cardano"
 path = "src/lib.rs"
 crate-type = ["staticlib"]

@@ -1,5 +1,5 @@
 module CCardano {
-    umbrella header "cardano.h"
+    umbrella header "ccardano.h"
     link "cardano"
     export *
 }

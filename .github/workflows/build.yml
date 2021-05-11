@@ -1,0 +1,49 @@
+name: Build & Tests
+on: [push, pull_request]
+jobs:
+  macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_12.4.app
+      - name: Setup | Rust
+        uses: ATiltedTree/setup-rust@v1
+        with:
+          rust-version: stable
+          targets: aarch64-apple-ios x86_64-apple-ios aarch64-apple-darwin x86_64-apple-darwin
+      - name: Building XCFramework
+        run: bash rust/scripts/build_binary_macos.sh release no-arm64
+      - name: Patching Package.swift for testing
+        run: sed -i '' 's/let[[:blank:]]useLocalBinary[[:blank:]]=[[:blank:]]false/let useLocalBinary = true/g' Package.swift
+      - name: Build and Test SPM
+        run: swift test
+      - name: Update Cocoa Pods repo
+        run: pod repo update
+      - name: Build and Test CocoaPods
+        run: pod lib lint --allow-warnings --fail-fast Cardano.podspec
+  linux:
+    runs-on: ubuntu-latest
+    container:
+      image: swift:5.3
+      options: --cap-add=SYS_PTRACE --security-opt seccomp=unconfined --security-opt apparmor=unconfined
+    steps:
+      - name: Ubuntu Packages
+        run: apt-get update && apt-get install -y software-properties-common && add-apt-repository -y ppa:git-core/ppa && apt-get update && apt-get upgrade -y git && apt-get install -y wget curl
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: Setup | Rust
+        uses: ATiltedTree/setup-rust@v1
+        with:
+          rust-version: stable
+        env:
+          ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+      - name: Building Rust
+        run: mkdir -p rust/binaries && bash rust/scripts/build_binary_linux.sh rust/binaries
+      - name: Build and Test
+        run: swift test -Xlinker -Lrust/binaries/lib -Xcc -Irust/binaries/include

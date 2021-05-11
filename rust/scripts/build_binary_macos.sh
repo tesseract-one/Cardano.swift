@@ -1,18 +1,41 @@
 #!/bin/bash
 set -e
 
-LIB_NAME="ccardano"
-SOURCES_DIR="rust"
-OUTPUT_DIR="rust/binaries"
+LIB_NAME="cardano"
+SOURCES_DIR=""
+HEADERS_DIR="target/include"
+OUTPUT_DIR="binaries"
 FRAMEWORK_NAME="CCardano"
-MODULE_MAP="rust/scripts/module.modulemap"
-BUILD_TARGETS="ios::arm64:aarch64-apple-ios ios:simulator:arm64,x86_64:aarch64-apple-ios,x86_64-apple-ios macos::arm64,x86_64:aarch64-apple-darwin,x86_64-apple-darwin"
+MODULE_MAP="scripts/module.modulemap"
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-ROOT_DIR="${DIR}/../.."
+ROOT_DIR="${DIR}/.."
 
 HAS_CARGO_IN_PATH=`command -v cargo >/dev/null 2>&1; echo $?`
 
+export MACOSX_DEPLOYMENT_TARGET=10.12
+export IPHONEOS_DEPLOYMENT_TARGET=11
+#export TVOS_DEPLOYMENT_TARGET=11
+
+readonly SDK_MAPPINGS=(
+  'ios-:iphoneos'
+  'ios-simulator:iphonesimulator'
+  'tvos-:appletvos'
+  'tvos-simulator:appletvsimulator'
+  'watchos-:watchos'
+  'watchos-simulator:watchsimulator'
+  'macos-:macosx'
+)
+
+function get_sdk_name() {
+  for mapping in ${SDK_MAPPINGS[@]}; do
+      IFS=: read -r platform sdk <<< "$mapping"
+      if [ "$platform" == "$1-$2" ]; then
+        echo "$sdk"
+        break
+      fi
+  done
+}
 
 function print_plist_header() {
   echo '<?xml version="1.0" encoding="UTF-8"?>' > $1
@@ -105,6 +128,26 @@ else
   CONFIGURATION="release"
 fi
 
+
+# Removed TV OS for now. TV OS target is Tier 3 target in Rust
+#
+#'tvos::arm64:aarch64-apple-ios'
+#'tvos:simulator:arm64,x86_64:aarch64-apple-tvos,x86_64-apple-tvos'
+
+if [ "$2" == "no-arm64" ]; then
+  readonly BUILD_TARGETS=(
+    'ios::arm64:aarch64-apple-ios'
+    'ios:simulator:arm64,x86_64:aarch64-apple-ios,x86_64-apple-ios'
+    'macos::x86_64:x86_64-apple-darwin'
+  )
+else
+  readonly BUILD_TARGETS=(
+    'ios::arm64:aarch64-apple-ios'
+    'ios:simulator:arm64,x86_64:aarch64-apple-ios,x86_64-apple-ios'
+    'macos::arm64,x86_64:aarch64-apple-darwin,x86_64-apple-darwin'
+  )
+fi
+
 XCFRAMEWORK_PATH="${ROOT_DIR}/${OUTPUT_DIR}/${FRAMEWORK_NAME}.xcframework"
 
 rm -rf "${XCFRAMEWORK_PATH}"
@@ -114,24 +157,43 @@ cd "${ROOT_DIR}/${SOURCES_DIR}"
 
 print_plist_header "${XCFRAMEWORK_PATH}/Info.plist"
 
-mkdir -p target/include
-cp -f "${ROOT_DIR}/${MODULE_MAP}" target/include/
+export LIBRARY_PATH="$(xcrun -sdk macosx --show-sdk-path)/usr/lib:${LIBRARY_PATH:-}"
 
-for BTARGET in $BUILD_TARGETS; do
-  IFS=: read -r platform variant arch target <<< "$BTARGET"
-  if [[ "$target" == *,* ]]; then
-    cargo lipo $RELEASE --targets $target
-    add_library_to_xcframework "${XCFRAMEWORK_PATH}" \
-        "${ROOT_DIR}/${SOURCES_DIR}/target/include" \
-        "${ROOT_DIR}/${SOURCES_DIR}/target/universal/${CONFIGURATION}/lib${LIB_NAME}.a" \
-        "${platform}" "${arch}" "${variant}"
-  else
-      cargo build --lib $RELEASE --target $target
-      add_library_to_xcframework "${XCFRAMEWORK_PATH}" \
-        "${ROOT_DIR}/${SOURCES_DIR}/target/include" \
-        "${ROOT_DIR}/${SOURCES_DIR}/target/${target}/${CONFIGURATION}/lib${LIB_NAME}.a" \
-        "${platform}" "${arch}" "${variant}"
-  fi
+for BTARGET in ${BUILD_TARGETS[@]}; do
+  IFS=: read -r platform variant archs targets <<< "$BTARGET"
+  
+  SDK_NAME=$(get_sdk_name "$platform" "$variant")
+  
+  echo "Building for: ${SDK_NAME}..."
+  
+  export SDKROOT="$(xcrun -sdk "$SDK_NAME" --show-sdk-path)"
+  
+  RUST_TARGET_DIR="${ROOT_DIR}/${SOURCES_DIR}/target"
+  OUT_LIB_DIR="${RUST_TARGET_DIR}/universal"
+
+  cargo clean
+  mkdir -p "${OUT_LIB_DIR}"
+  mkdir -p "${ROOT_DIR}/${HEADERS_DIR}"
+  cp -f "${ROOT_DIR}/${MODULE_MAP}" "${ROOT_DIR}/${HEADERS_DIR}/"
+  
+  BUILT_LIBS=""
+  OLD_IFS="${IFS}"
+  IFS=, targets=($targets)
+  IFS="${OLD_IFS}"
+  for target in "${targets[@]}"; do
+    echo "Building target: ${target}..."
+    cargo build --lib $RELEASE --target $target
+    BUILT_LIBS="${BUILT_LIBS} ${RUST_TARGET_DIR}/${target}/${CONFIGURATION}/lib${LIB_NAME}.a"
+  done
+  
+  BUILT_LIBS="${BUILT_LIBS:1}"
+  
+  lipo ${BUILT_LIBS} -create -output "${OUT_LIB_DIR}/lib${LIB_NAME}.a"
+  
+  add_library_to_xcframework "${XCFRAMEWORK_PATH}" \
+    "${ROOT_DIR}/${HEADERS_DIR}/" \
+    "${OUT_LIB_DIR}/lib${LIB_NAME}.a" \
+    "${platform}" "${archs}" "${variant}"
 done
 
 print_plist_footer "${XCFRAMEWORK_PATH}/Info.plist"

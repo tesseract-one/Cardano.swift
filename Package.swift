@@ -3,8 +3,11 @@
 
 import PackageDescription
 
+let useLocalBinary = true
+
 var package = Package(
     name: "Cardano",
+    platforms: [.iOS(.v11), .macOS(.v10_12)],
     products: [
         // Products define the executables and libraries produced by a package, and make them visible to other packages.
         .library(
@@ -21,11 +24,29 @@ var package = Package(
         .target(
             name: "Cardano",
             dependencies: ["CCardano"]),
-        .binaryTarget(
-            name: "CCardano",
-            path: "rust/binaries/CCardano.xcframework"),
         .testTarget(
             name: "CardanoTests",
             dependencies: ["Cardano"])
     ]
 )
+
+#if os(Linux)
+    package.targets.append(
+        .systemLibrary(name: "CCardano")
+    )
+#else
+    if useLocalBinary {
+        package.targets.append(
+            .binaryTarget(
+                name: "CCardano",
+                path: "rust/binaries/CCardano.xcframework")
+        )
+    } else {
+        package.targets.append(
+            .binaryTarget(
+                name: "CCardano",
+                url: "https://github.com/tesseract-one/Cardano.swift/releases/download/0.0.1/CCardano.binaries.zip",
+                checksum: "08fcaf9e09b9c53a1823cc6131ed2d9b55f6ba595e4fd39cee7f77a51973921a")
+        )
+    }
+#endif
