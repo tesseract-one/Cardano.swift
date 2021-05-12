@@ -8,6 +8,8 @@ use cardano_serialization_lib::address::{
   StakeCredential as RStakeCredential
 };
 
+use super::address::Address;
+
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct BaseAddress {
@@ -42,4 +44,68 @@ impl From<BaseAddress> for RBaseAddress {
       &address.stake.into()
     )
   }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_base_address_new(
+  network: NetworkId, payment: StakeCredential, stake: StakeCredential, address: &mut BaseAddress,
+  error: &mut CError
+) -> bool {
+  handle_exception_result(|| RBaseAddress::new(network, &payment.into(), &stake.into()).try_into())
+    .response(address, error)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_base_address_payment_cred(
+  base_address: BaseAddress, payment_credential: &mut StakeCredential, error: &mut CError
+) -> bool {
+  handle_exception_result(|| {
+    let base_address: RBaseAddress = base_address.into();
+    base_address.payment_cred().try_into()
+  })
+  .response(payment_credential, error)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_base_address_stake_cred(
+  base_address: BaseAddress, stake_credential: &mut StakeCredential, error: &mut CError
+) -> bool {
+  handle_exception_result(|| {
+    let base_address: RBaseAddress = base_address.into();
+    base_address.stake_cred().try_into()
+  })
+  .response(stake_credential, error)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_base_address_to_address(
+  base_address: BaseAddress, address: &mut Address, error: &mut CError
+) -> bool {
+  handle_exception_result(|| {
+    let base_address: RBaseAddress = base_address.into();
+    base_address.to_address().try_into()
+  })
+  .response(address, error)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_base_address_from_address(
+  address: Address, base_address: &mut BaseAddress, error: &mut CError
+) -> bool {
+  handle_exception_result(|| {
+    address.try_into().and_then(|address| {
+      RBaseAddress::from_address(&address).map_or(
+        Err("Cannot create BaseAddress from Address".into()),
+        |base_address| base_address.try_into(),
+      )
+    })
+  })
+  .response(base_address, error)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_base_address_clone(
+  base_address: BaseAddress, result: &mut BaseAddress, error: &mut CError
+) -> bool {
+  handle_exception(|| base_address.clone()).response(result, error)
 }
