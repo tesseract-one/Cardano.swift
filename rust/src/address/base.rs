@@ -56,28 +56,6 @@ pub unsafe extern "C" fn cardano_base_address_new(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn cardano_base_address_payment_cred(
-  base_address: BaseAddress, payment_credential: &mut StakeCredential, error: &mut CError
-) -> bool {
-  handle_exception_result(|| {
-    let base_address: RBaseAddress = base_address.into();
-    base_address.payment_cred().try_into()
-  })
-  .response(payment_credential, error)
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn cardano_base_address_stake_cred(
-  base_address: BaseAddress, stake_credential: &mut StakeCredential, error: &mut CError
-) -> bool {
-  handle_exception_result(|| {
-    let base_address: RBaseAddress = base_address.into();
-    base_address.stake_cred().try_into()
-  })
-  .response(stake_credential, error)
-}
-
-#[no_mangle]
 pub unsafe extern "C" fn cardano_base_address_to_address(
   base_address: BaseAddress, address: &mut Address, error: &mut CError
 ) -> bool {
@@ -101,11 +79,4 @@ pub unsafe extern "C" fn cardano_base_address_from_address(
     })
   })
   .response(base_address, error)
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn cardano_base_address_clone(
-  base_address: BaseAddress, result: &mut BaseAddress, error: &mut CError
-) -> bool {
-  handle_exception(|| base_address.clone()).response(result, error)
 }

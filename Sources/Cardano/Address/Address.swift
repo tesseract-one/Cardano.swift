@@ -11,7 +11,7 @@ import CCardano
 public class Address {
     private var address: CCardano.Address
     
-    private init(address: CCardano.Address) {
+    public init(address: CCardano.Address) {
         self.address = address
     }
     
@@ -41,6 +41,10 @@ public class Address {
     
     public func networkId() throws -> NetworkId {
         try address.networkId()
+    }
+    
+    public func getAddress() -> CCardano.Address {
+        self.address
     }
     
     deinit {

@@ -8,6 +8,7 @@
 import Foundation
 import CCardano
 
+public typealias BaseAddress = CCardano.BaseAddress
 public typealias PointerAddress = CCardano.PointerAddress
 public typealias EnterpriseAddress = CCardano.EnterpriseAddress
 public typealias RewardAddress = CCardano.RewardAddress
@@ -21,7 +22,7 @@ public enum AddressKind {
     
     public init(address: CCardano.Address) throws {
         switch address.tag {
-        case Base: self = .base(BaseAddress(address: address.base.clone()))
+        case Base: self = .base(address.base)
         case Byron: self = try .byron(ByronAddress(address: address.byron.clone()))
         case Ptr: self = .pointer(address.ptr)
         case Enterprise: self = .enterprise(address.enterprise)
@@ -70,7 +71,7 @@ public enum AddressKind {
         switch self {
         case .base(let base):
             address.tag = Base
-            address.base = try base.cAddress()
+            address.base = base
         case .byron(let byron):
             address.tag = Byron
             address.byron = try byron.cAddress()
