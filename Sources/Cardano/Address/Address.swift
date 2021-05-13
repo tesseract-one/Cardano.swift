@@ -43,7 +43,7 @@ public class Address {
         try address.networkId()
     }
     
-    public func getAddress() -> CCardano.Address {
+    internal func getAddress() -> CCardano.Address {
         self.address
     }
     
