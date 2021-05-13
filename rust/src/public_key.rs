@@ -1,7 +1,7 @@
 use super::data::CData;
 use super::error::CError;
 use super::panic::*;
-use super::ptr::Ptr;
+use super::ptr::*;
 use super::stake_credential::Ed25519KeyHash;
 use super::string::CharPtr;
 use super::string::IntoCString;
@@ -16,6 +16,12 @@ impl Clone for PublicKey {
   fn clone(&self) -> Self {
     let s: String = unsafe { self.0.unowned().expect("Bad char pointer").into() };
     Self(s.into_cstr())
+  }
+}
+
+impl Free for PublicKey {
+  unsafe fn free(&mut self) {
+    self.0.free()
   }
 }
 
@@ -98,5 +104,5 @@ pub unsafe extern "C" fn cardano_public_key_clone(
 
 #[no_mangle]
 pub unsafe extern "C" fn cardano_public_key_free(public_key: &mut PublicKey) {
-  public_key.0.free();
+  public_key.free();
 }

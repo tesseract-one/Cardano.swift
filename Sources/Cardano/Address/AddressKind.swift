@@ -20,7 +20,7 @@ public enum AddressKind {
     case reward(RewardAddress)
     case byron(ByronAddress)
     
-    public init(address: CCardano.Address) throws {
+    init(address: CCardano.Address) throws {
         switch address.tag {
         case Base: self = .base(address.base)
         case Byron: self = try .byron(ByronAddress(address: address.byron.clone()))

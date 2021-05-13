@@ -11,7 +11,7 @@ import CCardano
 public class ByronAddress {
     private var address: CCardano.ByronAddress
     
-    public init(address: CCardano.ByronAddress) {
+    init(address: CCardano.ByronAddress) {
         self.address = address
     }
     
@@ -27,7 +27,7 @@ public class ByronAddress {
         return try ByronAddress(address: address.clone())
     }
     
-    public func cAddress() throws -> CCardano.ByronAddress {
+    func cAddress() throws -> CCardano.ByronAddress {
         try address.clone()
     }
     

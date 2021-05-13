@@ -11,7 +11,7 @@ import CCardano
 public class PublicKey {
     private var publicKey: CCardano.PublicKey
     
-    public init(publicKey: CCardano.PublicKey) {
+    init(publicKey: CCardano.PublicKey) {
         self.publicKey = publicKey
     }
     
