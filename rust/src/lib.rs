@@ -1,5 +1,6 @@
 pub mod address;
 pub mod asset_name;
+pub mod assets;
 pub mod network_info;
 pub mod error;
 pub mod string;
@@ -11,6 +12,8 @@ pub mod ed25519_signature;
 pub mod linear_fee;
 mod ptr;
 mod panic;
+mod array;
+mod map;
 
 #[no_mangle]
 pub unsafe extern "C" fn cardano_initialize() {

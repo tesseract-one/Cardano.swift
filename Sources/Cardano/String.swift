@@ -9,7 +9,7 @@ import Foundation
 import CCardano
 
 extension CharPtr {
-    public func string() -> String {
+    func string() -> String {
         defer {
             var out = Optional(self)
             cardano_charptr_free(&out)
@@ -19,13 +19,13 @@ extension CharPtr {
 }
 
 extension String {
-    public func withCharPtr<T>(fn: @escaping (CharPtr) throws -> T) rethrows -> T {
+    func withCharPtr<T>(fn: @escaping (CharPtr) throws -> T) rethrows -> T {
         try withCString(fn)
     }
 }
 
 extension Optional where Wrapped == String {
-    public func withCharPtr<T>(fn: @escaping (Optional<CharPtr>) throws -> T) rethrows -> T {
+    func withCharPtr<T>(fn: @escaping (Optional<CharPtr>) throws -> T) rethrows -> T {
         if let str = self {
             return try str.withCharPtr(fn: fn)
         } else {

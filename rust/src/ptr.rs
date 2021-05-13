@@ -2,11 +2,18 @@ use super::panic::*;
 // use std::ffi::c_void;
 // use super::error::CError;
 
-pub trait Ptr {
+pub trait Free {
+    unsafe fn free(&mut self);
+}
+
+pub trait Ptr: Free {
     type PT: ?Sized;
 
     unsafe fn unowned(&self) -> Result<&Self::PT>;
-    unsafe fn free(&mut self);
+}
+
+impl Free for u64 {
+    unsafe fn free(&mut self) {}
 }
 
 // pub trait SizedPtr: Sized {

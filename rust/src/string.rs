@@ -1,9 +1,16 @@
-use super::ptr::Ptr;
+use super::ptr::{Ptr, Free};
 use super::panic::Result;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 
 pub type CharPtr = *const c_char;
+
+impl Free for CharPtr {
+  unsafe fn free(&mut self) {
+    let _ = CString::from_raw(*self as *mut c_char);
+    *self = std::ptr::null();
+  }
+}
 
 impl Ptr for CharPtr {
     type PT = str;
@@ -12,11 +19,6 @@ impl Ptr for CharPtr {
         CStr::from_ptr(*self)
             .to_str()
             .map_err(|err| err.into())
-    }
-
-    unsafe fn free(&mut self) {
-        let _ = CString::from_raw(*self as *mut c_char);
-        *self = std::ptr::null();
     }
 }
 

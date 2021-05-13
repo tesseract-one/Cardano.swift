@@ -1,5 +1,5 @@
 use super::string::*;
-use super::ptr::Ptr;
+use super::ptr::*;
 use cardano_serialization_lib::error::*;
 
 #[repr(C)]
@@ -13,13 +13,13 @@ pub enum CError {
     Error(CharPtr)
 }
 
-impl CError {
-    pub unsafe fn free(self) {
+impl Free for CError {
+    unsafe fn free(&mut self) {
         match self {
-            CError::Panic(mut ptr) => ptr.free(),
-            CError::Utf8Error(mut ptr) => ptr.free(),
-            CError::DeserializeError(mut ptr) => ptr.free(),
-            CError::Error(mut ptr) => ptr.free(),
+            &mut CError::Panic(mut ptr) => ptr.free(),
+            &mut CError::Utf8Error(mut ptr) => ptr.free(),
+            &mut CError::DeserializeError(mut ptr) => ptr.free(),
+            &mut CError::Error(mut ptr) => ptr.free(),
             _ => return
         }
     }

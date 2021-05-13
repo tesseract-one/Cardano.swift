@@ -60,6 +60,3 @@ extension AssetName: Hashable {
         hasher.combine(bytesArray)
     }
 }
-
-public typealias AssetNames = Array<AssetName>
-public typealias Assets = Dictionary<AssetName, UInt64>

@@ -1,7 +1,7 @@
 use super::data::CData;
 use super::error::CError;
 use super::panic::*;
-use super::ptr::Ptr;
+use super::ptr::*;
 use super::string::CharPtr;
 use super::string::IntoCString;
 use cardano_serialization_lib::crypto::Ed25519Signature as REd25519Signature;

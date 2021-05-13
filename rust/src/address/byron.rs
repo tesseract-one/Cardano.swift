@@ -1,6 +1,6 @@
 use crate::string::*;
 use crate::panic::*;
-use crate::ptr::Ptr;
+use crate::ptr::*;
 use crate::error::CError;
 use std::convert::{TryInto, TryFrom};
 use cardano_serialization_lib::address::{ByronAddress as RByronAddress};
@@ -13,6 +13,20 @@ impl Clone for ByronAddress {
   fn clone(&self) -> Self {
     let s: String = unsafe { self.0.unowned().expect("Bad char pointer").into() };
     Self(s.into_cstr())
+  }
+}
+
+impl Free for ByronAddress {
+  unsafe fn free(&mut self) {
+    self.0.free();
+  }
+}
+
+impl Ptr for ByronAddress {
+  type PT = str;
+
+  unsafe fn unowned(&self) -> Result<&str> {
+    self.0.unowned()
   }
 }
 
@@ -63,5 +77,5 @@ pub unsafe extern "C" fn cardano_byron_address_clone(
 
 #[no_mangle]
 pub unsafe extern "C" fn cardano_byron_address_free(address: &mut ByronAddress) {
-  address.0.free();
+  address.free();
 }

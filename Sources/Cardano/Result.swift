@@ -8,10 +8,10 @@
 import Foundation
 import CCardano
 
-public typealias RustResult<T> = Result<T, CardanoRustError>
+typealias RustResult<T> = Result<T, CardanoRustError>
 
 extension RustResult {
-    public static func wrap<S>(
+    static func wrap<S>(
         ccall: @escaping (UnsafeMutablePointer<S>, UnsafeMutablePointer<CError>) -> Bool
     ) -> RustResult<S> {
         var error = CError()

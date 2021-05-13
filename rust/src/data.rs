@@ -1,4 +1,4 @@
-use super::ptr::Ptr;
+use super::ptr::{Ptr, Free};
 use super::error::CError;
 use super::panic::Result;
 
@@ -7,6 +7,16 @@ use super::panic::Result;
 pub struct CData {
   ptr: *const u8,
   len: usize
+}
+
+impl Free for CData {
+  unsafe fn free(&mut self) {
+    if self.ptr.is_null() {
+        return;
+    }
+    let _ = Vec::from_raw_parts(self.ptr as *mut u8, self.len, self.len);
+    self.ptr = std::ptr::null();
+ }
 }
 
 impl Ptr for CData {
@@ -18,14 +28,6 @@ impl Ptr for CData {
         } else {
             Ok(std::slice::from_raw_parts(self.ptr, self.len))
         }
-    }
-
-    unsafe fn free(&mut self) {
-        if self.ptr.is_null() {
-            return;
-        }
-        let _ = Vec::from_raw_parts(self.ptr as *mut u8, self.len, self.len);
-        self.ptr = std::ptr::null();
     }
 }
 

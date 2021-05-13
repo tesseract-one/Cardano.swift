@@ -1,5 +1,5 @@
 use super::data::CData;
-use super::ptr::Ptr;
+use super::ptr::*;
 use std::convert::{TryInto, TryFrom};
 use super::error::CError;
 use super::panic::*;
@@ -10,6 +10,10 @@ use cardano_serialization_lib::{AssetName as RAssetName};
 pub struct AssetName {
   bytes: [u8; 32],
   len: u8
+}
+
+impl Free for AssetName {
+  unsafe fn free(&mut self) {}
 }
 
 impl TryFrom<RAssetName> for AssetName {

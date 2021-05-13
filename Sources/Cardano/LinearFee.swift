@@ -8,7 +8,7 @@
 import Foundation
 import CCardano
 
-typealias LinearFee = CCardano.LinearFee
+public typealias LinearFee = CCardano.LinearFee
 
 extension LinearFee {
     public init(coefficient: Coin, constant: Coin) throws {

@@ -1,7 +1,7 @@
 use crate::data::CData;
 use crate::error::CError;
 use crate::panic::*;
-use crate::ptr::Ptr;
+use crate::ptr::*;
 use crate::string::*;
 use crate::network_info::NetworkId;
 use super::addr_type::AddrType;
@@ -9,7 +9,7 @@ use super::base::BaseAddress;
 use super::enterprise::EnterpriseAddress;
 use super::pointer::PointerAddress;
 use super::reward::RewardAddress;
-use super::byron::{ByronAddress, cardano_byron_address_free};
+use super::byron::ByronAddress;
 use cardano_serialization_lib::address::{Address as RAddress};
 use std::convert::{TryInto, TryFrom};
 
@@ -21,6 +21,15 @@ pub enum Address {
   Enterprise(EnterpriseAddress),
   Reward(RewardAddress),
   Byron(ByronAddress)
+}
+
+impl Free for Address {
+  unsafe fn free(&mut self) {
+    match self {
+      &mut Address::Byron(mut byron) => byron.free(),
+      _ => return
+    }
+  }
 }
 
 impl TryFrom<RAddress> for Address {
@@ -124,8 +133,5 @@ pub unsafe extern "C" fn cardano_address_clone(
 
 #[no_mangle]
 pub unsafe extern "C" fn cardano_address_free(address: &mut Address) {
-  match address {
-    &mut Address::Byron(mut byron) => cardano_byron_address_free(&mut byron),
-    _ => return
-  }
+  address.free();
 }
