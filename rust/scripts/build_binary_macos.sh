@@ -140,6 +140,12 @@ if [ "$2" == "no-arm64" ]; then
     'ios:simulator:arm64,x86_64:aarch64-apple-ios,x86_64-apple-ios'
     'macos::x86_64:x86_64-apple-darwin'
   )
+elif [ "$2" == "current" ]; then
+  arch="$(uname -m)"
+  rarch=$([ "$arch" == "arm64" ] && echo "aarch64" || echo "x86_64")
+  readonly BUILD_TARGETS=(
+    "macos::${arch}:${rarch}-apple-darwin"
+  )
 else
   readonly BUILD_TARGETS=(
     'ios::arm64:aarch64-apple-ios'
