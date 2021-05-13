@@ -60,7 +60,7 @@ extension CCardano.Ed25519Signature {
     }
     
     public func clone() throws -> Self {
-        try RustResult<CCardano.Ed25519Signature>.wrap { result, error in
+        try RustResult<Self>.wrap { result, error in
             cardano_ed25519_signature_clone(self, result, error)
         }.get()
     }

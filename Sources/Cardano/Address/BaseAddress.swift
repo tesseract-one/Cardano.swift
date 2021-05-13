@@ -15,8 +15,8 @@ extension BaseAddress {
         }.get()
     }
     
-    public static func new(network: NetworkId, payment: StakeCredential, stake: StakeCredential) throws -> Self {
-        try RustResult<CCardano.BaseAddress>.wrap { result, error in
+    public init(network: NetworkId, payment: StakeCredential, stake: StakeCredential) throws {
+        self = try RustResult<CCardano.BaseAddress>.wrap { result, error in
             cardano_base_address_new(network, payment, stake, result, error)
         }.get()
     }

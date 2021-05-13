@@ -8,6 +8,7 @@ pub mod stake_credential;
 pub mod bip32_private_key;
 pub mod bip32_public_key;
 pub mod ed25519_signature;
+pub mod linear_fee;
 mod ptr;
 mod panic;
 
