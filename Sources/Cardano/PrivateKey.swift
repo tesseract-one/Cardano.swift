@@ -8,39 +8,81 @@
 import Foundation
 import CCardano
 
-public class PrivateKey {
-    private var privateKey: CCardano.PrivateKey
+public enum PrivateKey {
+    case extended(Data)
+    case normal(Data)
     
-    init(privateKey: CCardano.PrivateKey) {
-        self.privateKey = privateKey
+    init(privateKey: inout CCardano.PrivateKey) throws {
+        defer { privateKey.free() }
+        switch privateKey._0.tag {
+        case Extended:
+            self = .extended(privateKey._0.extended.data())
+        case Normal:
+            self = .normal(privateKey._0.normal.data())
+        default:
+            throw CardanoRustError.unknown
+        }
     }
     
-    public convenience init(extendedBytes bytes: Data) throws {
-        try self.init(privateKey: CCardano.PrivateKey(extendedBytes: bytes))
+    var isExtended: Bool {
+        get {
+            if case .extended = self { return true }
+            return false
+        }
     }
     
-    public convenience init(normalBytes bytes: Data) throws {
-        try self.init(privateKey: CCardano.PrivateKey(normalBytes: bytes))
+    var isNormal: Bool {
+        get {
+            if case .normal = self { return true }
+            return false
+        }
+    }
+    
+    public init(extendedBytes bytes: Data) throws {
+        var privateKey = try CCardano.PrivateKey(extendedBytes: bytes)
+        try self.init(privateKey: &privateKey)
+    }
+    
+    public init(normalBytes bytes: Data) throws {
+        var privateKey = try CCardano.PrivateKey(normalBytes: bytes)
+        try self.init(privateKey: &privateKey)
     }
     
     public func toPublic() throws -> PublicKey {
-        try privateKey.toPublic()
+        try withCPrivateKey { try $0.toPublic() }
     }
     
     public func bytes() throws -> Data {
-        try privateKey.bytes()
+        try withCPrivateKey { try $0.bytes() }
     }
     
     public func sign(message: Data) throws -> Ed25519Signature {
-        try privateKey.sign(message: message)
+        try withCPrivateKey { try $0.sign(message: message) }
     }
     
-    public func clone() throws -> PrivateKey {
-        return try PrivateKey(privateKey: privateKey.clone())
+    func clonedCPrivateKey() throws -> CCardano.PrivateKey {
+        try withCPrivateKey { try $0.clone() }
     }
     
-    deinit {
-        privateKey.free()
+    func withCPrivateKey<T>(
+        fn: @escaping (CCardano.PrivateKey) throws -> T
+    ) rethrows -> T {
+        switch self {
+        case .extended(let data):
+            return try data.withCData { data in
+                var key = EitherEd25519SecretKey()
+                key.tag = Extended
+                key.extended = data
+                return try fn(CCardano.PrivateKey(_0: key))
+            }
+        case .normal(let data):
+            return try data.withCData { data in
+                var key = EitherEd25519SecretKey()
+                key.tag = Normal
+                key.normal = data
+                return try fn(CCardano.PrivateKey(_0: key))
+            }
+        }
     }
 }
 
