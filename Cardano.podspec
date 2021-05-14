@@ -13,7 +13,7 @@ Pod::Spec.new do |s|
   s.osx.deployment_target = '10.12'
   # s.tvos.deployment_target = '11.0'
   
-  s.swift_versions = ['5.3']
+  s.swift_versions = ['5.3', '5.4']
   
   s.module_name = 'Cardano'
   
