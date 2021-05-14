@@ -14,12 +14,12 @@ extension BaseAddress: CType {}
 
 extension BaseAddress {
     public init?(address: Address) {
-        let address: Optional<Self> = try? address.withCAddress { addr in
+        let address: Optional<Optional<Self>> = try? address.withCAddress { addr in
             try RustResult<Self>.wrap { result, error in
                 cardano_base_address_from_address(addr, result, error)
             }.get()
         }
-        guard let addr = address else {
+        guard let addr = address.flatMap({$0}) else {
             return nil
         }
         self = addr
