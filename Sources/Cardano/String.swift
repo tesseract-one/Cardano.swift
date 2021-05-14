@@ -16,6 +16,10 @@ extension CharPtr {
         }
         return String(cString: self)
     }
+    
+    func copied() -> String {
+        return String(cString: self)
+    }
 }
 
 extension String {

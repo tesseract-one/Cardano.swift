@@ -8,31 +8,33 @@
 import Foundation
 import CCardano
 
-public class ByronAddress {
-    private var address: CCardano.ByronAddress
+public struct ByronAddress {
+    private var _address: String
     
-    init(address: CCardano.ByronAddress) {
-        self.address = address
+    init(address: inout CCardano.ByronAddress) {
+        _address = address.rawAddress
+        address.free()
     }
     
-    public convenience init(base58: String) throws {
-        try self.init(address: CCardano.ByronAddress(base58: base58))
+    public init(base58: String) throws {
+        var address = try CCardano.ByronAddress(base58: base58)
+        self.init(address: &address)
     }
     
     public func base58() throws -> String {
-        try address.base58()
+        try withCAddress { try $0.base58() }
     }
     
-    public func clone() throws -> ByronAddress {
-        return try ByronAddress(address: address.clone())
+    func clonedCAddress() throws -> CCardano.ByronAddress {
+        try withCAddress { try $0.clone() }
     }
     
-    func cAddress() throws -> CCardano.ByronAddress {
-        try address.clone()
-    }
-    
-    deinit {
-        address.free()
+    func withCAddress<T>(
+        fn: @escaping (CCardano.ByronAddress) throws -> T
+    ) rethrows -> T {
+        try _address.withCString { strPtr in
+            try fn(CCardano.ByronAddress(_0: strPtr))
+        }
     }
 }
 
@@ -44,6 +46,8 @@ extension CCardano.ByronAddress {
             }
         }.get()
     }
+    
+    public var rawAddress: String { _0.copied() }
     
     public func base58() throws -> String {
         try RustResult<CharPtr>.wrap { result, error in

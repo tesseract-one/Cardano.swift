@@ -26,4 +26,8 @@ extension CData {
         defer { cardano_data_free(&self) }
         return Data(bytes: self.ptr, count: Int(self.len))
     }
+    
+    func copied() -> Data {
+        return Data(bytes: self.ptr, count: Int(self.len))
+    }
 }

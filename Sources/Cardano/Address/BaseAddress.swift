@@ -12,9 +12,11 @@ public typealias BaseAddress = CCardano.BaseAddress
 
 extension BaseAddress {
     public init(address: Address) throws {
-        self = try RustResult<Self>.wrap { result, error in
-            cardano_base_address_from_address(address.getAddress(), result, error)
-        }.get()
+        self = try address.withCAddress { addr in
+            try RustResult<Self>.wrap { result, error in
+                cardano_base_address_from_address(addr, result, error)
+            }.get()
+        }
     }
     
     public init(network: NetworkId, payment: StakeCredential, stake: StakeCredential) throws {
@@ -24,8 +26,9 @@ extension BaseAddress {
     }
     
     public func toAddress() throws -> Address {
-        try Address(address: RustResult<Self>.wrap { result, error in
+        var address = try RustResult<Self>.wrap { result, error in
             cardano_base_address_to_address(self, result, error)
-        }.get())
+        }.get()
+        return try Address(address: &address)
     }
 }
