@@ -10,6 +10,8 @@ import CCardano
 
 public typealias Bip32PrivateKey = CCardano.Bip32PrivateKey
 
+extension Bip32PrivateKey: CType {}
+
 extension Bip32PrivateKey {
     public init(bytes: Data) throws {
         self = try bytes.withCData { bytes in
@@ -49,14 +51,14 @@ extension Bip32PrivateKey {
         var data = try RustResult<CData>.wrap { res, err in
             cardano_bip32_private_key_as_bytes(self, res, err)
         }.get()
-        return data.data()
+        return data.owned()
     }
     
     public func bech32() throws -> String {
-        let str = try RustResult<CharPtr>.wrap { res, err in
+        var str = try RustResult<CharPtr>.wrap { res, err in
             cardano_bip32_private_key_to_bech32(self, res, err)
         }.get()
-        return str!.string()
+        return str.owned()
     }
     
     public func publicKey() throws -> Bip32PublicKey {

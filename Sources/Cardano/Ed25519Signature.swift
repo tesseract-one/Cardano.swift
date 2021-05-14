@@ -36,6 +36,18 @@ public class Ed25519Signature {
     }
 }
 
+extension CCardano.Ed25519Signature: CPtr {
+    typealias Value = Ed25519Signature
+    
+    func copied() -> Ed25519Signature {
+        Ed25519Signature(signature: self)
+    }
+    
+    mutating func free() {
+        cardano_ed25519_signature_free(&self)
+    }
+}
+
 extension CCardano.Ed25519Signature {
     public init(data: Data) throws {
         self = try data.withCData { bytes in
@@ -49,23 +61,19 @@ extension CCardano.Ed25519Signature {
         var data = try RustResult<CData>.wrap { result, error in
             cardano_ed25519_signature_to_bytes(self, result, error)
         }.get()
-        return data.data()
+        return data.owned()
     }
     
     public func hex() throws -> String {
-        let chars = try RustResult<CharPtr>.wrap { result, error in
+        var chars = try RustResult<CharPtr>.wrap { result, error in
             cardano_ed25519_signature_to_hex(self, result, error)
         }.get()
-        return chars!.string()
+        return chars.owned()
     }
     
     public func clone() throws -> Self {
         try RustResult<Self>.wrap { result, error in
             cardano_ed25519_signature_clone(self, result, error)
         }.get()
-    }
-    
-    public mutating func free() {
-        cardano_ed25519_signature_free(&self)
     }
 }

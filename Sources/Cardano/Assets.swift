@@ -12,7 +12,7 @@ import CCardano
 public typealias AssetNames = Array<AssetName>
 
 extension CCardano.AssetNames: CArray {
-    typealias Value = CCardano.AssetName
+    typealias CElement = CCardano.AssetName
     
     mutating func free() {
         cardano_asset_names_free(&self)
@@ -20,11 +20,13 @@ extension CCardano.AssetNames: CArray {
 }
 
 extension AssetNames: CArrayConvertible {
-    typealias Arr = CCardano.AssetNames;
+    typealias Array = CCardano.AssetNames
 }
 
 // Assets Dictionary
 public typealias Assets = Dictionary<AssetName, UInt64>
+
+extension CCardano.AssetsKeyValue: CType {}
 
 extension CCardano.AssetsKeyValue: CKeyValue {
     typealias Key = AssetName
@@ -32,7 +34,7 @@ extension CCardano.AssetsKeyValue: CKeyValue {
 }
 
 extension CCardano.Assets: CArray {
-    typealias Value = CCardano.AssetsKeyValue
+    typealias CElement = CCardano.AssetsKeyValue
     
     mutating func free() {
         cardano_assets_free(&self)
@@ -40,5 +42,5 @@ extension CCardano.Assets: CArray {
 }
 
 extension Assets: CKeyValueArrayConvertible {
-    typealias Arr = CCardano.Assets
+    typealias Array = CCardano.Assets
 }

@@ -17,17 +17,28 @@ public enum CardanoRustError: Error {
     case common(message: String)
     case unknown
     
-    
     public init(error: CError) {
         switch error.tag {
         case NullPtr: self = .nullPtr
         case DataLengthMismatch: self = .dataLengthMismatch
-        case Panic: self = .panic(reason: error.panic.string())
-        case Utf8Error: self = .utf8(message: error.utf8_error.string())
+        case Panic: self = .panic(reason: error.panic.copied())
+        case Utf8Error: self = .utf8(message: error.utf8_error.copied())
         case DeserializeError:
-            self = .deserialization(message: error.deserialize_error.string())
-        case Error: self = .common(message: error.error.string())
+            self = .deserialization(message: error.deserialize_error.copied())
+        case Error: self = .common(message: error.error.copied())
         default: self = .unknown
         }
+    }
+}
+
+extension CError: CPtr {
+    typealias Value = CardanoRustError
+    
+    func copied() -> CardanoRustError {
+        CardanoRustError(error: self)
+    }
+    
+    mutating func free() {
+        cardano_error_free(&self)
     }
 }

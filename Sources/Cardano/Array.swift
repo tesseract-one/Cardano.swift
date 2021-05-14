@@ -7,21 +7,18 @@
 
 import Foundation
 
-protocol CArray {
-    associatedtype Value;
+protocol CArray: CPtr where Value == [CElement] {
+    associatedtype CElement: CType
     
-    init(ptr: UnsafePointer<Value>!, len: UInt)
+    init(ptr: UnsafePointer<CElement>!, len: UInt)
     
-    var ptr: UnsafePointer<Value>! { get set }
+    var ptr: UnsafePointer<CElement>! { get set }
     var len: UInt { get }
-    
-    mutating func free()
 }
 
 extension CArray {
-    mutating func array() -> [Value] {
-        defer { self.free() }
-        return Array(UnsafeBufferPointer(start: ptr, count: Int(len)))
+    func copied() -> Value {
+        Array(UnsafeBufferPointer(start: ptr, count: Int(len)))
     }
 }
 
@@ -39,46 +36,48 @@ extension CKeyValue {
     init(_ tuple: (Key, Value)) {
         self.init(key: tuple.0, val: tuple.1)
     }
-    
     var tuple: (Key, Value) { (key, val) }
 }
 
-extension CArray where Value: CKeyValue {
-    mutating func dictionary() -> [Value.Key: Value.Value] {
-        defer { self.free() }
-        let tuples = UnsafeBufferPointer(start: ptr, count: Int(len))
-            .map { $0.tuple }
+extension CArray where CElement: CKeyValue {
+    func copiedDictionary() -> [CElement.Key: CElement.Value] {
+        let tuples = copied().map { $0.tuple }
+        return Dictionary(uniqueKeysWithValues: tuples)
+    }
+    
+    mutating func ownedDictionary() -> [CElement.Key: CElement.Value] {
+        let tuples = owned().map { $0.tuple }
         return Dictionary(uniqueKeysWithValues: tuples)
     }
 }
 
 protocol CArrayConvertible: Sequence {
-    associatedtype Arr: CArray where Self.Arr.Value == Self.Element
+    associatedtype Array: CArray where Array.CElement == Element
     
-    func withCArray<T>(fn: @escaping (Arr) throws -> T) rethrows -> T
+    func withCArray<T>(fn: @escaping (Array) throws -> T) rethrows -> T
 }
 
 extension CArrayConvertible {
-    func withCArray<T>(fn: @escaping (Arr) throws -> T) rethrows -> T {
+    func withCArray<T>(fn: @escaping (Array) throws -> T) rethrows -> T {
         try withContiguousStorageIfAvailable { storage in
-            try fn(Arr(ptr: storage.baseAddress, len: UInt(storage.count)))
+            try fn(Array(ptr: storage.baseAddress, len: UInt(storage.count)))
         }!
     }
 }
 
 protocol CKeyValueArrayConvertible: Sequence {
-    associatedtype Arr: CArray where
-        Arr.Value: CKeyValue,
-        Element == (key: Arr.Value.Key, value: Arr.Value.Value)
+    associatedtype Array: CArray where
+        Array.CElement: CKeyValue,
+        Element == (key: Array.CElement.Key, value: Array.CElement.Value)
     
-    func withCKVArray<T>(fn: @escaping (Arr) throws -> T) rethrows -> T
+    func withCKVArray<T>(fn: @escaping (Array) throws -> T) rethrows -> T
 }
 
 extension CKeyValueArrayConvertible {
-    func withCKVArray<T>(fn: @escaping (Arr) throws -> T) rethrows -> T {
+    func withCKVArray<T>(fn: @escaping (Array) throws -> T) rethrows -> T {
         try withContiguousStorageIfAvailable { storage in
-            let mapped = storage.map { Arr.Value($0) }
-            return try fn(Arr(ptr: mapped, len: UInt(mapped.count)))
+            let mapped = storage.map { Array.CElement($0) }
+            return try fn(Array(ptr: mapped, len: UInt(mapped.count)))
         }!
     }
 }

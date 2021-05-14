@@ -11,14 +11,13 @@ import CCardano
 public struct ByronAddress {
     private var _address: String
     
-    init(address: inout CCardano.ByronAddress) {
-        _address = address.rawAddress
-        address.free()
+    init(address: CCardano.ByronAddress) {
+        _address = address._0.copied()
     }
     
     public init(base58: String) throws {
         var address = try CCardano.ByronAddress(base58: base58)
-        self.init(address: &address)
+        self = address.owned()
     }
     
     public func base58() throws -> String {
@@ -38,6 +37,18 @@ public struct ByronAddress {
     }
 }
 
+extension CCardano.ByronAddress: CPtr {
+    typealias Value = ByronAddress
+    
+    func copied() -> ByronAddress {
+        ByronAddress(address: self)
+    }
+    
+    mutating func free() {
+        cardano_byron_address_free(&self)
+    }
+}
+
 extension CCardano.ByronAddress {
     public init(base58: String) throws {
         self = try base58.withCharPtr { b58 in
@@ -47,21 +58,16 @@ extension CCardano.ByronAddress {
         }.get()
     }
     
-    public var rawAddress: String { _0.copied() }
-    
     public func base58() throws -> String {
-        try RustResult<CharPtr>.wrap { result, error in
+        var base58 = try RustResult<CharPtr>.wrap { result, error in
             cardano_byron_address_to_base58(self, result, error)
-        }.get()!.string()
+        }.get()
+        return base58.owned()
     }
     
     public func clone() throws -> Self {
         try RustResult<CCardano.ByronAddress>.wrap { result, error in
             cardano_byron_address_clone(self, result, error)
         }.get()
-    }
-    
-    public mutating func free() {
-        cardano_byron_address_free(&self)
     }
 }

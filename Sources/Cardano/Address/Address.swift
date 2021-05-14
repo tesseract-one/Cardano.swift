@@ -19,28 +19,25 @@ public enum Address {
     case reward(RewardAddress)
     case byron(ByronAddress)
     
-    init(address: inout CCardano.Address) throws {
-        defer { address.free() }
+    init(address: CCardano.Address) {
         switch address.tag {
         case Base: self = .base(address.base)
-        case Byron:
-            var baddr = try address.byron.clone()
-            self = .byron(ByronAddress(address: &baddr))
+        case Byron: self = .byron(address.byron.copied())
         case Ptr: self = .pointer(address.ptr)
         case Enterprise: self = .enterprise(address.enterprise)
         case Reward: self = .reward(address.reward)
-        default: throw CardanoRustError.unknown
+        default: fatalError("Unknown address type")
         }
     }
     
     public init(bytes: Data) throws {
         var address = try CCardano.Address(bytes: bytes)
-        try self.init(address: &address)
+        self = address.owned()
     }
 
     public init(bech32: String) throws {
         var address = try CCardano.Address(bech32: bech32)
-        try self.init(address: &address)
+        self = address.owned()
     }
     
     var byron: ByronAddress? {
@@ -129,6 +126,21 @@ public enum Address {
     }
 }
 
+extension PointerAddress: CType {}
+extension EnterpriseAddress: CType {}
+extension RewardAddress: CType {}
+extension NetworkId: CType {}
+
+extension CCardano.Address: CPtr {
+    typealias Value = Address
+    
+    func copied() -> Address { Address(address: self) }
+    
+    mutating func free() {
+        cardano_address_free(&self)
+    }
+}
+
 extension CCardano.Address {
     public init(bytes: Data) throws {
         self = try bytes.withCData { bytes in
@@ -150,16 +162,16 @@ extension CCardano.Address {
         var data = try RustResult<CData>.wrap { data, error in
             cardano_address_to_bytes(self, data, error)
         }.get()
-        return data.data()
+        return data.owned()
     }
     
     public func bech32(prefix: Optional<String> = nil) throws -> String {
-        let chars = try prefix.withCharPtr { chPtr in
+        var chars = try prefix.withCharPtr { chPtr in
             RustResult<CharPtr>.wrap { out, error in
                 cardano_address_to_bech32(self, chPtr, out, error)
             }
         }.get()
-        return chars!.string()
+        return chars.owned()
     }
     
     public func networkId() throws -> NetworkId {
@@ -172,9 +184,5 @@ extension CCardano.Address {
         try RustResult<CCardano.Address>.wrap { result, error in
             cardano_address_clone(self, result, error)
         }.get()
-    }
-    
-    public mutating func free() {
-        cardano_address_free(&self)
     }
 }

@@ -10,6 +10,8 @@ import CCardano
 
 public typealias NetworkInfo = CCardano.NetworkInfo
 
+extension NetworkInfo: CType {}
+
 extension NetworkInfo {
     public static let mainnet: NetworkInfo = {
        cardano_network_info_mainnet()

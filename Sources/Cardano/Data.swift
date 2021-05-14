@@ -21,13 +21,14 @@ extension Data {
     }
 }
 
-extension CData {
-    mutating func data() -> Data {
-        defer { cardano_data_free(&self) }
-        return Data(bytes: self.ptr, count: Int(self.len))
-    }
+extension CData: CPtr {
+    typealias Value = Data
     
     func copied() -> Data {
-        return Data(bytes: self.ptr, count: Int(self.len))
+        Data(bytes: self.ptr, count: Int(self.len))
+    }
+    
+    mutating func free() {
+        cardano_data_free(&self)
     }
 }

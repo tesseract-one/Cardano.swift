@@ -12,6 +12,8 @@ public typealias StakeCredential = CCardano.StakeCredential
 public typealias Ed25519KeyHash = CCardano.Ed25519KeyHash
 public typealias ScriptHash = CCardano.ScriptHash
 
+extension Ed25519KeyHash: CType {}
+
 extension Ed25519KeyHash {
     public init(bytes: Data) throws {
         self = try bytes.withCData { bytes in
@@ -25,9 +27,11 @@ extension Ed25519KeyHash {
         var data = try RustResult<Self>.wrap { res, err in
             cardano_ed25519_key_hash_to_bytes(self, res, err)
         }.get()
-        return data.data()
+        return data.owned()
     }
 }
+
+extension ScriptHash: CType {}
 
 extension ScriptHash {
     public init(bytes: Data) throws {
@@ -42,9 +46,11 @@ extension ScriptHash {
         var data = try RustResult<Self>.wrap { res, err in
             cardano_script_hash_to_bytes(self, res, err)
         }.get()
-        return data.data()
+        return data.owned()
     }
 }
+
+extension StakeCredential: CType {}
 
 extension StakeCredential {
     public init(bytes: Data) throws {
@@ -73,7 +79,7 @@ extension StakeCredential {
         var data = try RustResult<Self>.wrap { res, err in
             cardano_stake_credential_to_bytes(self, res, err)
         }.get()
-        return data.data()
+        return data.owned()
     }
     
     public var kind: UInt8 {

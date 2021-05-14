@@ -10,6 +10,8 @@ import CCardano
 
 public typealias AssetName = CCardano.AssetName
 
+extension AssetName: CType {}
+
 extension AssetName {
     public init(name: Data) throws {
         self = try name.withCData { bytes in
@@ -31,14 +33,14 @@ extension AssetName {
         var data = try RustResult<CData>.wrap { res, err in
             cardano_asset_name_get_name(self, res, err)
         }.get()
-        return data.data()
+        return data.owned()
     }
     
     public func data() throws -> Data {
         var data = try RustResult<CData>.wrap { res, err in
             cardano_asset_name_to_bytes(self, res, err)
         }.get()
-        return data.data()
+        return data.owned()
     }
     
     public var bytesArray: [UInt8] {

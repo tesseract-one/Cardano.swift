@@ -12,12 +12,11 @@ public enum PrivateKey {
     case extended(Data)
     case normal(Data)
     
-    init(privateKey: inout CCardano.PrivateKey) throws {
-        defer { privateKey.free() }
+    init(privateKey: CCardano.PrivateKey) {
         switch privateKey.tag {
         case Extended: self = .extended(privateKey.extended.copied())
         case Normal: self = .normal(privateKey.normal.copied())
-        default: throw CardanoRustError.unknown
+        default: fatalError("Unknown PrivateKey type")
         }
     }
     
@@ -37,12 +36,12 @@ public enum PrivateKey {
     
     public init(extendedBytes bytes: Data) throws {
         var privateKey = try CCardano.PrivateKey(extendedBytes: bytes)
-        try self.init(privateKey: &privateKey)
+        self = privateKey.owned()
     }
     
     public init(normalBytes bytes: Data) throws {
         var privateKey = try CCardano.PrivateKey(normalBytes: bytes)
-        try self.init(privateKey: &privateKey)
+        self = privateKey.owned()
     }
     
     public func toPublic() throws -> PublicKey {
@@ -83,6 +82,19 @@ public enum PrivateKey {
     }
 }
 
+
+extension CCardano.PrivateKey: CPtr {
+    typealias Value = PrivateKey
+    
+    func copied() -> PrivateKey {
+        PrivateKey(privateKey: self)
+    }
+    
+    mutating func free() {
+        cardano_private_key_free(&self)
+    }
+}
+
 extension CCardano.PrivateKey {
     public init(extendedBytes bytes: Data) throws {
         self = try bytes.withCData { bytes in
@@ -101,33 +113,31 @@ extension CCardano.PrivateKey {
     }
     
     public func toPublic() throws -> PublicKey {
-        try PublicKey(publicKey: RustResult<CCardano.PublicKey>.wrap { result, error in
+        var pub = try RustResult<CCardano.PublicKey>.wrap { result, error in
             cardano_private_key_to_public(self, result, error)
-        }.get())
+        }.get()
+        return pub.owned()
     }
     
     public func bytes() throws -> Data {
         var data = try RustResult<CData>.wrap { result, error in
             cardano_private_key_as_bytes(self, result, error)
         }.get()
-        return data.data()
+        return data.owned()
     }
     
     public func sign(message: Data) throws -> Ed25519Signature {
-        try Ed25519Signature(signature: message.withCData { message in
-            RustResult<Ed25519Signature>.wrap { result, error in
+        var signature = try message.withCData { message in
+            RustResult<CCardano.Ed25519Signature>.wrap { result, error in
                 cardano_private_key_sign(self, message, result, error)
             }
-        }.get())
+        }.get()
+        return signature.owned()
     }
     
     public func clone() throws -> Self {
         try RustResult<Self>.wrap { result, error in
             cardano_private_key_clone(self, result, error)
         }.get()
-    }
-    
-    public mutating func free() {
-        cardano_private_key_free(&self)
     }
 }

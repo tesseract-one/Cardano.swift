@@ -10,6 +10,8 @@ import CCardano
 
 public typealias BaseAddress = CCardano.BaseAddress
 
+extension BaseAddress: CType {}
+
 extension BaseAddress {
     public init(address: Address) throws {
         self = try address.withCAddress { addr in
@@ -26,9 +28,9 @@ extension BaseAddress {
     }
     
     public func toAddress() throws -> Address {
-        var address = try RustResult<Self>.wrap { result, error in
+        let address = try RustResult<Self>.wrap { result, error in
             cardano_base_address_to_address(self, result, error)
         }.get()
-        return try Address(address: &address)
+        return Address(address: address)
     }
 }
