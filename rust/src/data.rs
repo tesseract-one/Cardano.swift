@@ -20,15 +20,15 @@ impl Free for CData {
 }
 
 impl Ptr for CData {
-    type PT = [u8];
+  type PT = [u8];
 
-    unsafe fn unowned(&self) -> Result<&[u8]> {
-        if self.ptr.is_null() {
-            Err(CError::NullPtr)
-        } else {
-            Ok(std::slice::from_raw_parts(self.ptr, self.len))
-        }
+  unsafe fn unowned(&self) -> Result<&[u8]> {
+    if self.ptr.is_null() {
+      Err(CError::NullPtr)
+    } else {
+      Ok(std::slice::from_raw_parts(self.ptr, self.len))
     }
+  }
 }
 
 impl From<&[u8]> for CData {
