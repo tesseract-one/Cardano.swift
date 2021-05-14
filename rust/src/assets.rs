@@ -1,6 +1,5 @@
 use super::ptr::*;
-use super::array::CArray;
-use super::map::*;
+use super::array::*;
 use super::asset_name::AssetName;
 
 pub type AssetNames = CArray<AssetName>;
@@ -10,7 +9,8 @@ pub unsafe extern "C" fn cardano_asset_names_free(asset_names: &mut AssetNames) 
     asset_names.free();
 }
 
-pub type Assets = CMap<AssetName, u64>;
+pub type AssetsKeyValue = CKeyValue<AssetName, u64>;
+pub type Assets = CArray<AssetsKeyValue>;
 
 #[no_mangle]
 pub unsafe extern "C" fn cardano_assets_free(assets: &mut Assets) {

@@ -1,6 +1,7 @@
 use super::ptr::*;
 use super::error::CError;
 use super::panic::Result;
+use std::collections::{BTreeMap, HashMap};
 
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -48,5 +49,90 @@ impl <V1: Free, V2: Into<V1>> From<Vec<V2>> for CArray<V1> {
     let out = slice.as_mut_ptr();
     std::mem::forget(slice);
     Self { ptr: out, len: len }
+  }
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct CKeyValue<K, V> {
+  pub key: K,
+  pub val: V
+}
+
+impl<K: Free, V: Free> Free for CKeyValue<K, V> {
+  unsafe fn free(&mut self) {
+    self.key.free(); self.val.free();
+  }
+}
+
+impl<K, V> From<(K, V)> for CKeyValue<K, V> {
+  fn from(tuple: (K, V)) -> Self {
+    Self { key: tuple.0, val: tuple.1 }
+  }
+}
+
+impl<K, V> From<CKeyValue<K, V>> for (K, V) {
+  fn from(kv: CKeyValue<K, V>) -> Self {
+    (kv.key, kv.val)
+  }
+}
+
+pub trait AsHashMap {
+  type Key: Free + std::hash::Hash + Eq + Clone;
+  type Value: Free + Clone;
+
+  unsafe fn as_hash_map(&self) -> Result<HashMap<Self::Key, Self::Value>>;
+}
+
+pub trait AsBTreeMap {
+  type Key: Free + Ord;
+  type Value: Free;
+
+  unsafe fn as_btree_map(&self) -> Result<BTreeMap<Self::Key, Self::Value>>;
+}
+
+impl<K: Free + Ord + Clone, V: Free + Clone> AsBTreeMap for CArray<CKeyValue<K, V>> {
+  type Key = K;
+  type Value = V;
+
+  unsafe fn as_btree_map(&self) -> Result<BTreeMap<K, V>> {
+    self.unowned().map(|sl| sl.into_iter().cloned().map(|kv| kv.into()).collect())
+  }
+}
+
+impl<K: Free + std::hash::Hash + Eq + Clone, V: Free + Clone> AsHashMap for CArray<CKeyValue<K,V>> {
+  type Key = K;
+  type Value = V;
+
+  unsafe fn as_hash_map(&self) -> Result<HashMap<K, V>> {
+    self.unowned().map(|sl| sl.into_iter().cloned().map(|kv| kv.into()).collect())
+  }
+}
+
+impl <K1, K2, V1, V2> From<BTreeMap<K2, V2>> for CArray<CKeyValue<K1, V1>> 
+  where
+    K1: Free, K2: Into<K1>, V1: Free, V2: Into<V1>
+{
+  fn from(map: BTreeMap<K2, V2>) -> Self {
+    let kvs: Vec<CKeyValue<K1, V1>> = map.into_iter().map(|(k, v)| (k.into(), v.into()).into()).collect();
+    let len = kvs.len();
+    let mut slice = kvs.into_boxed_slice();
+    let ptr = slice.as_mut_ptr();
+    std::mem::forget(slice);
+    Self { ptr, len }
+  }
+}
+
+impl <K1, K2, V1, V2> From<HashMap<K2, V2>> for CArray<CKeyValue<K1, V1>> 
+  where
+    K1: Free, K2: Into<K1>, V1: Free, V2: Into<V1>
+{
+  fn from(map: HashMap<K2, V2>) -> Self {
+    let kvs: Vec<CKeyValue<K1, V1>> = map.into_iter().map(|(k, v)| (k.into(), v.into()).into()).collect();
+    let len = kvs.len();
+    let mut slice = kvs.into_boxed_slice();
+    let ptr = slice.as_mut_ptr();
+    std::mem::forget(slice);
+    Self { ptr, len }
   }
 }

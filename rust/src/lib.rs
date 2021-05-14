@@ -14,7 +14,6 @@ pub mod public_key;
 mod ptr;
 mod panic;
 mod array;
-mod map;
 
 #[no_mangle]
 pub unsafe extern "C" fn cardano_initialize() {

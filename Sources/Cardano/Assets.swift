@@ -8,6 +8,7 @@
 import Foundation
 import CCardano
 
+// AssetNames Array
 public typealias AssetNames = Array<AssetName>
 
 extension CCardano.AssetNames: CArray {
@@ -22,18 +23,22 @@ extension AssetNames: CArrayConvertible {
     typealias Arr = CCardano.AssetNames;
 }
 
-
+// Assets Dictionary
 public typealias Assets = Dictionary<AssetName, UInt64>
 
-extension CCardano.Assets: CMap {
-    typealias Key = CCardano.AssetName
+extension CCardano.AssetsKeyValue: CKeyValue {
+    typealias Key = AssetName
     typealias Value = UInt64
+}
+
+extension CCardano.Assets: CArray {
+    typealias Value = CCardano.AssetsKeyValue
     
     mutating func free() {
         cardano_assets_free(&self)
     }
 }
 
-extension Assets: CMapConvertible {
-    typealias Map = CCardano.Assets
+extension Assets: CKeyValueArrayConvertible {
+    typealias Arr = CCardano.Assets
 }
