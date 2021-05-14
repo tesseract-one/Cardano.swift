@@ -5,35 +5,37 @@ use super::panic::*;
 use super::ptr::*;
 use super::public_key::PublicKey;
 use cardano_serialization_lib::{
-  crypto::PrivateKey as RPrivateKey,
-  impl_mockchain::key::EitherEd25519SecretKey as REitherEd25519SecretKey,
+  crypto::PrivateKey as RPrivateKey, impl_mockchain::key::EitherEd25519SecretKey
 };
 use std::convert::{TryFrom, TryInto};
 
 #[repr(C)]
 #[derive(Copy)]
-pub struct PrivateKey(pub EitherEd25519SecretKey);
+pub enum PrivateKey {
+  Extended(CData),
+  Normal(CData)
+}
 
 impl Free for PrivateKey {
-    unsafe fn free(&mut self) {
-      match self.0 {
-        EitherEd25519SecretKey::Extended(mut bytes) => bytes.free(),
-        EitherEd25519SecretKey::Normal(mut bytes) => bytes.free()
-      }
+  unsafe fn free(&mut self) {
+    match self {
+      PrivateKey::Extended(mut bytes) => bytes.free(),
+      PrivateKey::Normal(mut bytes) => bytes.free()
     }
+  }
 }
 
 impl Clone for PrivateKey {
   fn clone(&self) -> Self {
-    match self.0 {
-      EitherEd25519SecretKey::Extended(bytes) => {
+    match self {
+      PrivateKey::Extended(bytes) => {
         let bytes = unsafe { bytes.unowned().expect("Bad bytes pointer") };
-        Self(EitherEd25519SecretKey::Extended(bytes.into()))
-      },
-      EitherEd25519SecretKey::Normal(bytes) => {
+        PrivateKey::Extended(bytes.into())
+      }
+      PrivateKey::Normal(bytes) => {
         let bytes = unsafe { bytes.unowned().expect("Bad bytes pointer") };
-        Self(EitherEd25519SecretKey::Normal(bytes.into()))
-      },
+        PrivateKey::Normal(bytes.into())
+      }
     }
   }
 }
@@ -42,12 +44,12 @@ impl TryFrom<PrivateKey> for RPrivateKey {
   type Error = CError;
 
   fn try_from(private_key: PrivateKey) -> Result<Self> {
-    match private_key.0 {
-      EitherEd25519SecretKey::Extended(bytes) => {
+    match private_key {
+      PrivateKey::Extended(bytes) => {
         let bytes = unsafe { bytes.unowned()? };
         RPrivateKey::from_extended_bytes(bytes).into_result()
-      },
-      EitherEd25519SecretKey::Normal(bytes) => {
+      }
+      PrivateKey::Normal(bytes) => {
         let bytes = unsafe { bytes.unowned()? };
         RPrivateKey::from_normal_bytes(bytes).into_result()
       }
@@ -55,23 +57,16 @@ impl TryFrom<PrivateKey> for RPrivateKey {
   }
 }
 
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub enum EitherEd25519SecretKey {
-  Extended(CData),
-  Normal(CData)
-}
-
 // For transmutation
-struct TPrivateKey(REitherEd25519SecretKey);
+struct TPrivateKey(EitherEd25519SecretKey);
 
 impl From<RPrivateKey> for PrivateKey {
   fn from(private_key: RPrivateKey) -> Self {
     let bytes = private_key.as_bytes().into();
     let tpkey: TPrivateKey = unsafe { std::mem::transmute(private_key) };
     match tpkey.0 {
-      REitherEd25519SecretKey::Extended(_) => Self(EitherEd25519SecretKey::Extended(bytes)),
-      REitherEd25519SecretKey::Normal(_) => Self(EitherEd25519SecretKey::Normal(bytes)),
+      EitherEd25519SecretKey::Extended(_) => PrivateKey::Extended(bytes),
+      EitherEd25519SecretKey::Normal(_) => PrivateKey::Normal(bytes)
     }
   }
 }

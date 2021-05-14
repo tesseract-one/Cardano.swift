@@ -14,13 +14,10 @@ public enum PrivateKey {
     
     init(privateKey: inout CCardano.PrivateKey) throws {
         defer { privateKey.free() }
-        switch privateKey._0.tag {
-        case Extended:
-            self = .extended(privateKey._0.extended.data())
-        case Normal:
-            self = .normal(privateKey._0.normal.data())
-        default:
-            throw CardanoRustError.unknown
+        switch privateKey.tag {
+        case Extended: self = .extended(privateKey.extended.copied())
+        case Normal: self = .normal(privateKey.normal.copied())
+        default: throw CardanoRustError.unknown
         }
     }
     
@@ -70,17 +67,17 @@ public enum PrivateKey {
         switch self {
         case .extended(let data):
             return try data.withCData { data in
-                var key = EitherEd25519SecretKey()
-                key.tag = Extended
-                key.extended = data
-                return try fn(CCardano.PrivateKey(_0: key))
+                var privateKey = CCardano.PrivateKey()
+                privateKey.tag = Extended
+                privateKey.extended = data
+                return try fn(privateKey)
             }
         case .normal(let data):
             return try data.withCData { data in
-                var key = EitherEd25519SecretKey()
-                key.tag = Normal
-                key.normal = data
-                return try fn(CCardano.PrivateKey(_0: key))
+                var privateKey = CCardano.PrivateKey()
+                privateKey.tag = Normal
+                privateKey.normal = data
+                return try fn(privateKey)
             }
         }
     }
