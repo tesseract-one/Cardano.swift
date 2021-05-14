@@ -8,7 +8,6 @@
 import Foundation
 import CCardano
 
-public typealias BaseAddress = CCardano.BaseAddress
 public typealias PointerAddress = CCardano.PointerAddress
 public typealias EnterpriseAddress = CCardano.EnterpriseAddress
 public typealias RewardAddress = CCardano.RewardAddress
