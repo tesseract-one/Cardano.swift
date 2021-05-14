@@ -45,37 +45,3 @@ impl From<BaseAddress> for RBaseAddress {
     )
   }
 }
-
-#[no_mangle]
-pub unsafe extern "C" fn cardano_base_address_new(
-  network: NetworkId, payment: StakeCredential, stake: StakeCredential, address: &mut BaseAddress,
-  error: &mut CError
-) -> bool {
-  handle_exception_result(|| RBaseAddress::new(network, &payment.into(), &stake.into()).try_into())
-    .response(address, error)
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn cardano_base_address_to_address(
-  base_address: BaseAddress, address: &mut Address, error: &mut CError
-) -> bool {
-  handle_exception_result(|| {
-    let base_address: RBaseAddress = base_address.into();
-    base_address.to_address().try_into()
-  })
-  .response(address, error)
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn cardano_base_address_from_address(
-  address: Address, base_address: &mut *mut BaseAddress, error: &mut CError
-) -> bool {
-  handle_exception_result(|| {
-    address.try_into().and_then(|address| {
-      RBaseAddress::from_address(&address)
-        .map(|base_address| base_address.try_into())
-        .map_or(Ok(None), |v| v.map(Some))
-    })
-  })
-  .response(base_address, error)
-}

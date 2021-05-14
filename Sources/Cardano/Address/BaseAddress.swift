@@ -14,27 +14,29 @@ extension BaseAddress: CType {}
 
 extension BaseAddress {
     public init?(address: Address) {
-        let address: Optional<Optional<Self>> = try? address.withCAddress { addr in
-            try RustResult<Self>.wrap { result, error in
-                cardano_base_address_from_address(addr, result, error)
-            }.get()
+        switch address {
+        case .base(let addr): self = addr
+        default: return nil
         }
-        guard let addr = address.flatMap({$0}) else {
-            return nil
-        }
-        self = addr
     }
     
-    public init(network: NetworkId, payment: StakeCredential, stake: StakeCredential) throws {
-        self = try RustResult<Self>.wrap { result, error in
-            cardano_base_address_new(network, payment, stake, result, error)
-        }.get()
+    public init(network: NetworkId, payment: StakeCredential, stake: StakeCredential) {
+        self = payment.withCCredential { payment in
+            stake.withCCredential { stake in
+                Self(network: network, payment: payment, stake: stake)
+            }
+        }
+    }
+    
+    public func payment() -> StakeCredential {
+        payment.copied()
+    }
+    
+    public func stake() -> StakeCredential {
+        stake.copied()
     }
     
     public func toAddress() throws -> Address {
-        let address = try RustResult<Self>.wrap { result, error in
-            cardano_base_address_to_address(self, result, error)
-        }.get()
-        return Address(address: address)
+        return .base(self)
     }
 }
