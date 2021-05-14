@@ -18,14 +18,26 @@ impl Clone for Ed25519Signature {
   }
 }
 
+impl Free for Ed25519Signature {
+  unsafe fn free(&mut self) {
+    self.0.free()
+  }
+}
+
+impl Ptr for Ed25519Signature {
+  type PT = [u8];
+
+  unsafe fn unowned(&self) -> Result<&Self::PT> {
+    self.0.unowned()
+  }
+}
+
 impl TryFrom<Ed25519Signature> for REd25519Signature {
   type Error = CError;
 
   fn try_from(ed25519_signature: Ed25519Signature) -> Result<Self> {
-    unsafe {
-      ed25519_signature.0.unowned()
-        .and_then(|bytes| REd25519Signature::from_bytes(bytes.to_vec()).into_result())
-    }
+    let bytes = unsafe { ed25519_signature.unowned()? };
+    REd25519Signature::from_bytes(bytes.to_vec()).into_result()
   }
 }
 
@@ -77,5 +89,5 @@ pub unsafe extern "C" fn cardano_ed25519_signature_clone(
 
 #[no_mangle]
 pub unsafe extern "C" fn cardano_ed25519_signature_free(ed25519_signature: &mut Ed25519Signature) {
-  ed25519_signature.0.free()
+  ed25519_signature.free()
 }

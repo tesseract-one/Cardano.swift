@@ -14,7 +14,7 @@ pub struct PublicKey(CharPtr);
 
 impl Clone for PublicKey {
   fn clone(&self) -> Self {
-    let s: String = unsafe { self.0.unowned().expect("Bad char pointer").into() };
+    let s: String = unsafe { self.unowned().expect("Bad char pointer").into() };
     Self(s.into_cstr())
   }
 }
@@ -23,6 +23,14 @@ impl Free for PublicKey {
   unsafe fn free(&mut self) {
     self.0.free()
   }
+}
+
+impl Ptr for PublicKey {
+    type PT = str;
+
+    unsafe fn unowned(&self) -> Result<&Self::PT> {
+        self.0.unowned()
+    }
 }
 
 impl From<RPublicKey> for PublicKey {
@@ -35,7 +43,7 @@ impl TryFrom<PublicKey> for RPublicKey {
   type Error = CError;
 
   fn try_from(public_key: PublicKey) -> Result<Self> {
-    let bech32_str = unsafe { public_key.0.unowned()? };
+    let bech32_str = unsafe { public_key.unowned()? };
     RPublicKey::from_bech32(bech32_str).into_result()
   }
 }

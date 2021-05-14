@@ -11,7 +11,7 @@ import CCardano
 public class Ed25519Signature {
     private var signature: CCardano.Ed25519Signature
     
-    public init(signature: CCardano.Ed25519Signature) {
+    init(signature: CCardano.Ed25519Signature) {
         self.signature = signature
     }
     
