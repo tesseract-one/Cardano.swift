@@ -8,39 +8,45 @@
 import Foundation
 import CCardano
 
-public class PublicKey {
-    private var publicKey: CCardano.PublicKey
+public struct PublicKey {
+    private var _publicKey: String
     
     init(publicKey: CCardano.PublicKey) {
-        self.publicKey = publicKey
+        _publicKey = publicKey._0.copied()
     }
     
-    public convenience init(bech32: String) throws {
-        try self.init(publicKey: CCardano.PublicKey(bech32: bech32))
+    public init(bech32: String) throws {
+        var publicKey = try CCardano.PublicKey(bech32: bech32)
+        self = publicKey.owned()
     }
     
-    public convenience init(bytes: Data) throws {
-        try self.init(publicKey: CCardano.PublicKey(bytes: bytes))
+    public init(bytes: Data) throws {
+        var publicKey = try CCardano.PublicKey(bytes: bytes)
+        self = publicKey.owned()
     }
     
     public func bech32() throws -> String {
-        try publicKey.bech32()
+        try withCPublicKey { try $0.bech32() }
     }
     
     public func bytes() throws -> Data {
-        try publicKey.bytes()
+        try withCPublicKey { try $0.bytes() }
     }
     
     public func hash() throws -> Ed25519KeyHash {
-        try publicKey.hash()
+        try withCPublicKey { try $0.hash() }
     }
     
-    public func clone() throws -> PublicKey {
-        return try PublicKey(publicKey: publicKey.clone())
+    func clonedCPublicKey() throws -> CCardano.PublicKey {
+        try withCPublicKey { try $0.clone() }
     }
     
-    deinit {
-        publicKey.free()
+    func withCPublicKey<T>(
+        fn: @escaping (CCardano.PublicKey) throws -> T
+    ) rethrows -> T {
+        try _publicKey.withCharPtr { strPtr in
+            try fn(CCardano.PublicKey(_0: strPtr))
+        }
     }
 }
 

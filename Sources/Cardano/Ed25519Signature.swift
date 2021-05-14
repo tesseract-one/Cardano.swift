@@ -8,31 +8,36 @@
 import Foundation
 import CCardano
 
-public class Ed25519Signature {
-    private var signature: CCardano.Ed25519Signature
+public struct Ed25519Signature {
+    private var _signature: Data
     
     init(signature: CCardano.Ed25519Signature) {
-        self.signature = signature
+        _signature = signature._0.copied()
     }
     
-    public convenience init(data: Data) throws {
-        try self.init(signature: CCardano.Ed25519Signature(data: data))
+    public init(data: Data) throws {
+        var signature = try CCardano.Ed25519Signature(data: data)
+        self = signature.owned()
     }
     
     public func data() throws -> Data {
-        try signature.data()
+        try withCSignature { try $0.data() }
     }
     
     public func hex() throws -> String {
-        try signature.hex()
+        try withCSignature { try $0.hex() }
     }
     
-    public func clone() throws -> Ed25519Signature {
-        return try Ed25519Signature(signature: signature.clone())
+    func clonedCSignature() throws -> CCardano.Ed25519Signature {
+        try withCSignature { try $0.clone() }
     }
     
-    deinit {
-        signature.free()
+    func withCSignature<T>(
+        fn: @escaping (CCardano.Ed25519Signature) throws -> T
+    ) rethrows -> T {
+        try _signature.withCData { data in
+            try fn(CCardano.Ed25519Signature(_0: data))
+        }
     }
 }
 
