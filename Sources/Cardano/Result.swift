@@ -23,6 +23,35 @@ extension RustResult {
     }
 }
 
+extension RustResult {
+    static func wrap<S: CType>(
+        ccall: @escaping (UnsafeMutablePointer<UnsafeMutablePointer<S>?>, UnsafeMutablePointer<CError>) -> Bool
+    ) -> RustResult<Optional<S>> {
+        var error = CError()
+        var val = S()
+        return withUnsafeMutablePointer(to: &val) { valPtr in
+            var option = Optional(valPtr)
+            if !ccall(&option, &error) {
+                return .failure(error.owned())
+            }
+            return .success(option?.pointee)
+        }
+    }
+}
+
+extension RustResult {
+    static func wrap(
+        ccall: @escaping (UnsafeMutablePointer<CharPtr?>, UnsafeMutablePointer<CError>) -> Bool
+    ) -> RustResult<CharPtr?> {
+        var error = CError()
+        var val: CharPtr? = nil
+        if !ccall(&val, &error) {
+            return .failure(error.owned())
+        }
+        return .success(val)
+    }
+}
+
 protocol CType {
     init()
 }
@@ -40,4 +69,3 @@ extension CPtr {
         return self.copied()
     }
 }
-

@@ -8,16 +8,13 @@
 import Foundation
 import CCardano
 
-extension Optional: CType where Wrapped == CharPtr {
-    init() {
-        self = nil
-    }
-}
-
-extension Optional: CPtr where Wrapped == CharPtr {
-    typealias Value = String
+extension Optional where Wrapped == CharPtr {
+    func copied() -> String { String(cString: self!) }
     
-    func copied() -> Value { String(cString: self!) }
+    mutating func owned() -> String {
+        defer { self.free() }
+        return self.copied()
+    }
     
     mutating func free() {
         cardano_charptr_free(&self)

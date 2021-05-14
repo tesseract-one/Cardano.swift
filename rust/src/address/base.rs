@@ -68,14 +68,13 @@ pub unsafe extern "C" fn cardano_base_address_to_address(
 
 #[no_mangle]
 pub unsafe extern "C" fn cardano_base_address_from_address(
-  address: Address, base_address: &mut BaseAddress, error: &mut CError
+  address: Address, base_address: &mut *mut BaseAddress, error: &mut CError
 ) -> bool {
   handle_exception_result(|| {
     address.try_into().and_then(|address| {
-      RBaseAddress::from_address(&address).map_or(
-        Err("Cannot create BaseAddress from Address".into()),
-        |base_address| base_address.try_into(),
-      )
+      RBaseAddress::from_address(&address)
+        .map(|base_address| base_address.try_into())
+        .map_or(Ok(None), |v| v.map(Some))
     })
   })
   .response(base_address, error)

@@ -66,6 +66,29 @@ impl<T: Copy> CResponse<T> for Result<T> {
     }
 }
 
+impl<T: Copy> CResponse<*mut T> for Result<Option<T>> {
+  fn response(&self, val: &mut *mut T, error: &mut CError) -> bool {
+      match self {
+        Err(err) => {
+          *error = *err;
+          false
+        }
+        Ok(value) => {
+          match value {
+            None => {
+              *val = std::ptr::null_mut();
+            }
+            Some(value) => {
+              unsafe { **val = *value; }
+            }
+          }
+          true
+        }
+      }
+  }
+}
+
+
 #[allow(dead_code)]
 pub fn handle_exception<F: FnOnce() -> R + panic::UnwindSafe, R>(func: F) -> Result<R> {
   handle_exception_result(|| Ok(func()))

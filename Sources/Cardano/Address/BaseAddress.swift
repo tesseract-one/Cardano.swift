@@ -13,12 +13,16 @@ public typealias BaseAddress = CCardano.BaseAddress
 extension BaseAddress: CType {}
 
 extension BaseAddress {
-    public init(address: Address) throws {
-        self = try address.withCAddress { addr in
+    public init?(address: Address) {
+        let address: Optional<Self> = try? address.withCAddress { addr in
             try RustResult<Self>.wrap { result, error in
                 cardano_base_address_from_address(addr, result, error)
             }.get()
         }
+        guard let addr = address else {
+            return nil
+        }
+        self = addr
     }
     
     public init(network: NetworkId, payment: StakeCredential, stake: StakeCredential) throws {
