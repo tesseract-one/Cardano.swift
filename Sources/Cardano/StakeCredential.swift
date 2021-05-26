@@ -47,6 +47,25 @@ extension ScriptHash {
         }.get()
         return data.owned()
     }
+    
+    public var bytesArray: [UInt8] {
+        withUnsafeBytes(of: bytes) { ptr in
+            Array(ptr.bindMemory(to: UInt8.self).prefix(Int(self.len)))
+        }
+    }
+}
+
+extension ScriptHash: Equatable {
+    public static func == (lhs: ScriptHash, rhs: ScriptHash) -> Bool {
+        lhs.len == rhs.len && lhs.bytesArray == rhs.bytesArray
+    }
+}
+
+extension ScriptHash: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(len)
+        hasher.combine(bytesArray)
+    }
 }
 
 public enum StakeCredential {

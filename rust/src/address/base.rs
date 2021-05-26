@@ -8,8 +8,6 @@ use cardano_serialization_lib::address::{
   StakeCredential as RStakeCredential
 };
 
-use super::address::Address;
-
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct BaseAddress {

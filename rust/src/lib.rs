@@ -12,6 +12,7 @@ pub mod ed25519_signature;
 pub mod linear_fee;
 pub mod private_key;
 pub mod public_key;
+pub mod multi_asset;
 mod ptr;
 mod panic;
 mod array;

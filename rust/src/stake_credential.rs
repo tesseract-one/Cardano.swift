@@ -7,7 +7,7 @@ use cardano_serialization_lib::crypto::{
   Ed25519KeyHash as REd25519KeyHash,
   ScriptHash as RScriptHash
 };
-use cardano_serialization_lib::address::{StakeCredential as RStakeCredential};
+use cardano_serialization_lib::address::StakeCredential as RStakeCredential;
 
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -29,21 +29,26 @@ impl From<Ed25519KeyHash> for REd25519KeyHash {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone)]
-pub struct ScriptHash(pub [u8; 28]);
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub struct ScriptHash {
+  bytes: [u8; 28],
+  len: u8
+}
 
 impl TryFrom<RScriptHash> for ScriptHash {
   type Error = CError;
 
   fn try_from(hash: RScriptHash) -> Result<Self> {
-    let bytes: [u8; 28] = hash.to_bytes().try_into().map_err(|_| CError::DataLengthMismatch)?;
-    Ok(Self(bytes))
+    let bytes = hash.to_bytes();
+    let len = bytes.len() as u8;
+    let bytes: [u8; 28] = bytes.try_into().map_err(|_| CError::DataLengthMismatch)?;
+    Ok(Self { bytes, len })
   }
 }
 
 impl From<ScriptHash> for RScriptHash {
   fn from(hash: ScriptHash) -> Self {
-    hash.0.into()
+    hash.bytes.into()
   }
 }
 

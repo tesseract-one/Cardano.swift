@@ -6,7 +6,7 @@ use super::panic::*;
 use cardano_serialization_lib::{AssetName as RAssetName};
 
 #[repr(C)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct AssetName {
   bytes: [u8; 32],
   len: u8
