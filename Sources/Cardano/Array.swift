@@ -64,20 +64,3 @@ extension CArrayConvertible {
         }!
     }
 }
-
-protocol CKeyValueArrayConvertible: Sequence {
-    associatedtype Array: CArray where
-        Array.CElement: CKeyValue,
-        Element == (key: Array.CElement.Key, value: Array.CElement.Value)
-    
-    func withCKVArray<T>(fn: @escaping (Array) throws -> T) rethrows -> T
-}
-
-extension CKeyValueArrayConvertible {
-    func withCKVArray<T>(fn: @escaping (Array) throws -> T) rethrows -> T {
-        try withContiguousStorageIfAvailable { storage in
-            let mapped = storage.map { Array.CElement($0) }
-            return try fn(Array(ptr: mapped, len: UInt(mapped.count)))
-        }!
-    }
-}
