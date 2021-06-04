@@ -40,7 +40,9 @@ extension MultiAsset {
                     CCardano.MultiAsset.CElement((el.key, arr))
                 }
             }
-            return try fn(CCardano.MultiAsset(ptr: mapped, len: UInt(mapped.count)))
+            return try mapped.withUnsafeBufferPointer {
+                try fn(CCardano.MultiAsset(ptr: $0.baseAddress, len: UInt($0.count)))
+            }
         }!
     }
 }
