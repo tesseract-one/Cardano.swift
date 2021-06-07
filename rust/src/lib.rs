@@ -13,6 +13,7 @@ pub mod linear_fee;
 pub mod private_key;
 pub mod public_key;
 pub mod multi_asset;
+pub mod vkey;
 mod ptr;
 mod panic;
 mod array;
