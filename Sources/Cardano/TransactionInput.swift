@@ -8,9 +8,11 @@
 import Foundation
 import CCardano
 
-extension CCardano.TransactionInput: CType {}
+public typealias TransactionInput = CCardano.TransactionInput
 
-extension CCardano.TransactionInput {
+extension TransactionInput: CType {}
+
+extension TransactionInput {
     public init(bytes: Data) throws {
         self = try bytes.withCData { bytes in
             RustResult<Self>.wrap { result, error in
