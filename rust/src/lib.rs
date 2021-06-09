@@ -15,6 +15,7 @@ pub mod public_key;
 pub mod multi_asset;
 pub mod vkey;
 pub mod transaction_hash;
+pub mod transaction_input;
 mod ptr;
 mod panic;
 mod array;
