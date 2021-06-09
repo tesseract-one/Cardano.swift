@@ -50,17 +50,3 @@ extension CArray where CElement: CKeyValue {
         return Dictionary(uniqueKeysWithValues: tuples)
     }
 }
-
-protocol CArrayConvertible: Sequence {
-    associatedtype Array: CArray where Array.CElement == Element
-    
-    func withCArray<T>(fn: @escaping (Array) throws -> T) rethrows -> T
-}
-
-extension CArrayConvertible {
-    func withCArray<T>(fn: @escaping (Array) throws -> T) rethrows -> T {
-        try withContiguousStorageIfAvailable { storage in
-            try fn(Array(ptr: storage.baseAddress, len: UInt(storage.count)))
-        }!
-    }
-}

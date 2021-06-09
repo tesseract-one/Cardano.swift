@@ -19,8 +19,12 @@ extension CCardano.AssetNames: CArray {
     }
 }
 
-extension AssetNames: CArrayConvertible {
-    typealias Array = CCardano.AssetNames
+extension AssetNames {
+    func withCArray<T>(fn: @escaping (CCardano.AssetNames) throws -> T) rethrows -> T {
+        try withContiguousStorageIfAvailable { storage in
+            try fn(CCardano.AssetNames(ptr: storage.baseAddress, len: UInt(storage.count)))
+        }!
+    }
 }
 
 // Assets Dictionary
