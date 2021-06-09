@@ -6,11 +6,13 @@ use crate::ptr::Ptr;
 use cardano_serialization_lib::TransactionInput as RTransactionInput;
 use std::convert::{TryFrom, TryInto};
 
+pub type TransactionIndex = u32;
+
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct TransactionInput {
   transaction_id: TransactionHash,
-  index: u32,
+  index: TransactionIndex,
 }
 
 impl From<TransactionInput> for RTransactionInput {

@@ -1,5 +1,6 @@
 use crate::error::CError;
 use crate::panic::Result;
+use crate::transaction_input::TransactionIndex;
 use std::convert::{TryInto, TryFrom};
 use crate::stake_credential::StakeCredential;
 use crate::network_info::NetworkId;
@@ -11,7 +12,6 @@ use cardano_serialization_lib::address::{
 };
 
 pub type Slot = u32;
-pub type TransactionIndex = u32;
 pub type CertificateIndex = u32;
 
 #[repr(C)]
