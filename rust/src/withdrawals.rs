@@ -4,9 +4,10 @@ use crate::error::CError;
 use crate::linear_fee::Coin;
 use crate::panic::*;
 use crate::ptr::Free;
-use cardano_serialization_lib::utils::from_bignum;
-use cardano_serialization_lib::utils::to_bignum;
-use cardano_serialization_lib::Withdrawals as RWithdrawals;
+use cardano_serialization_lib::{
+  utils::{from_bignum, to_bignum},
+  Withdrawals as RWithdrawals,
+};
 use std::convert::{TryFrom, TryInto};
 
 pub type WithdrawalsKeyValue = CKeyValue<RewardAddress, Coin>;
