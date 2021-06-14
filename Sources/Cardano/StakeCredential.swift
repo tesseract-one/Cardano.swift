@@ -28,6 +28,25 @@ extension Ed25519KeyHash {
         }.get()
         return data.owned()
     }
+    
+    public var bytesArray: [UInt8] {
+        withUnsafeBytes(of: bytes) { ptr in
+            Array(ptr.bindMemory(to: UInt8.self).prefix(Int(self.len)))
+        }
+    }
+}
+
+extension Ed25519KeyHash: Equatable {
+    public static func == (lhs: Ed25519KeyHash, rhs: Ed25519KeyHash) -> Bool {
+        lhs.len == rhs.len && lhs.bytesArray == rhs.bytesArray
+    }
+}
+
+extension Ed25519KeyHash: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(len)
+        hasher.combine(bytesArray)
+    }
 }
 
 extension ScriptHash: CType {}
@@ -68,7 +87,7 @@ extension ScriptHash: Hashable {
     }
 }
 
-public enum StakeCredential {
+public enum StakeCredential: Equatable, Hashable {
     case keyHash(Ed25519KeyHash)
     case scriptHash(ScriptHash)
     

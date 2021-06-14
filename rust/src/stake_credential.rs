@@ -10,26 +10,31 @@ use cardano_serialization_lib::crypto::{
 use cardano_serialization_lib::address::StakeCredential as RStakeCredential;
 
 #[repr(C)]
-#[derive(Copy, Clone)]
-pub struct Ed25519KeyHash(pub [u8; 28]);
+#[derive(Copy, Clone, Hash, PartialEq, Eq)]
+pub struct Ed25519KeyHash {
+  bytes: [u8; 28],
+  len: u8
+}
 
 impl TryFrom<REd25519KeyHash> for Ed25519KeyHash {
   type Error = CError;
 
   fn try_from(hash: REd25519KeyHash) -> Result<Self> {
-    let bytes: [u8; 28] = hash.to_bytes().try_into().map_err(|_| CError::DataLengthMismatch)?;
-    Ok(Self(bytes))
+    let bytes = hash.to_bytes();
+    let len = bytes.len() as u8;
+    let bytes: [u8; 28] = bytes.try_into().map_err(|_| CError::DataLengthMismatch)?;
+    Ok(Self { bytes, len })
   }
 }
 
 impl From<Ed25519KeyHash> for REd25519KeyHash {
   fn from(hash: Ed25519KeyHash) -> Self {
-    hash.0.into()
+    hash.bytes.into()
   }
 }
 
 #[repr(C)]
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ScriptHash {
   bytes: [u8; 28],
   len: u8
@@ -53,7 +58,7 @@ impl From<ScriptHash> for RScriptHash {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Hash, PartialEq, Eq)]
 pub enum StakeCredential {
   Key(Ed25519KeyHash),
   Script(ScriptHash)

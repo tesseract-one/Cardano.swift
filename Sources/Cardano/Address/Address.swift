@@ -186,3 +186,18 @@ extension CCardano.Address {
         }.get()
     }
 }
+
+extension RewardAddress: Equatable {
+    public static func == (lhs: RewardAddress, rhs: RewardAddress) -> Bool {
+        let lhsPayment = StakeCredential(credential: lhs.payment)
+        let rhsPayment = StakeCredential(credential: rhs.payment)
+        return lhs.network == rhs.network && lhsPayment == rhsPayment
+    }
+}
+
+extension RewardAddress: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(network)
+        hasher.combine(StakeCredential(credential: payment))
+    }
+}
