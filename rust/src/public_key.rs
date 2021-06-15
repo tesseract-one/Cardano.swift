@@ -26,11 +26,11 @@ impl Free for PublicKey {
 }
 
 impl Ptr for PublicKey {
-    type PT = str;
+  type PT = str;
 
-    unsafe fn unowned(&self) -> Result<&Self::PT> {
-        self.0.unowned()
-    }
+  unsafe fn unowned(&self) -> Result<&Self::PT> {
+    self.0.unowned()
+  }
 }
 
 impl From<RPublicKey> for PublicKey {
