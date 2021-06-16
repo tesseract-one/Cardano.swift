@@ -66,3 +66,13 @@ extension CCardano.BootstrapWitness {
         }.get()
     }
 }
+
+public typealias BootstrapWitnesses = Array<BootstrapWitness>
+
+extension CCardano.BootstrapWitnesses: CArray {
+    typealias CElement = CCardano.BootstrapWitness
+
+    mutating func free() {
+        cardano_bootstrap_witnesses_free(&self)
+    }
+}

@@ -23,7 +23,7 @@ impl TryFrom<Withdrawals> for RWithdrawals {
   fn try_from(withdrawals: Withdrawals) -> Result<Self> {
     let map = unsafe { withdrawals.as_hash_map()? };
     let mut withdrawals = RWithdrawals::new();
-    for (reward_address, coin) in map.into_iter() {
+    for (reward_address, coin) in map {
       withdrawals.insert(&reward_address.into(), &to_bignum(coin));
     }
     Ok(withdrawals)

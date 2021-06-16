@@ -56,3 +56,13 @@ extension CCardano.Vkeywitness {
         }.get()
     }
 }
+
+public typealias Vkeywitnesses = Array<Vkeywitness>
+
+extension CCardano.Vkeywitnesses: CArray {
+    typealias CElement = CCardano.Vkeywitness
+
+    mutating func free() {
+        cardano_vkeywitnesses_free(&self)
+    }
+}

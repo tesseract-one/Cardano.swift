@@ -25,7 +25,7 @@ impl TryFrom<Assets> for RAssets {
   fn try_from(assets: Assets) -> Result<Self> {
     let map = unsafe { assets.as_btree_map()? };
     let mut assets = RAssets::new();
-    for (name, bn) in map.into_iter() {
+    for (name, bn) in map {
       let name = name.try_into()?;
       assets.insert(&name, &to_bignum(bn));
     }

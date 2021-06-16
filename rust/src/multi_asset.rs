@@ -21,7 +21,7 @@ impl TryFrom<MultiAsset> for RMultiAsset {
   fn try_from(multi_asset: MultiAsset) -> Result<Self> {
     let map = unsafe { multi_asset.as_btree_map()? };
     let mut multi_asset = RMultiAsset::new();
-    for (pid, assets) in map.into_iter() {
+    for (pid, assets) in map {
       let assets = assets.try_into()?;
       multi_asset.insert(&pid.into(), &assets);
     }

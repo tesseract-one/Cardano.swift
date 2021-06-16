@@ -1,25 +1,19 @@
+use crate::array::CArray;
 use crate::ed25519_signature::Ed25519Signature;
 use crate::error::CError;
 use crate::panic::*;
 use crate::ptr::*;
 use crate::vkey::Vkey;
-use cardano_serialization_lib::crypto::Vkeywitness as RVkeywitness;
+use cardano_serialization_lib::crypto::{
+  Vkeywitness as RVkeywitness, Vkeywitnesses as RVkeywitnesses,
+};
 use std::convert::{TryFrom, TryInto};
 
 #[repr(C)]
-#[derive(Copy)]
+#[derive(Copy, Clone)]
 pub struct Vkeywitness {
   vkey: Vkey,
   signature: Ed25519Signature,
-}
-
-impl Clone for Vkeywitness {
-  fn clone(&self) -> Self {
-    Self {
-      vkey: self.vkey.clone(),
-      signature: self.signature.clone(),
-    }
-  }
 }
 
 impl Free for Vkeywitness {
@@ -52,7 +46,7 @@ impl From<RVkeywitness> for Vkeywitness {
 
 #[no_mangle]
 pub unsafe extern "C" fn cardano_vkeywitness_clone(
-  vkeywitness: Vkeywitness, result: &mut Vkeywitness, error: &mut CError
+  vkeywitness: Vkeywitness, result: &mut Vkeywitness, error: &mut CError,
 ) -> bool {
   handle_exception(|| vkeywitness.clone()).response(result, error)
 }
@@ -60,4 +54,35 @@ pub unsafe extern "C" fn cardano_vkeywitness_clone(
 #[no_mangle]
 pub unsafe extern "C" fn cardano_vkeywitness_free(vkeywitness: &mut Vkeywitness) {
   vkeywitness.free()
+}
+
+pub type Vkeywitnesses = CArray<Vkeywitness>;
+
+impl From<RVkeywitnesses> for Vkeywitnesses {
+  fn from(vkeywitnesses: RVkeywitnesses) -> Self {
+    (0..vkeywitnesses.len())
+      .map(|index| vkeywitnesses.get(index))
+      .map(|vkeywitness| vkeywitness.into())
+      .collect::<Vec<Vkeywitness>>()
+      .into()
+  }
+}
+
+impl TryFrom<Vkeywitnesses> for RVkeywitnesses {
+  type Error = CError;
+
+  fn try_from(vkeywitnesses: Vkeywitnesses) -> Result<Self> {
+    let vec = unsafe { vkeywitnesses.unowned()? };
+    let mut vkeywitnesses = RVkeywitnesses::new();
+    for vkeywitness in vec.to_vec() {
+      let vkeywitness = vkeywitness.try_into()?;
+      vkeywitnesses.add(&vkeywitness);
+    }
+    Ok(vkeywitnesses)
+  }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_vkeywitnesses_free(vkeywitnesses: &mut Vkeywitnesses) {
+  vkeywitnesses.free();
 }

@@ -7,14 +7,8 @@ use cardano_serialization_lib::crypto::Vkey as RVkey;
 use std::convert::{TryFrom, TryInto};
 
 #[repr(C)]
-#[derive(Copy)]
+#[derive(Copy, Clone)]
 pub struct Vkey(pub PublicKey);
-
-impl Clone for Vkey {
-  fn clone(&self) -> Self {
-    Self(self.0.clone())
-  }
-}
 
 impl Free for Vkey {
   unsafe fn free(&mut self) {

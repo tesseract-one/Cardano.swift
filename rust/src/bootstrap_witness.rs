@@ -1,10 +1,13 @@
+use crate::array::CArray;
 use crate::data::CData;
 use crate::ed25519_signature::Ed25519Signature;
 use crate::error::CError;
 use crate::panic::*;
 use crate::ptr::*;
 use crate::vkey::Vkey;
-use cardano_serialization_lib::crypto::BootstrapWitness as RBootstrapWitness;
+use cardano_serialization_lib::crypto::{
+  BootstrapWitness as RBootstrapWitness, BootstrapWitnesses as RBootstrapWitnesses,
+};
 use std::convert::TryFrom;
 use std::convert::TryInto;
 
@@ -14,7 +17,7 @@ pub struct BootstrapWitness {
   vkey: Vkey,
   signature: Ed25519Signature,
   chain_code: CData,
-  attributes: CData
+  attributes: CData,
 }
 
 impl Clone for BootstrapWitness {
@@ -68,7 +71,7 @@ impl From<RBootstrapWitness> for BootstrapWitness {
 
 #[no_mangle]
 pub unsafe extern "C" fn cardano_bootstrap_witness_clone(
-  bootstrap_witness: BootstrapWitness, result: &mut BootstrapWitness, error: &mut CError
+  bootstrap_witness: BootstrapWitness, result: &mut BootstrapWitness, error: &mut CError,
 ) -> bool {
   handle_exception(|| bootstrap_witness.clone()).response(result, error)
 }
@@ -76,4 +79,37 @@ pub unsafe extern "C" fn cardano_bootstrap_witness_clone(
 #[no_mangle]
 pub unsafe extern "C" fn cardano_bootstrap_witness_free(bootstrap_witness: &mut BootstrapWitness) {
   bootstrap_witness.free()
+}
+
+pub type BootstrapWitnesses = CArray<BootstrapWitness>;
+
+impl From<RBootstrapWitnesses> for BootstrapWitnesses {
+  fn from(bootstrap_witnesses: RBootstrapWitnesses) -> Self {
+    (0..bootstrap_witnesses.len())
+      .map(|index| bootstrap_witnesses.get(index))
+      .map(|bootstrap_witness| bootstrap_witness.into())
+      .collect::<Vec<BootstrapWitness>>()
+      .into()
+  }
+}
+
+impl TryFrom<BootstrapWitnesses> for RBootstrapWitnesses {
+  type Error = CError;
+
+  fn try_from(bootstrap_witnesses: BootstrapWitnesses) -> Result<Self> {
+    let vec = unsafe { bootstrap_witnesses.unowned()? };
+    let mut bootstrap_witnesses = RBootstrapWitnesses::new();
+    for bootstrap_witness in vec.to_vec() {
+      let bootstrap_witness = bootstrap_witness.try_into()?;
+      bootstrap_witnesses.add(&bootstrap_witness);
+    }
+    Ok(bootstrap_witnesses)
+  }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_bootstrap_witnesses_free(
+  bootstrap_witnesses: &mut BootstrapWitnesses,
+) {
+  bootstrap_witnesses.free();
 }
