@@ -7,43 +7,23 @@ use super::string::IntoCString;
 use cardano_serialization_lib::crypto::Ed25519Signature as REd25519Signature;
 use std::convert::{TryFrom, TryInto};
 
+pub const SIGNATURE_LENGTH: usize = 64;
+
 #[repr(C)]
-#[derive(Copy)]
-pub struct Ed25519Signature(pub CData);
-
-impl Clone for Ed25519Signature {
-  fn clone(&self) -> Self {
-    let bytes = unsafe { self.0.unowned().expect("Bad bytes pointer") };
-    Self(bytes.into())
-  }
-}
-
-impl Free for Ed25519Signature {
-  unsafe fn free(&mut self) {
-    self.0.free()
-  }
-}
-
-impl Ptr for Ed25519Signature {
-  type PT = [u8];
-
-  unsafe fn unowned(&self) -> Result<&Self::PT> {
-    self.0.unowned()
-  }
-}
+#[derive(Copy, Clone)]
+pub struct Ed25519Signature([u8; SIGNATURE_LENGTH]);
 
 impl TryFrom<Ed25519Signature> for REd25519Signature {
   type Error = CError;
 
   fn try_from(ed25519_signature: Ed25519Signature) -> Result<Self> {
-    let bytes = unsafe { ed25519_signature.unowned()? };
-    REd25519Signature::from_bytes(bytes.to_vec()).into_result()
+    REd25519Signature::from_bytes(ed25519_signature.0.to_vec()).into_result()
   }
 }
 
 impl From<REd25519Signature> for Ed25519Signature {
   fn from(ed25519_signature: REd25519Signature) -> Self {
-    Ed25519Signature(ed25519_signature.to_bytes().into())
+    Ed25519Signature(ed25519_signature.to_bytes().try_into().unwrap())
   }
 }
 
@@ -78,16 +58,4 @@ pub unsafe extern "C" fn cardano_ed25519_signature_to_hex(
       .try_into()
       .map(|ed25519_signature: REd25519Signature| ed25519_signature.to_hex().into_cstr())
   }).response(result, error)
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn cardano_ed25519_signature_clone(
-  ed25519_signature: Ed25519Signature, result: &mut Ed25519Signature, error: &mut CError
-) -> bool {
-  handle_exception(|| ed25519_signature.clone()).response(result, error)
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn cardano_ed25519_signature_free(ed25519_signature: &mut Ed25519Signature) {
-  ed25519_signature.free()
 }

@@ -33,10 +33,9 @@ extension PrivateKey {
     }
     
     public func toPublic() throws -> PublicKey {
-        var pub = try RustResult<CCardano.PublicKey>.wrap { result, error in
+        try RustResult<CCardano.PublicKey>.wrap { result, error in
             cardano_private_key_to_public(self, result, error)
         }.get()
-        return pub.owned()
     }
     
     public func bytes() throws -> Data {
@@ -47,11 +46,10 @@ extension PrivateKey {
     }
     
     public func sign(message: Data) throws -> Ed25519Signature {
-        var signature = try message.withCData { message in
+        try message.withCData { message in
             RustResult<CCardano.Ed25519Signature>.wrap { result, error in
                 cardano_private_key_sign(self, message, result, error)
             }
         }.get()
-        return signature.owned()
     }
 }

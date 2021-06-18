@@ -17,10 +17,7 @@ pub struct Vkeywitness {
 }
 
 impl Free for Vkeywitness {
-  unsafe fn free(&mut self) {
-    self.vkey.free();
-    self.signature.free();
-  }
+  unsafe fn free(&mut self) {}
 }
 
 impl TryFrom<Vkeywitness> for RVkeywitness {
@@ -42,18 +39,6 @@ impl From<RVkeywitness> for Vkeywitness {
       signature: vkeywitness.signature().into(),
     }
   }
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn cardano_vkeywitness_clone(
-  vkeywitness: Vkeywitness, result: &mut Vkeywitness, error: &mut CError,
-) -> bool {
-  handle_exception(|| vkeywitness.clone()).response(result, error)
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn cardano_vkeywitness_free(vkeywitness: &mut Vkeywitness) {
-  vkeywitness.free()
 }
 
 pub type Vkeywitnesses = CArray<Vkeywitness>;

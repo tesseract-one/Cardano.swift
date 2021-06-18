@@ -35,8 +35,6 @@ impl Clone for BootstrapWitness {
 
 impl Free for BootstrapWitness {
   unsafe fn free(&mut self) {
-    self.vkey.free();
-    self.signature.free();
     self.chain_code.free();
     self.attributes.free();
   }

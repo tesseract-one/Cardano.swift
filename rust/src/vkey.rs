@@ -10,20 +10,6 @@ use std::convert::{TryFrom, TryInto};
 #[derive(Copy, Clone)]
 pub struct Vkey(pub PublicKey);
 
-impl Free for Vkey {
-  unsafe fn free(&mut self) {
-    self.0.free()
-  }
-}
-
-impl Ptr for Vkey {
-  type PT = str;
-
-  unsafe fn unowned(&self) -> Result<&Self::PT> {
-    self.0.unowned()
-  }
-}
-
 impl From<RVkey> for Vkey {
   fn from(vkey: RVkey) -> Self {
     Self(vkey.public_key().into())
@@ -57,16 +43,4 @@ pub unsafe extern "C" fn cardano_vkey_from_bytes(
       .map(|vkey| vkey.into())
   })
   .response(result, error)
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn cardano_vkey_clone(
-  vkey: Vkey, result: &mut Vkey, error: &mut CError
-) -> bool {
-  handle_exception(|| vkey.clone()).response(result, error)
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn cardano_vkey_free(vkey: &mut Vkey) {
-  vkey.free();
 }

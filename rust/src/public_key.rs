@@ -8,34 +8,15 @@ use super::string::IntoCString;
 use cardano_serialization_lib::crypto::PublicKey as RPublicKey;
 use std::convert::{TryFrom, TryInto};
 
+pub const PUBLIC_KEY_LENGTH: usize = 32;
+
 #[repr(C)]
-#[derive(Copy)]
-pub struct PublicKey(CharPtr);
-
-impl Clone for PublicKey {
-  fn clone(&self) -> Self {
-    let s: String = unsafe { self.unowned().expect("Bad char pointer").into() };
-    Self(s.into_cstr())
-  }
-}
-
-impl Free for PublicKey {
-  unsafe fn free(&mut self) {
-    self.0.free()
-  }
-}
-
-impl Ptr for PublicKey {
-  type PT = str;
-
-  unsafe fn unowned(&self) -> Result<&Self::PT> {
-    self.0.unowned()
-  }
-}
+#[derive(Copy, Clone)]
+pub struct PublicKey([u8; PUBLIC_KEY_LENGTH]);
 
 impl From<RPublicKey> for PublicKey {
   fn from(public_key: RPublicKey) -> Self {
-    Self(public_key.to_bech32().into_cstr())
+    Self(public_key.as_bytes().try_into().unwrap())
   }
 }
 
@@ -43,8 +24,7 @@ impl TryFrom<PublicKey> for RPublicKey {
   type Error = CError;
 
   fn try_from(public_key: PublicKey) -> Result<Self> {
-    let bech32_str = unsafe { public_key.unowned()? };
-    RPublicKey::from_bech32(bech32_str).into_result()
+    RPublicKey::from_bytes(&public_key.0).into_result()
   }
 }
 
@@ -101,16 +81,4 @@ pub unsafe extern "C" fn cardano_public_key_hash(
       .try_into()
       .and_then(|public_key: RPublicKey| public_key.hash().try_into())
   }).response(result, error)
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn cardano_public_key_clone(
-  public_key: PublicKey, result: &mut PublicKey, error: &mut CError
-) -> bool {
-  handle_exception(|| public_key.clone()).response(result, error)
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn cardano_public_key_free(public_key: &mut PublicKey) {
-  public_key.free();
 }

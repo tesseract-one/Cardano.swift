@@ -15,8 +15,8 @@ public struct BootstrapWitness {
     public private(set) var attributes: Data
     
     init(bootstrapWitness: CCardano.BootstrapWitness) {
-        vkey = bootstrapWitness.vkey.copied()
-        signature = bootstrapWitness.signature.copied()
+        vkey = bootstrapWitness.vkey
+        signature = bootstrapWitness.signature
         chainCode = bootstrapWitness.chain_code.copied()
         attributes = bootstrapWitness.attributes.copied()
     }
@@ -35,13 +35,9 @@ public struct BootstrapWitness {
     func withCBootstrapWitness<T>(
         fn: @escaping (CCardano.BootstrapWitness) throws -> T
     ) rethrows -> T {
-        try vkey.withCVkey { vkey in
-            try signature.withCSignature { signature in
-                try chainCode.withCData { chainCode in
-                    try attributes.withCData { attributes in
-                        try fn(CCardano.BootstrapWitness(vkey: vkey, signature: signature, chain_code: chainCode, attributes: attributes))
-                    }
-                }
+        try chainCode.withCData { chainCode in
+            try attributes.withCData { attributes in
+                try fn(CCardano.BootstrapWitness(vkey: vkey, signature: signature, chain_code: chainCode, attributes: attributes))
             }
         }
     }
