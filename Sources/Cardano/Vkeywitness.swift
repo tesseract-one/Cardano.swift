@@ -21,3 +21,11 @@ extension CCardano.Vkeywitnesses: CArray {
         cardano_vkeywitnesses_free(&self)
     }
 }
+
+extension Vkeywitnesses {
+    func withCArray<T>(fn: @escaping (CCardano.Vkeywitnesses) throws -> T) rethrows -> T {
+        try withContiguousStorageIfAvailable { storage in
+            try fn(CCardano.Vkeywitnesses(ptr: storage.baseAddress, len: UInt(storage.count)))
+        }!
+    }
+}

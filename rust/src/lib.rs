@@ -20,6 +20,8 @@ pub mod transaction_inputs;
 pub mod withdrawals;
 pub mod bootstrap_witness;
 pub mod vkeywitness;
+pub mod option;
+pub mod transaction_witness_set;
 mod ptr;
 mod panic;
 mod array;

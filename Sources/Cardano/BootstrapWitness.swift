@@ -63,12 +63,20 @@ extension CCardano.BootstrapWitness {
     }
 }
 
-public typealias BootstrapWitnesses = Array<BootstrapWitness>
+public typealias BootstrapWitnesses = Array<CCardano.BootstrapWitness>
 
 extension CCardano.BootstrapWitnesses: CArray {
     typealias CElement = CCardano.BootstrapWitness
 
     mutating func free() {
         cardano_bootstrap_witnesses_free(&self)
+    }
+}
+
+extension BootstrapWitnesses {
+    func withCArray<T>(fn: @escaping (CCardano.BootstrapWitnesses) throws -> T) rethrows -> T {
+        try withContiguousStorageIfAvailable { storage in
+            try fn(CCardano.BootstrapWitnesses(ptr: storage.baseAddress, len: UInt(storage.count)))
+        }!
     }
 }
