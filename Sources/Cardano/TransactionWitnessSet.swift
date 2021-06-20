@@ -40,7 +40,7 @@ public struct TransactionWitnessSet {
     
     init(transactionWitnessSet: CCardano.TransactionWitnessSet) {
         vkeys = transactionWitnessSet.vkeys.get()?.copied()
-        bootstraps = transactionWitnessSet.bootstraps.get()?.copied()
+        bootstraps = transactionWitnessSet.bootstraps.get()?.copied().map { $0.copied() }
     }
     
     public init(vkeys: Vkeywitnesses, bootstraps: BootstrapWitnesses) {
@@ -55,11 +55,10 @@ public struct TransactionWitnessSet {
     func withCTransactionWitnessSet<T>(
         fn: @escaping (CCardano.TransactionWitnessSet) throws -> T
     ) rethrows -> T {
-        try vkeys.withCOption(with: { try $0.withCArray(fn: $1) }) { vkeys in
-            try bootstraps.withCOption(with: { try $0.withCArray(fn: $1) }) { bootstraps in
-                try fn(CCardano.TransactionWitnessSet(vkeys: vkeys, bootstraps: bootstraps))
-            }
-        }
+        try fn(CCardano.TransactionWitnessSet(
+            vkeys: vkeys.cOption { $0.withCArray { $0 } },
+            bootstraps: bootstraps.cOption { $0.withCArray { $0 } }
+        ))
     }
 }
 

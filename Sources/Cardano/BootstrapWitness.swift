@@ -63,7 +63,7 @@ extension CCardano.BootstrapWitness {
     }
 }
 
-public typealias BootstrapWitnesses = Array<CCardano.BootstrapWitness>
+public typealias BootstrapWitnesses = Array<BootstrapWitness>
 
 extension CCardano.BootstrapWitnesses: CArray {
     typealias CElement = CCardano.BootstrapWitness
@@ -76,7 +76,10 @@ extension CCardano.BootstrapWitnesses: CArray {
 extension BootstrapWitnesses {
     func withCArray<T>(fn: @escaping (CCardano.BootstrapWitnesses) throws -> T) rethrows -> T {
         try withContiguousStorageIfAvailable { storage in
-            try fn(CCardano.BootstrapWitnesses(ptr: storage.baseAddress, len: UInt(storage.count)))
+            let mapped = storage.map { $0.withCBootstrapWitness { $0 } }
+            return try mapped.withUnsafeBufferPointer {
+                try fn(CCardano.BootstrapWitnesses(ptr: $0.baseAddress, len: UInt($0.count)))
+            }
         }!
     }
 }

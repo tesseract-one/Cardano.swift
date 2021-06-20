@@ -27,29 +27,18 @@ extension COption {
 }
 
 extension Optional {
-    func cOption<O: COption>() -> O where O.Value == Wrapped {
-        var option = O()
-        if let value = self {
-            option.tag = option.someTag()
-            option.some = value
-            return option
-        } else {
-            option.tag = option.noneTag()
-            return option
-        }
+    func cOption<Option: COption>() -> Option where Option.Value == Wrapped {
+        cOption { $0 }
     }
     
-    func withCOption<O: COption, T>(with: (Wrapped, @escaping (O.Value) throws -> T) throws -> T, fn: @escaping (O) throws -> T) rethrows -> T {
-        var option = O()
+    func cOption<Option: COption>(convert: (Wrapped) throws -> Option.Value) rethrows -> Option {
+        var option = Option()
         if let value = self {
-            return try with(value) { value in
-                option.tag = option.someTag()
-                option.some = value
-                return try fn(option)
-            }
+            option.tag = option.someTag()
+            option.some = try convert(value)
         } else {
             option.tag = option.noneTag()
-            return try fn(option)
         }
+        return option
     }
 }
