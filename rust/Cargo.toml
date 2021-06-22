@@ -8,7 +8,7 @@ keywords = [ "Tesseract", "Cardano", "C" ]
 edition = "2018"
 
 [dependencies]
-cardano-serialization-lib = { git = "https://github.com/tesseract-one/cardano-serialization-lib.git", branch = "master" }
+cardano-serialization-lib = "7.1.0"
 
 [build-dependencies]
 cbindgen = "0.19"
