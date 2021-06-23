@@ -24,3 +24,14 @@ extension CCardano.Withdrawals: CArray {
         cardano_withdrawals_free(&self)
     }
 }
+
+extension Withdrawals {
+    func withCKVArray<T>(fn: @escaping (CCardano.Withdrawals) throws -> T) rethrows -> T {
+        try withContiguousStorageIfAvailable { storage in
+            let mapped = storage.map { CCardano.Withdrawals.CElement($0) }
+            return try mapped.withUnsafeBufferPointer {
+                try fn(CCardano.Withdrawals(ptr: $0.baseAddress, len: UInt($0.count)))
+            }
+        }!
+    }
+}
