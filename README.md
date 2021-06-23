@@ -61,7 +61,9 @@ Setup instructions:
 
 Right now SDK is in the active development stage. You can check our progress and plan below.
 
-### Part 1: Core ![70%](https://progress-bar.dev/70?title=progress)
+### Part 1: Core
+
+![70%](https://progress-bar.dev/70?title=progress&width=150)
 
 This is the core part of the SDK. Has all needed primitives for transaction building and signing.
 This is a wrapper for [cardano-serialization-lib](https://github.com/Emurgo/cardano-serialization-lib).
@@ -96,7 +98,9 @@ Provided structures:
 - [ ] Transaction
 - [ ] Value
 
-### Part 2: Networking ![0%](https://progress-bar.dev/0?title=progress)
+### Part 2: Networking
+
+![0%](https://progress-bar.dev/0?title=progress&width=150)
 
 This part provides Swift APIs for communication with the Cardano node through GraphQL. Methods for connection to the Cardano node, obtaining info from it, and submitting new transactions will be implemented.
 
@@ -107,7 +111,9 @@ Models:
 - [ ] UtXOs
 - [ ] Balances
 
-### Part 3: Developer-friendly APIs ![0%](https://progress-bar.dev/0?title=progress)
+### Part 3: Developer-friendly APIs
+
+![0%](https://progress-bar.dev/0?title=progress&width=150)
 
 Having GraphQL and Core wrapped is great, but it's not developer-friendly yet. In this part, we are covering up all "exposed wires" under the hood with Swift-style neat APIs available for rapid dApps development.
 
@@ -121,7 +127,9 @@ We will provide APIs for:
 - [ ] Submitting signed transaction 
 - [ ] Transferring ADA (a simple way to build, sign and submit transfer transaction)
 
-### Part 4: Keychain ![0%](https://progress-bar.dev/0?title=progress)
+### Part 4: Keychain
+
+![0%](https://progress-bar.dev/0?title=progress&width=150)
 
 In this part, we will provide Keychain with easy private/public key management inside the dApp and Keychain API for more Keychain implementations.
 The Keychain API will allow integration with signers and key providers, which is critical for further integration with Tesseract or any solution that keep private keys safe apart from the dApp.
@@ -135,7 +143,9 @@ Keychain API metods:
 - [ ] derive addresses from the extended public key
 - [ ] sign transaction
 
-### Part 5: Tests, Documentation and Examples ![0%](https://progress-bar.dev/0?title=progress)
+### Part 5: Tests, Documentation and Examples
+
+![0%](https://progress-bar.dev/0?title=progress&width=150)
 
 Having a library is good but it should have proper documentation, examples and be properly tested for real-life usage.
 In this part, we will work on that.
