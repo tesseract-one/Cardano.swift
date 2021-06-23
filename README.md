@@ -67,6 +67,7 @@ This is the core part of the SDK. Has all needed primitives for transaction buil
 This is a wrapper for [cardano-serialization-lib](https://github.com/Emurgo/cardano-serialization-lib).
 
 Provided structures:
+
 - [x] Address
 - [x] AssetName
 - [x] Assets
@@ -100,6 +101,7 @@ Provided structures:
 This part provides Swift APIs for communication with the Cardano node through GraphQL. Methods for connection to the Cardano node, obtaining info from it, and submitting new transactions will be implemented.
 
 Models:
+
 - [ ] Transactions
 - [ ] Addresses
 - [ ] UtXOs
@@ -110,6 +112,7 @@ Models:
 Having GraphQL and Core wrapped is great, but it's not developer-friendly yet. In this part, we are covering up all "exposed wires" under the hood with Swift-style neat APIs available for rapid dApps development.
 
 We will provide APIs for:
+
 - [ ] Obtaining the list of accounts from Keychain
 - [ ] Obtaining all used addresses for account
 - [ ] Obtaining balance for account / address
@@ -123,12 +126,22 @@ We will provide APIs for:
 In this part, we will provide Keychain with easy private/public key management inside the dApp and Keychain API for more Keychain implementations.
 The Keychain API will allow integration with signers and key providers, which is critical for further integration with Tesseract or any solution that keep private keys safe apart from the dApp.
 
+Keychain API metods:
+
+- [ ] generate key
+- [ ] create key (from bytes / string)
+- [ ] derive addresses
+- [ ] return extended public key
+- [ ] derive addresses from the extended public key
+- [ ] sign transaction
+
 ### Part 5: Tests, Documentation and Examples ![0%](https://progress-bar.dev/0?title=progress)
 
 Having a library is good but it should have proper documentation, examples and be properly tested for real-life usage.
 In this part, we will work on that.
 
 We will provide:
+
 - [ ] unit-tests for Core
 - [ ] unit-tests for Keychain
 - [ ] integration tests for Networking
