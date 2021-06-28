@@ -7,7 +7,7 @@
 
 import Foundation
 
-protocol CArray: CPtr where Value == [CElement] {
+protocol CArray: CPtr where Val == [CElement] {
     associatedtype CElement: CType
     
     init(ptr: UnsafePointer<CElement>!, len: UInt)
@@ -17,7 +17,7 @@ protocol CArray: CPtr where Value == [CElement] {
 }
 
 extension CArray {
-    func copied() -> Value {
+    func copied() -> Val {
         Array(UnsafeBufferPointer(start: ptr, count: Int(len)))
     }
 }

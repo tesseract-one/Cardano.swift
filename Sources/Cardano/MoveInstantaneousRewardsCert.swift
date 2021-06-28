@@ -38,7 +38,7 @@ public struct MoveInstantaneousReward {
 }
 
 extension CCardano.MoveInstantaneousReward: CPtr {
-    typealias Value = MoveInstantaneousReward
+    typealias Val = MoveInstantaneousReward
     
     func copied() -> MoveInstantaneousReward {
         MoveInstantaneousReward(moveInstantaneousReward: self)
@@ -97,7 +97,7 @@ public struct MoveInstantaneousRewardsCert {
 }
 
 extension CCardano.MoveInstantaneousRewardsCert: CPtr {
-    typealias Value = MoveInstantaneousRewardsCert
+    typealias Val = MoveInstantaneousRewardsCert
     
     func copied() -> MoveInstantaneousRewardsCert {
         MoveInstantaneousRewardsCert(mirsCert: self)

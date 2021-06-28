@@ -30,6 +30,7 @@ pub mod pool_registration;
 pub mod genesis_key_delegation;
 pub mod move_instantaneous_rewards_cert;
 pub mod certificate;
+pub mod value;
 mod ptr;
 mod panic;
 mod array;

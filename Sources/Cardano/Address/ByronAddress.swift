@@ -38,7 +38,7 @@ public struct ByronAddress {
 }
 
 extension CCardano.ByronAddress: CPtr {
-    typealias Value = ByronAddress
+    typealias Val = ByronAddress
     
     func copied() -> ByronAddress {
         ByronAddress(address: self)

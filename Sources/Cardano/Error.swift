@@ -32,7 +32,7 @@ public enum CardanoRustError: Error {
 }
 
 extension CError: CPtr {
-    typealias Value = CardanoRustError
+    typealias Val = CardanoRustError
     
     func copied() -> CardanoRustError {
         CardanoRustError(error: self)

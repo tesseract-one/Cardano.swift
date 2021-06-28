@@ -57,14 +57,14 @@ protocol CType {
 }
 
 protocol CPtr: CType {
-    associatedtype Value
-    func copied() -> Value
-    mutating func owned() -> Value
+    associatedtype Val
+    func copied() -> Val
+    mutating func owned() -> Val
     mutating func free()
 }
 
 extension CPtr {
-    mutating func owned() -> Value {
+    mutating func owned() -> Val {
         defer { self.free() }
         return self.copied()
     }

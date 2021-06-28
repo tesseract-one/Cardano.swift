@@ -43,12 +43,12 @@ impl TryFrom<TransactionWitnessSet> for RTransactionWitnessSet {
     let vkeys: Option<Vkeywitnesses> = transaction_witness_set.vkeys.into();
     let bootstraps: Option<BootstrapWitnesses> = transaction_witness_set.bootstraps.into();
     let mut transaction_witness_set = RTransactionWitnessSet::new();
-    if vkeys.is_some() {
-      let vkeys = vkeys.unwrap().try_into()?;
+    if let Some(vkeys) = vkeys {
+      let vkeys = vkeys.try_into()?;
       transaction_witness_set.set_vkeys(&vkeys);
     }
-    if bootstraps.is_some() {
-      let bootstraps = bootstraps.unwrap().try_into()?;
+    if let Some(bootstraps) = bootstraps {
+      let bootstraps = bootstraps.try_into()?;
       transaction_witness_set.set_bootstraps(&bootstraps);
     }
     Ok(transaction_witness_set)

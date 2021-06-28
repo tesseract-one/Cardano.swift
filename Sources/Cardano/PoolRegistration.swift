@@ -38,7 +38,7 @@ public struct PoolRegistration {
 }
 
 extension CCardano.PoolRegistration: CPtr {
-    typealias Value = PoolRegistration
+    typealias Val = PoolRegistration
     
     func copied() -> PoolRegistration {
         PoolRegistration(poolRegistration: self)

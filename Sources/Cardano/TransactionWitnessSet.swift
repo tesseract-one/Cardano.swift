@@ -63,7 +63,7 @@ public struct TransactionWitnessSet {
 }
 
 extension CCardano.TransactionWitnessSet: CPtr {
-    typealias Value = TransactionWitnessSet
+    typealias Val = TransactionWitnessSet
     
     func copied() -> TransactionWitnessSet {
         TransactionWitnessSet(transactionWitnessSet: self)

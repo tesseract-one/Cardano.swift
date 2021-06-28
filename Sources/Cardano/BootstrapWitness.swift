@@ -44,7 +44,7 @@ public struct BootstrapWitness {
 }
 
 extension CCardano.BootstrapWitness: CPtr {
-    typealias Value = BootstrapWitness
+    typealias Val = BootstrapWitness
     
     func copied() -> BootstrapWitness {
         BootstrapWitness(bootstrapWitness: self)

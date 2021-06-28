@@ -140,7 +140,7 @@ public enum StakeCredential: Equatable, Hashable {
 }
 
 extension CCardano.StakeCredential: CPtr {
-    typealias Value = StakeCredential
+    typealias Val = StakeCredential
     
     func copied() -> StakeCredential {
         StakeCredential(credential: self)

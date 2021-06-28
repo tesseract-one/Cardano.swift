@@ -132,7 +132,7 @@ extension RewardAddress: CType {}
 extension NetworkId: CType {}
 
 extension CCardano.Address: CPtr {
-    typealias Value = Address
+    typealias Val = Address
     
     func copied() -> Address { Address(address: self) }
     

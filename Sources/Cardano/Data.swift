@@ -22,7 +22,7 @@ extension Data {
 }
 
 extension CData: CPtr {
-    typealias Value = Data
+    typealias Val = Data
     
     func copied() -> Data {
         Data(bytes: self.ptr, count: Int(self.len))

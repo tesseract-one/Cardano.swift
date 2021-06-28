@@ -82,7 +82,7 @@ public enum Certificate {
 }
 
 extension CCardano.Certificate: CPtr {
-    typealias Value = Certificate
+    typealias Val = Certificate
     
     func copied() -> Certificate {
         Certificate(certificate: self)
