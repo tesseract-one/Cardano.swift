@@ -69,3 +69,5 @@ extension CPtr {
         return self.copied()
     }
 }
+
+extension Int8: CType {}

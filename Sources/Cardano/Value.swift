@@ -84,6 +84,14 @@ extension CCardano.Value {
         return value.owned()
     }
     
+    public func compare(rhs: Value) throws -> Int8? {
+        try rhs.withCValue { rhs in
+            try RustResult<Int8>.wrap { result, error in
+                cardano_value_compare(self, rhs, result, error)
+            }.get()
+        }
+    }
+    
     public func clone() throws -> Self {
         try RustResult<Self>.wrap { result, error in
             cardano_value_clone(self, result, error)
