@@ -28,3 +28,21 @@ extension TransactionInput {
         return bytes.owned()
     }
 }
+
+public typealias TransactionInputs = Array<TransactionInput>
+
+extension CCardano.TransactionInputs: CArray {
+    typealias CElement = CCardano.TransactionInput
+
+    mutating func free() {
+        cardano_transaction_inputs_free(&self)
+    }
+}
+
+extension TransactionInputs {
+    func withCArray<T>(fn: @escaping (CCardano.TransactionInputs) throws -> T) rethrows -> T {
+        try withContiguousStorageIfAvailable { storage in
+            try fn(CCardano.TransactionInputs(ptr: storage.baseAddress, len: UInt(storage.count)))
+        }!
+    }
+}

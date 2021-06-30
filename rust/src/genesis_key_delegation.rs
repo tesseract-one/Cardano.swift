@@ -5,21 +5,31 @@ use cardano_serialization_lib::{
   },
   GenesisKeyDelegation as RGenesisKeyDelegation,
 };
-use std::convert::TryInto;
+use std::convert::{TryFrom, TryInto};
+
+use crate::{error::CError, panic::Result};
 
 #[repr(C)]
-#[derive(Copy, Clone)]
-pub struct GenesisHash([u8; 28]);
+#[derive(Copy, Clone, Hash, PartialEq, Eq)]
+pub struct GenesisHash {
+  bytes: [u8; 28],
+  len: u8,
+}
 
-impl From<RGenesisHash> for GenesisHash {
-  fn from(hash: RGenesisHash) -> Self {
-    Self(hash.to_bytes().try_into().unwrap())
+impl TryFrom<RGenesisHash> for GenesisHash {
+  type Error = CError;
+
+  fn try_from(hash: RGenesisHash) -> Result<Self> {
+    let bytes = hash.to_bytes();
+    let len = bytes.len() as u8;
+    let bytes: [u8; 28] = bytes.try_into().map_err(|_| CError::DataLengthMismatch)?;
+    Ok(Self { bytes, len })
   }
 }
 
 impl From<GenesisHash> for RGenesisHash {
   fn from(hash: GenesisHash) -> Self {
-    hash.0.into()
+    hash.bytes.into()
   }
 }
 
@@ -63,13 +73,18 @@ pub struct GenesisKeyDelegation {
   vrf_keyhash: VRFKeyHash,
 }
 
-impl From<RGenesisKeyDelegation> for GenesisKeyDelegation {
-  fn from(genesis_key_delegation: RGenesisKeyDelegation) -> Self {
-    Self {
-      genesishash: genesis_key_delegation.genesishash().into(),
-      genesis_delegate_hash: genesis_key_delegation.genesis_delegate_hash().into(),
-      vrf_keyhash: genesis_key_delegation.vrf_keyhash().into(),
-    }
+impl TryFrom<RGenesisKeyDelegation> for GenesisKeyDelegation {
+  type Error = CError;
+
+  fn try_from(genesis_key_delegation: RGenesisKeyDelegation) -> Result<Self> {
+    genesis_key_delegation
+      .genesishash()
+      .try_into()
+      .map(|genesishash| Self {
+        genesishash,
+        genesis_delegate_hash: genesis_key_delegation.genesis_delegate_hash().into(),
+        vrf_keyhash: genesis_key_delegation.vrf_keyhash().into(),
+      })
   }
 }
 

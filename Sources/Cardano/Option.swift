@@ -9,7 +9,7 @@ import Foundation
 
 protocol COption {
     associatedtype Tag: Equatable
-    associatedtype Value: CType
+    associatedtype Value
     
     var tag: Tag { get set }
     var some: Value { get set }

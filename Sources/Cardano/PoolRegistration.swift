@@ -52,7 +52,7 @@ extension CCardano.PoolRegistration: CPtr {
 extension CCardano.PoolRegistration {
     public init(bytes: Data) throws {
         self = try bytes.withCData { bytes in
-            RustResult<CCardano.PoolRegistration>.wrap { result, error in
+            RustResult<Self>.wrap { result, error in
                 cardano_pool_registration_from_bytes(bytes, result, error)
             }
         }.get()

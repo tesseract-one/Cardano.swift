@@ -63,7 +63,7 @@ Right now SDK is in the active development stage. You can check our progress and
 
 ### Part 1: Core
 
-![78%](https://progress-bar.dev/78?title=progress&width=150)
+![81%](https://progress-bar.dev/81?title=progress&width=150)
 
 This is the core part of the SDK. Has all needed primitives for transaction building and signing.
 This is a wrapper for [cardano-serialization-lib](https://github.com/Emurgo/cardano-serialization-lib).
@@ -91,7 +91,7 @@ Provided structures:
 - [x] Withdrawals
 - [x] Certificate
 - [ ] GeneralTransactionMetadata
-- [ ] TransactionBody
+- [x] TransactionBody
 - [ ] TransactionBuilder
 - [ ] TransactionMetadata
 - [ ] TransactionMetadatumLabels

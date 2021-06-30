@@ -98,9 +98,8 @@ impl TryFrom<RCertificate> for Certificate {
       CertificateKind::GenesisKeyDelegation => certificate
         .as_genesis_key_delegation()
         .ok_or("Empty GenesisKeyDelegation".into())
-        .map(|genesis_key_delegation| {
-          Self::GenesisKeyDelegationKind(genesis_key_delegation.into())
-        }),
+        .and_then(|genesis_key_delegation| genesis_key_delegation.try_into())
+        .map(|genesis_key_delegation| Self::GenesisKeyDelegationKind(genesis_key_delegation)),
       CertificateKind::MoveInstantaneousRewardsCert => certificate
         .as_move_instantaneous_rewards_cert()
         .ok_or("Empty MoveInstantaneousRewardsCert".into())

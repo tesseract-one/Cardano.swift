@@ -1,9 +1,12 @@
 use super::transaction_hash::TransactionHash;
+use crate::array::CArray;
 use crate::data::CData;
 use crate::error::CError;
 use crate::panic::*;
-use crate::ptr::Ptr;
-use cardano_serialization_lib::TransactionInput as RTransactionInput;
+use crate::ptr::*;
+use cardano_serialization_lib::{
+  TransactionInput as RTransactionInput, TransactionInputs as RTransactionInputs,
+};
 use std::convert::{TryFrom, TryInto};
 
 pub type TransactionIndex = u32;
@@ -40,7 +43,7 @@ impl TryFrom<RTransactionInput> for TransactionInput {
 
 #[no_mangle]
 pub unsafe extern "C" fn cardano_transaction_input_to_bytes(
-  transaction_input: TransactionInput, result: &mut CData, error: &mut CError
+  transaction_input: TransactionInput, result: &mut CData, error: &mut CError,
 ) -> bool {
   handle_exception(|| {
     let transaction_input: RTransactionInput = transaction_input.into();
@@ -51,7 +54,7 @@ pub unsafe extern "C" fn cardano_transaction_input_to_bytes(
 
 #[no_mangle]
 pub unsafe extern "C" fn cardano_transaction_input_from_bytes(
-  data: CData, result: &mut TransactionInput, error: &mut CError
+  data: CData, result: &mut TransactionInput, error: &mut CError,
 ) -> bool {
   handle_exception_result(|| {
     data
@@ -60,4 +63,42 @@ pub unsafe extern "C" fn cardano_transaction_input_from_bytes(
       .and_then(|transaction_input| transaction_input.try_into())
   })
   .response(result, error)
+}
+
+pub type TransactionInputs = CArray<TransactionInput>;
+
+impl Free for TransactionInput {
+  unsafe fn free(&mut self) {}
+}
+
+impl TryFrom<TransactionInputs> for RTransactionInputs {
+  type Error = CError;
+
+  fn try_from(transaction_inputs: TransactionInputs) -> Result<Self> {
+    let vec = unsafe { transaction_inputs.unowned()? };
+    let mut transaction_inputs = Self::new();
+    for transaction_input in vec.to_vec() {
+      transaction_inputs.add(&transaction_input.into());
+    }
+    Ok(transaction_inputs)
+  }
+}
+
+impl TryFrom<RTransactionInputs> for TransactionInputs {
+  type Error = CError;
+
+  fn try_from(transaction_inputs: RTransactionInputs) -> Result<Self> {
+    (0..transaction_inputs.len())
+      .map(|index| transaction_inputs.get(index))
+      .map(|transaction_input| transaction_input.try_into())
+      .collect::<Result<Vec<TransactionInput>>>()
+      .map(|transaction_inputs| transaction_inputs.into())
+  }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_transaction_inputs_free(
+  transaction_inputs: &mut TransactionInputs,
+) {
+  transaction_inputs.free();
 }
