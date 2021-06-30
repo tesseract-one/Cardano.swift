@@ -1,19 +1,40 @@
 use super::panic::*;
-// use std::ffi::c_void;
-// use super::error::CError;
+use crate::error::CError;
 
 pub trait Free {
-    unsafe fn free(&mut self);
+  unsafe fn free(&mut self);
 }
 
 pub trait Ptr: Free {
-    type PT: ?Sized;
+  type PT: ?Sized;
 
-    unsafe fn unowned(&self) -> Result<&Self::PT>;
+  unsafe fn unowned(&self) -> Result<&Self::PT>;
 }
 
 impl Free for u64 {
-    unsafe fn free(&mut self) {}
+  unsafe fn free(&mut self) {}
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct CPointer<T: Free>(pub(crate) *const T);
+
+impl<T: Free> Free for CPointer<T> {
+  unsafe fn free(&mut self) {
+    if self.0.is_null() {
+      return;
+    }
+    (*(self.0 as *mut T)).free();
+    self.0 = std::ptr::null();
+  }
+}
+
+impl<T: Free> Ptr for CPointer<T> {
+  type PT = T;
+
+  unsafe fn unowned(&self) -> Result<&T> {
+    self.0.as_ref().ok_or(CError::NullPtr)
+  }
 }
 
 // pub trait SizedPtr: Sized {
@@ -53,4 +74,3 @@ impl Free for u64 {
 //         }
 //     }
 // }
-
