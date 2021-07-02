@@ -36,6 +36,8 @@ pub mod transaction_body;
 pub mod general_transaction_metadata;
 pub mod metadata_map;
 pub mod metadata_list;
+pub mod transaction_metadata;
+pub mod transaction_metadatum_labels;
 mod ptr;
 mod panic;
 mod array;

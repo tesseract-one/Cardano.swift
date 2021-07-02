@@ -26,7 +26,7 @@ public enum Certificate {
         case PoolRetirementKind: self = .poolRetirement(certificate.pool_retirement_kind)
         case GenesisKeyDelegationKind: self = .genesisKeyDelegation(certificate.genesis_key_delegation_kind)
         case MoveInstantaneousRewardsCertKind: self = .moveInstantaneousRewardsCert(certificate.move_instantaneous_rewards_cert_kind.copied())
-        default: fatalError("Unknown certificate type")
+        default: fatalError("Unknown Certificate type")
         }
     }
     
@@ -95,7 +95,7 @@ extension CCardano.Certificate: CPtr {
 
 extension CCardano.Certificate {
     public func clone() throws -> Self {
-        try RustResult<CCardano.Certificate>.wrap { result, error in
+        try RustResult<Self>.wrap { result, error in
             cardano_certificate_clone(self, result, error)
         }.get()
     }

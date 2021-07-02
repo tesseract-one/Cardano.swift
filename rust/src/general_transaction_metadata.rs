@@ -6,10 +6,13 @@ use crate::metadata_map::MetadataMap;
 use crate::panic::*;
 use crate::ptr::*;
 use crate::string::*;
-use cardano_serialization_lib::utils::to_bignum;
+use crate::transaction_metadatum_labels::TransactionMetadatumLabel;
 use cardano_serialization_lib::{
-  metadata::{TransactionMetadatum as RTransactionMetadatum, TransactionMetadatumKind},
-  utils::{from_bignum, Int},
+  metadata::{
+    GeneralTransactionMetadata as RGeneralTransactionMetadata,
+    TransactionMetadatum as RTransactionMetadatum, TransactionMetadatumKind,
+  },
+  utils::{from_bignum, to_bignum, Int},
 };
 use std::convert::{TryFrom, TryInto};
 
@@ -128,10 +131,43 @@ pub unsafe extern "C" fn cardano_transaction_metadatum_free(
   transaction_metadatum.free()
 }
 
-pub type TransactionMetadatumLabel = u64;
 pub type GeneralTransactionMetadataKeyValue =
   CKeyValue<TransactionMetadatumLabel, TransactionMetadatum>;
 pub type GeneralTransactionMetadata = CArray<GeneralTransactionMetadataKeyValue>;
+
+impl TryFrom<GeneralTransactionMetadata> for RGeneralTransactionMetadata {
+  type Error = CError;
+
+  fn try_from(general_transaction_metadata: GeneralTransactionMetadata) -> Result<Self> {
+    let map = unsafe { general_transaction_metadata.as_hash_map()? };
+    let mut general_transaction_metadata = Self::new();
+    for (tm_label, tm) in map {
+      let transaction_metadatum = tm.try_into()?;
+      general_transaction_metadata.insert(&to_bignum(tm_label), &transaction_metadatum);
+    }
+    Ok(general_transaction_metadata)
+  }
+}
+
+impl TryFrom<RGeneralTransactionMetadata> for GeneralTransactionMetadata {
+  type Error = CError;
+
+  fn try_from(general_transaction_metadata: RGeneralTransactionMetadata) -> Result<Self> {
+    Ok(general_transaction_metadata.keys()).and_then(|tm_labels| {
+      (0..tm_labels.len())
+        .map(|index| tm_labels.get(index))
+        .map(|tm_label| {
+          general_transaction_metadata
+            .get(&tm_label)
+            .ok_or("Cannot get TransactionMetadatum by TransactionMetadatumLabel".into())
+            .and_then(|tm| tm.try_into())
+            .map(|tm| (from_bignum(&tm_label), tm).into())
+        })
+        .collect::<Result<Vec<GeneralTransactionMetadataKeyValue>>>()
+        .map(|general_transaction_metadata| general_transaction_metadata.into())
+    })
+  }
+}
 
 #[no_mangle]
 pub unsafe extern "C" fn cardano_general_transaction_metadata_free(

@@ -8,7 +8,7 @@
 import Foundation
 
 protocol CArray: CPtr where Val == [CElement] {
-    associatedtype CElement: CType
+    associatedtype CElement
     
     init(ptr: UnsafePointer<CElement>!, len: UInt)
     
