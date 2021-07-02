@@ -1,0 +1,69 @@
+use crate::error::CError;
+use crate::option::COption;
+use crate::panic::*;
+use crate::ptr::Free;
+use crate::transaction_body::TransactionBody;
+use crate::transaction_metadata::TransactionMetadata;
+use crate::transaction_witness_set::TransactionWitnessSet;
+use cardano_serialization_lib::Transaction as RTransaction;
+use std::convert::{TryFrom, TryInto};
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct Transaction {
+  body: TransactionBody,
+  witness_set: TransactionWitnessSet,
+  metadata: COption<TransactionMetadata>,
+}
+
+impl Free for Transaction {
+  unsafe fn free(&mut self) {
+    self.body.free();
+    self.witness_set.free();
+    self.metadata.free();
+  }
+}
+
+impl TryFrom<Transaction> for RTransaction {
+  type Error = CError;
+
+  fn try_from(transaction: Transaction) -> Result<Self> {
+    transaction
+      .body
+      .try_into()
+      .zip(transaction.witness_set.try_into())
+      .zip({
+        let metadata: Option<TransactionMetadata> = transaction.metadata.into();
+        metadata.map(|metadata| metadata.try_into()).transpose()
+      })
+      .map(|((body, witness_set), metadata)| Self::new(&body, &witness_set, metadata))
+  }
+}
+
+impl TryFrom<RTransaction> for Transaction {
+  type Error = CError;
+
+  fn try_from(transaction: RTransaction) -> Result<Self> {
+    transaction
+      .body()
+      .try_into()
+      .zip(transaction.metadata().map(|m| m.try_into()).transpose())
+      .map(|(body, metadata)| Self {
+        body,
+        witness_set: transaction.witness_set().into(),
+        metadata: metadata.into(),
+      })
+  }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_transaction_clone(
+  transaction: Transaction, result: &mut Transaction, error: &mut CError,
+) -> bool {
+  handle_exception(|| transaction.clone()).response(result, error)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_transaction_free(transaction: &mut Transaction) {
+  transaction.free();
+}
