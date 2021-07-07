@@ -39,7 +39,9 @@ pub mod metadata_list;
 pub mod transaction_metadata;
 pub mod transaction_metadatum_labels;
 pub mod transaction;
+pub mod transaction_builder;
 mod ptr;
+mod pointer;
 mod panic;
 mod array;
 

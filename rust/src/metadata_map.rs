@@ -2,6 +2,7 @@ use crate::array::*;
 use crate::error::CError;
 use crate::general_transaction_metadata::TransactionMetadatum;
 use crate::panic::*;
+use crate::pointer::CPointer;
 use crate::ptr::*;
 use cardano_serialization_lib::metadata::MetadataMap as RMetadataMap;
 use std::convert::{TryFrom, TryInto};
@@ -39,7 +40,7 @@ impl TryFrom<RMetadataMap> for MetadataMap {
             .into_result()
             .and_then(|tm_value| tm_value.try_into())
             .zip(tm_key.try_into())
-            .map(|(tm_value, tm_key)| (CPointer(&tm_key), CPointer(&tm_value)).into())
+            .map(|(tm_value, tm_key)| (CPointer::new(&tm_key), CPointer::new(&tm_value)).into())
         })
         .collect::<Result<Vec<MetadataMapKeyValue>>>()
         .map(|metadata_map| metadata_map.into())
