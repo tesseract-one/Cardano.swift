@@ -2,6 +2,7 @@ use crate::array::*;
 use crate::error::CError;
 use crate::general_transaction_metadata::TransactionMetadatum;
 use crate::panic::*;
+use crate::pointer::CPointer;
 use crate::ptr::*;
 use cardano_serialization_lib::metadata::MetadataMap as RMetadataMap;
 use std::convert::{TryFrom, TryInto};

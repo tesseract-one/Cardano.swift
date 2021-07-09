@@ -66,7 +66,7 @@ extension CCardano.PoolRegistration {
     }
     
     public func clone() throws -> Self {
-        try RustResult<CCardano.PoolRegistration>.wrap { result, error in
+        try RustResult<Self>.wrap { result, error in
             cardano_pool_registration_clone(self, result, error)
         }.get()
     }

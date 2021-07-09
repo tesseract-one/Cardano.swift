@@ -52,6 +52,18 @@ extension RustResult {
     }
 }
 
+extension RustResult {
+    static func wrap(
+        ccall: @escaping (UnsafeMutablePointer<CError>) -> Bool
+    ) -> RustResult<Void> {
+        var error = CError()
+        if !ccall(&error) {
+            return .failure(error.owned())
+        }
+        return .success(())
+    }
+}
+
 protocol CType {
     init()
 }
@@ -71,3 +83,5 @@ extension CPtr {
 }
 
 extension Int8: CType {}
+extension UInt64: CType {}
+extension Bool: CType {}
