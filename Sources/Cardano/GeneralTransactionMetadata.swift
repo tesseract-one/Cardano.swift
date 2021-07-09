@@ -18,9 +18,8 @@ public enum TransactionMetadatum: Equatable, Hashable {
     init(transactionMetadatum: CCardano.TransactionMetadatum) {
         switch transactionMetadatum.tag {
         case MetadataMapKind:
-            let metadataMap = transactionMetadatum.metadata_map_kind.copiedDictionary().map { key, value in
-                (key.copied().copied(), value.copied().copied())
-            }
+            let metadataMap = transactionMetadatum.metadata_map_kind
+                .copiedDictionary().map { key, value in (key.copied(), value.copied()) }
             self = .metadataMap(Dictionary(uniqueKeysWithValues: metadataMap))
         case MetadataListKind:
             self = .metadataList(transactionMetadatum.metadata_list_kind.copied().map {
@@ -77,6 +76,21 @@ extension CCardano.TransactionMetadatum {
         try RustResult<Self>.wrap { result, error in
             cardano_transaction_metadatum_clone(self, result, error)
         }.get()
+    }
+}
+
+extension CCardano.TransactionMetadatum: Equatable {
+    public static func == (
+        lhs: CCardano.TransactionMetadatum,
+        rhs: CCardano.TransactionMetadatum
+    ) -> Bool {
+        lhs.copied() == rhs.copied()
+    }
+}
+
+extension CCardano.TransactionMetadatum: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        self.copied().hash(into: &hasher)
     }
 }
 

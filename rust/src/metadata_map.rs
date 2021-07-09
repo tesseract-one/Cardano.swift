@@ -2,7 +2,6 @@ use crate::array::*;
 use crate::error::CError;
 use crate::general_transaction_metadata::TransactionMetadatum;
 use crate::panic::*;
-use crate::pointer::CPointer;
 use crate::ptr::*;
 use cardano_serialization_lib::metadata::MetadataMap as RMetadataMap;
 use std::convert::{TryFrom, TryInto};
@@ -12,17 +11,17 @@ pub type MetadataMapKeyValue = CKeyValue<TransactionMetadatum, TransactionMetada
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct MetadataMap {
-  pub ptr: *const std::os::raw::c_void,
+  pub cptr: *const std::os::raw::c_void,
   pub len: usize
 }
 
 impl Free for MetadataMap {
   unsafe fn free(&mut self) {
-    if self.ptr.is_null() {
+    if self.cptr.is_null() {
       return;
     }
-    let mut vals = Vec::from_raw_parts(self.ptr as *mut MetadataMapKeyValue, self.len, self.len);
-    self.ptr = std::ptr::null();
+    let mut vals = Vec::from_raw_parts(self.cptr as *mut MetadataMapKeyValue, self.len, self.len);
+    self.cptr = std::ptr::null();
     for val in vals.iter_mut() {
       val.free()
     }
@@ -33,10 +32,10 @@ impl Ptr for MetadataMap {
   type PT = [MetadataMapKeyValue];
 
   unsafe fn unowned(&self) -> Result<&[MetadataMapKeyValue]> {
-    if self.ptr.is_null() {
+    if self.cptr.is_null() {
       Err(CError::NullPtr)
     } else {
-      Ok(std::slice::from_raw_parts(self.ptr as *const MetadataMapKeyValue, self.len))
+      Ok(std::slice::from_raw_parts(self.cptr as *const MetadataMapKeyValue, self.len))
     }
   }
 }
@@ -61,7 +60,7 @@ impl From<Vec<MetadataMapKeyValue>> for MetadataMap {
     let mut slice = array.into_boxed_slice();
     let out = slice.as_mut_ptr();
     std::mem::forget(slice);
-    Self { ptr: out as *const std::os::raw::c_void, len: len }
+    Self { cptr: out as *const std::os::raw::c_void, len: len }
   }
 }
 
@@ -92,7 +91,7 @@ pub unsafe extern "C" fn cardano_metadata_map_from_array(
   result: &mut MetadataMap, error: &mut CError
 ) -> bool {
   handle_exception(|| {
-    MetadataMap { ptr: array as *const std::os::raw::c_void, len: len }
+    MetadataMap { cptr: array as *const std::os::raw::c_void, len: len }
   }).response(result, error)
 }
 
