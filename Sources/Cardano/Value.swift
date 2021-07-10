@@ -22,12 +22,34 @@ extension COption_MultiAsset: COption {
 }
 
 public struct Value {
-    public private(set) var coin: Coin
-    public private(set) var multiasset: MultiAsset?
+    public var coin: Coin
+    public var multiasset: MultiAsset?
     
     init(value: CCardano.Value) {
         coin = value.coin
-        multiasset = value.multiasset.get()?.copiedDictionary().mapValues { $0.copiedDictionary() }
+        multiasset = value.multiasset.get()?.copiedDictionary().mapValues {
+            $0.copiedDictionary()
+        }
+    }
+    
+    public init(coin: Coin) {
+        self.coin = coin
+    }
+    
+    public func checkedAdd(rhs: Value) throws -> Value {
+        try withCValue { try $0.checkedAdd(rhs: rhs) }
+    }
+    
+    public func checkedSub(rhs: Value) throws -> Value {
+        try withCValue { try $0.checkedSub(rhs: rhs) }
+    }
+    
+    public func clampedSub(rhs: Value) throws -> Value {
+        try withCValue { try $0.clampedSub(rhs: rhs) }
+    }
+    
+    public func compare(rhs: Value) throws -> Int8? {
+        try withCValue { try $0.compare(rhs: rhs) }
     }
     
     func clonedCValue() throws -> CCardano.Value {

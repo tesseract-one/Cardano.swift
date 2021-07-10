@@ -193,7 +193,7 @@ public struct TransactionBuilder {
         keyDeposit = transactionBuilder.key_deposit
         feeAlgo = transactionBuilder.fee_algo
         inputs = transactionBuilder.inputs.copied().map { $0.copied() }
-        outputs = transactionBuilder.outputs.copied()
+        outputs = transactionBuilder.outputs.copied().map { $0.copied() }
         fee = transactionBuilder.fee.get()
         ttl = transactionBuilder.ttl.get()
         certs = transactionBuilder.certs.get()?.copied().map { $0.copied() }
@@ -374,14 +374,18 @@ extension CCardano.TransactionBuilder {
     }
     
     public func addOutput(output: TransactionOutput) throws {
-        try RustResult<Void>.wrap { error in
-            cardano_transaction_builder_add_output(self, output, error)
+        try output.withCTransactionOutput { output in
+            RustResult<Void>.wrap { error in
+                cardano_transaction_builder_add_output(self, output, error)
+            }
         }.get()
     }
     
     public func feeForOutput(output: TransactionOutput) throws -> Coin {
-        try RustResult<Coin>.wrap { result, error in
-            cardano_transaction_builder_fee_for_output(self, output, result, error)
+        try output.withCTransactionOutput { output in
+            RustResult<Coin>.wrap { result, error in
+                cardano_transaction_builder_fee_for_output(self, output, result, error)
+            }
         }.get()
     }
     

@@ -35,18 +35,17 @@ extension COption_BootstrapWitnesses: COption {
 }
 
 public struct TransactionWitnessSet {
-    public private(set) var vkeys: Vkeywitnesses?
-    public private(set) var bootstraps: BootstrapWitnesses?
+    public var vkeys: Vkeywitnesses?
+    public var scripts: NativeScripts?
+    public var bootstraps: BootstrapWitnesses?
     
     init(transactionWitnessSet: CCardano.TransactionWitnessSet) {
         vkeys = transactionWitnessSet.vkeys.get()?.copied()
+        scripts = transactionWitnessSet.scripts.get()?.copied().map { $0.copied() }
         bootstraps = transactionWitnessSet.bootstraps.get()?.copied().map { $0.copied() }
     }
     
-    public init(vkeys: Vkeywitnesses, bootstraps: BootstrapWitnesses) {
-        self.vkeys = vkeys
-        self.bootstraps = bootstraps
-    }
+    public init() {}
     
     func clonedCTransactionWitnessSet() throws -> CCardano.TransactionWitnessSet {
         try withCTransactionWitnessSet { try $0.clone() }
@@ -57,6 +56,7 @@ public struct TransactionWitnessSet {
     ) rethrows -> T {
         try fn(CCardano.TransactionWitnessSet(
             vkeys: vkeys.cOption { $0.withCArray { $0 } },
+            scripts: scripts.cOption { $0.withCArray { $0 } },
             bootstraps: bootstraps.cOption { $0.withCArray { $0 } }
         ))
     }

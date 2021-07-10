@@ -47,10 +47,11 @@ impl TryFrom<RTransaction> for Transaction {
     transaction
       .body()
       .try_into()
+      .zip(transaction.witness_set().try_into())
       .zip(transaction.metadata().map(|m| m.try_into()).transpose())
-      .map(|(body, metadata)| Self {
+      .map(|((body, witness_set), metadata)| Self {
         body,
-        witness_set: transaction.witness_set().into(),
+        witness_set,
         metadata: metadata.into(),
       })
   }

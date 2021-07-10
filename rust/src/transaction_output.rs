@@ -17,6 +17,13 @@ pub struct TransactionOutput {
   amount: Value,
 }
 
+impl Free for TransactionOutput {
+  unsafe fn free(&mut self) {
+    self.address.free();
+    self.amount.free();
+  }
+}
+
 impl TryFrom<TransactionOutput> for RTransactionOutput {
   type Error = CError;
 
@@ -67,11 +74,21 @@ pub unsafe extern "C" fn cardano_transaction_output_from_bytes(
   .response(result, error)
 }
 
-pub type TransactionOutputs = CArray<TransactionOutput>;
-
-impl Free for TransactionOutput {
-  unsafe fn free(&mut self) {}
+#[no_mangle]
+pub unsafe extern "C" fn cardano_transaction_output_clone(
+  transaction_output: TransactionOutput, result: &mut TransactionOutput, error: &mut CError,
+) -> bool {
+  handle_exception(|| transaction_output.clone()).response(result, error)
 }
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_transaction_output_free(
+  transaction_output: &mut TransactionOutput,
+) {
+  transaction_output.free();
+}
+
+pub type TransactionOutputs = CArray<TransactionOutput>;
 
 impl TryFrom<TransactionOutputs> for RTransactionOutputs {
   type Error = CError;

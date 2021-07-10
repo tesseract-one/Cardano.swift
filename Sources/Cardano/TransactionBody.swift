@@ -223,16 +223,16 @@ public struct TransactionBody {
     public private(set) var outputs: TransactionOutputs
     public private(set) var fee: Coin
     public private(set) var ttl: Slot?
-    public private(set) var certs: Certificates?
-    public private(set) var withdrawals: Withdrawals?
-    public private(set) var update: Update?
-    public private(set) var metadataHash: MetadataHash?
-    public private(set) var validityStartInterval: Slot?
-    public private(set) var mint: Mint?
+    public var certs: Certificates?
+    public var withdrawals: Withdrawals?
+    public var update: Update?
+    public var metadataHash: MetadataHash?
+    public var validityStartInterval: Slot?
+    public var mint: Mint?
     
     init(transactionBody: CCardano.TransactionBody) {
         inputs = transactionBody.inputs.copied()
-        outputs = transactionBody.outputs.copied()
+        outputs = transactionBody.outputs.copied().map { $0.copied() }
         fee = transactionBody.fee
         ttl = transactionBody.ttl.get()
         certs = transactionBody.certs.get()?.copied().map { $0.copied() }
@@ -241,6 +241,15 @@ public struct TransactionBody {
         metadataHash = transactionBody.metadata_hash.get()
         validityStartInterval = transactionBody.validity_start_interval.get()
         mint = transactionBody.mint.get()?.copiedDictionary().mapValues { $0.copiedDictionary() }
+    }
+    
+    public init(
+        inputs: TransactionInputs, outputs: TransactionOutputs, fee: Coin, ttl: Slot?
+    ) {
+        self.inputs = inputs
+        self.outputs = outputs
+        self.fee = fee
+        self.ttl = ttl
     }
     
     func clonedCTransactionBody() throws -> CCardano.TransactionBody {

@@ -27,6 +27,10 @@ public struct ScriptAll {
         nativeScripts = scriptAll.native_scripts.copied().map { $0.copied() }
     }
     
+    public init(nativeScripts: NativeScripts) {
+        self.nativeScripts = nativeScripts
+    }
+    
     func clonedCScriptAll() throws -> CCardano.ScriptAll {
         try withCScriptAll { try $0.clone() }
     }
@@ -65,6 +69,10 @@ public struct ScriptAny {
     
     init(scriptAny: CCardano.ScriptAny) {
         nativeScripts = scriptAny.native_scripts.copied().map { $0.copied() }
+    }
+    
+    public init(nativeScripts: NativeScripts) {
+        self.nativeScripts = nativeScripts
     }
     
     func clonedCScriptAny() throws -> CCardano.ScriptAny {
@@ -107,6 +115,11 @@ public struct ScriptNOfK {
     init(scriptNOfK: CCardano.ScriptNOfK) {
         n = scriptNOfK.n
         nativeScripts = scriptNOfK.native_scripts.copied().map { $0.copied() }
+    }
+    
+    public init(n: UInt32, nativeScripts: NativeScripts) {
+        self.n = n
+        self.nativeScripts = nativeScripts
     }
     
     func clonedCScriptNOfK() throws -> CCardano.ScriptNOfK {
@@ -266,11 +279,15 @@ extension COption_NativeScripts: COption {
 
 public struct TransactionMetadata {
     public private(set) var general: GeneralTransactionMetadata
-    public private(set) var nativeScripts: NativeScripts?
+    public var nativeScripts: NativeScripts?
     
     init(transactionMetadata: CCardano.TransactionMetadata) {
         general = transactionMetadata.general.copiedDictionary().mapValues { $0.copied() }
         nativeScripts = transactionMetadata.native_scripts.get()?.copied().map { $0.copied() }
+    }
+    
+    public init(general: GeneralTransactionMetadata) {
+        self.general = general
     }
     
     func clonedCTransactionMetadata() throws -> CCardano.TransactionMetadata {
