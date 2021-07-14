@@ -16,7 +16,7 @@ extension CArray_Ed25519KeyHash: CArray {
 
 extension Set where Element == Ed25519KeyHash {
     func withCArray<T>(fn: @escaping (CArray_Ed25519KeyHash) throws -> T) rethrows -> T {
-        try withContiguousStorageIfAvailable { storage in
+        try Array(self).withContiguousStorageIfAvailable { storage in
             try fn(CArray_Ed25519KeyHash(ptr: storage.baseAddress, len: UInt(storage.count)))
         }!
     }
@@ -30,7 +30,7 @@ extension CArray_ScriptHash: CArray {
 
 extension Set where Element == ScriptHash {
     func withCArray<T>(fn: @escaping (CArray_ScriptHash) throws -> T) rethrows -> T {
-        try withContiguousStorageIfAvailable { storage in
+        try Array(self).withContiguousStorageIfAvailable { storage in
             try fn(CArray_ScriptHash(ptr: storage.baseAddress, len: UInt(storage.count)))
         }!
     }
@@ -44,7 +44,7 @@ extension CArray_CData: CArray {
 
 extension Set where Element == Data {
     func withCArray<T>(fn: @escaping (CArray_CData) throws -> T) rethrows -> T {
-        try withContiguousStorageIfAvailable { storage in
+        try Array(self).withContiguousStorageIfAvailable { storage in
             let mapped = storage.map { $0.withCData { $0 } }
             return try mapped.withUnsafeBufferPointer {
                 try fn(CArray_CData(ptr: $0.baseAddress, len: UInt($0.count)))
@@ -178,12 +178,12 @@ public struct TransactionBuilder {
     public private(set) var feeAlgo: LinearFee
     public private(set) var inputs: Array<TxBuilderInput>
     public private(set) var outputs: TransactionOutputs
-    public private(set) var fee: Coin?
-    public private(set) var ttl: Slot?
-    public private(set) var certs: Certificates?
-    public private(set) var withdrawals: Withdrawals?
-    public private(set) var metadata: TransactionMetadata?
-    public private(set) var validityStartInterval: Slot?
+    public var fee: Coin?
+    public var ttl: Slot?
+    public var certs: Certificates?
+    public var withdrawals: Withdrawals?
+    public var metadata: TransactionMetadata?
+    public var validityStartInterval: Slot?
     public private(set) var inputTypes: MockWitnessSet
     public private(set) var mint: Mint?
     
