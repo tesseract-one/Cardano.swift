@@ -10,7 +10,51 @@ import CCardano
 
 public typealias PointerAddress = CCardano.PointerAddress
 public typealias EnterpriseAddress = CCardano.EnterpriseAddress
-public typealias RewardAddress = CCardano.RewardAddress
+
+public struct RewardAddress: Equatable, Hashable {
+    private var network: NetworkId
+    public private(set) var payment: StakeCredential
+    
+    init(rewardAddress: CCardano.RewardAddress) {
+        network = rewardAddress.network
+        payment = rewardAddress.payment.copied()
+    }
+    
+    public init(network: NetworkId, payment: StakeCredential) {
+        self.network = network
+        self.payment = payment
+    }
+    
+    func withCRewardAddress<T>(
+        fn: @escaping (CCardano.RewardAddress) throws -> T
+    ) rethrows -> T {
+        try payment.withCCredential { payment in
+            try fn(CCardano.RewardAddress(network: network, payment: payment))
+        }
+    }
+}
+
+extension CCardano.RewardAddress: Equatable {
+    public static func == (lhs: CCardano.RewardAddress, rhs: CCardano.RewardAddress) -> Bool {
+        return lhs.copied() == rhs.copied()
+    }
+}
+
+extension CCardano.RewardAddress: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        self.copied().hash(into: &hasher)
+    }
+}
+
+extension CCardano.RewardAddress: CPtr {
+    typealias Val = RewardAddress
+    
+    func copied() -> RewardAddress {
+        RewardAddress(rewardAddress: self)
+    }
+    
+    mutating func free() {}
+}
 
 public enum Address {
     case base(BaseAddress)
@@ -25,7 +69,7 @@ public enum Address {
         case Byron: self = .byron(address.byron.copied())
         case Ptr: self = .pointer(address.ptr)
         case Enterprise: self = .enterprise(address.enterprise)
-        case Reward: self = .reward(address.reward)
+        case Reward: self = .reward(address.reward.copied())
         default: fatalError("Unknown address type")
         }
     }
@@ -118,17 +162,18 @@ public enum Address {
             address.enterprise = ent
             return try fn(address)
         case .reward(let rew):
-            var address = CCardano.Address()
-            address.tag = Reward
-            address.reward = rew
-            return try fn(address)
+            return try rew.withCRewardAddress { rew in
+                var address = CCardano.Address()
+                address.tag = Reward
+                address.reward = rew
+                return try fn(address)
+            }
         }
     }
 }
 
 extension PointerAddress: CType {}
 extension EnterpriseAddress: CType {}
-extension RewardAddress: CType {}
 extension NetworkId: CType {}
 
 extension CCardano.Address: CPtr {
@@ -184,20 +229,5 @@ extension CCardano.Address {
         try RustResult<CCardano.Address>.wrap { result, error in
             cardano_address_clone(self, result, error)
         }.get()
-    }
-}
-
-extension RewardAddress: Equatable {
-    public static func == (lhs: RewardAddress, rhs: RewardAddress) -> Bool {
-        let lhsPayment = StakeCredential(credential: lhs.payment)
-        let rhsPayment = StakeCredential(credential: rhs.payment)
-        return lhs.network == rhs.network && lhsPayment == rhsPayment
-    }
-}
-
-extension RewardAddress: Hashable {
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(network)
-        hasher.combine(StakeCredential(credential: payment))
     }
 }

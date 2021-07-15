@@ -236,7 +236,11 @@ public struct TransactionBody {
         fee = transactionBody.fee
         ttl = transactionBody.ttl.get()
         certs = transactionBody.certs.get()?.copied().map { $0.copied() }
-        withdrawals = transactionBody.withdrawals.get()?.copiedDictionary()
+        withdrawals = transactionBody.withdrawals.get().map {
+            Dictionary(uniqueKeysWithValues: $0.copiedDictionary().map { key, value in
+                (key.copied(), value)
+            })
+        }
         update = transactionBody.update.get()?.copied()
         metadataHash = transactionBody.metadata_hash.get()
         validityStartInterval = transactionBody.validity_start_interval.get()

@@ -18,8 +18,8 @@ public enum TransactionMetadatum: Equatable, Hashable {
     init(transactionMetadatum: CCardano.TransactionMetadatum) {
         switch transactionMetadatum.tag {
         case MetadataMapKind:
-            let metadataMap = transactionMetadatum.metadata_map_kind
-                .copiedDictionary().map { key, value in (key.copied(), value.copied()) }
+            let metadataMap = transactionMetadatum.metadata_map_kind.copiedDictionary()
+                .map { key, value in (key.copied(), value.copied()) }
             self = .metadataMap(Dictionary(uniqueKeysWithValues: metadataMap))
         case MetadataListKind:
             self = .metadataList(transactionMetadatum.metadata_list_kind.copied().map {

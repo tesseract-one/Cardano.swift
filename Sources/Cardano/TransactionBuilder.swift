@@ -180,9 +180,9 @@ public struct TransactionBuilder {
     public private(set) var outputs: TransactionOutputs
     public var fee: Coin?
     public var ttl: Slot?
-    public var certs: Certificates?
-    public var withdrawals: Withdrawals?
-    public var metadata: TransactionMetadata?
+    public private(set) var certs: Certificates?
+    public private(set) var withdrawals: Withdrawals?
+    public private(set) var metadata: TransactionMetadata?
     public var validityStartInterval: Slot?
     public private(set) var inputTypes: MockWitnessSet
     public private(set) var mint: Mint?
@@ -197,7 +197,11 @@ public struct TransactionBuilder {
         fee = transactionBuilder.fee.get()
         ttl = transactionBuilder.ttl.get()
         certs = transactionBuilder.certs.get()?.copied().map { $0.copied() }
-        withdrawals = transactionBuilder.withdrawals.get()?.copiedDictionary()
+        withdrawals = transactionBuilder.withdrawals.get().map {
+            Dictionary(uniqueKeysWithValues: $0.copiedDictionary().map { key, value in
+                (key.copied(), value)
+            })
+        }
         metadata = transactionBuilder.metadata.get()?.copied()
         validityStartInterval = transactionBuilder.validity_start_interval.get()
         inputTypes = transactionBuilder.input_types.copied()
