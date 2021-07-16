@@ -89,7 +89,8 @@ impl TryFrom<RCertificate> for Certificate {
       CertificateKind::PoolRegistration => certificate
         .as_pool_registration()
         .ok_or("Empty PoolRegistration".into())
-        .map(|pool_registration| Self::PoolRegistrationKind(pool_registration.into())),
+        .and_then(|pool_registration| pool_registration.try_into())
+        .map(|pool_registration| Self::PoolRegistrationKind(pool_registration)),
       CertificateKind::PoolRetirement => certificate
         .as_pool_retirement()
         .ok_or("Empty PoolRetirement".into())

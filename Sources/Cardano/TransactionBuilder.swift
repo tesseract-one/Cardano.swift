@@ -8,12 +8,6 @@
 import Foundation
 import CCardano
 
-extension CArray_Ed25519KeyHash: CArray {
-    typealias CElement = CCardano.Ed25519KeyHash
-
-    mutating func free() {}
-}
-
 extension Set where Element == Ed25519KeyHash {
     func withCArray<T>(fn: @escaping (CArray_Ed25519KeyHash) throws -> T) rethrows -> T {
         try Array(self).withContiguousStorageIfAvailable { storage in

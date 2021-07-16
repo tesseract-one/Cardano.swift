@@ -49,6 +49,24 @@ extension Ed25519KeyHash: Hashable {
     }
 }
 
+public typealias Ed25519KeyHashes = Array<Ed25519KeyHash>
+
+extension CCardano.Ed25519KeyHashes: CArray {
+    typealias CElement = Ed25519KeyHash
+
+    mutating func free() {
+        cardano_ed25519_key_hashes_free(&self)
+    }
+}
+
+extension Ed25519KeyHashes {
+    func withCArray<T>(fn: @escaping (CCardano.Ed25519KeyHashes) throws -> T) rethrows -> T {
+        try withContiguousStorageIfAvailable { storage in
+            try fn(CCardano.Ed25519KeyHashes(ptr: storage.baseAddress, len: UInt(storage.count)))
+        }!
+    }
+}
+
 extension ScriptHash: CType {}
 
 extension ScriptHash {

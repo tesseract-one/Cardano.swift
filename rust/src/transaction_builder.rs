@@ -32,10 +32,6 @@ use std::convert::{TryFrom, TryInto};
 
 pub type BigNum = u64;
 
-impl Free for Ed25519KeyHash {
-  unsafe fn free(&mut self) {}
-}
-
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct MockWitnessSet {

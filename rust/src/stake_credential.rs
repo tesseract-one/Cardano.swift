@@ -1,19 +1,26 @@
-use std::convert::{TryInto, TryFrom};
+use crate::array::CArray;
+use crate::ptr::Free;
 use super::error::CError;
 use super::data::CData;
 use super::panic::*;
 use super::ptr::Ptr;
+use cardano_serialization_lib::Ed25519KeyHashes as REd25519KeyHashes;
 use cardano_serialization_lib::crypto::{
   Ed25519KeyHash as REd25519KeyHash,
   ScriptHash as RScriptHash
 };
 use cardano_serialization_lib::address::StakeCredential as RStakeCredential;
+use std::convert::{TryInto, TryFrom};
 
 #[repr(C)]
 #[derive(Copy, Clone, Hash, PartialEq, Eq)]
 pub struct Ed25519KeyHash {
   bytes: [u8; 28],
   len: u8
+}
+
+impl Free for Ed25519KeyHash {
+  unsafe fn free(&mut self) {}
 }
 
 impl TryFrom<REd25519KeyHash> for Ed25519KeyHash {
@@ -31,6 +38,40 @@ impl From<Ed25519KeyHash> for REd25519KeyHash {
   fn from(hash: Ed25519KeyHash) -> Self {
     hash.bytes.into()
   }
+}
+
+pub type Ed25519KeyHashes = CArray<Ed25519KeyHash>;
+
+impl TryFrom<Ed25519KeyHashes> for REd25519KeyHashes {
+  type Error = CError;
+
+  fn try_from(ed25519_key_hashes: Ed25519KeyHashes) -> Result<Self> {
+    let vec = unsafe { ed25519_key_hashes.unowned()? };
+    let mut ed25519_key_hashes = REd25519KeyHashes::new();
+    for ed25519_key_hash in vec.to_vec() {
+      ed25519_key_hashes.add(&ed25519_key_hash.into());
+    }
+    Ok(ed25519_key_hashes)
+  }
+}
+
+impl TryFrom<REd25519KeyHashes> for Ed25519KeyHashes {
+  type Error = CError;
+
+  fn try_from(ed25519_key_hashes: REd25519KeyHashes) -> Result<Self> {
+    (0..ed25519_key_hashes.len())
+      .map(|index| ed25519_key_hashes.get(index))
+      .map(|ed25519_key_hash| ed25519_key_hash.try_into())
+      .collect::<Result<Vec<Ed25519KeyHash>>>()
+      .map(|ed25519_key_hashes| ed25519_key_hashes.into())
+  }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_ed25519_key_hashes_free(
+  ed25519_key_hashes: &mut Ed25519KeyHashes,
+) {
+  ed25519_key_hashes.free();
 }
 
 #[repr(C)]
