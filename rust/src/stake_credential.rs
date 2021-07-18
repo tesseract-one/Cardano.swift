@@ -105,6 +105,10 @@ pub enum StakeCredential {
   Script(ScriptHash)
 }
 
+impl Free for StakeCredential {
+  unsafe fn free(&mut self) {}
+}
+
 impl TryFrom<RStakeCredential> for StakeCredential {
   type Error = CError;
 

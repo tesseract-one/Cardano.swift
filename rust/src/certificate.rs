@@ -104,7 +104,8 @@ impl TryFrom<RCertificate> for Certificate {
       CertificateKind::MoveInstantaneousRewardsCert => certificate
         .as_move_instantaneous_rewards_cert()
         .ok_or("Empty MoveInstantaneousRewardsCert".into())
-        .map(|mirs_cert| Self::MoveInstantaneousRewardsCertKind(mirs_cert.into())),
+        .and_then(|mirs_cert| mirs_cert.try_into())
+        .map(|mirs_cert| Self::MoveInstantaneousRewardsCertKind(mirs_cert)),
     }
   }
 }

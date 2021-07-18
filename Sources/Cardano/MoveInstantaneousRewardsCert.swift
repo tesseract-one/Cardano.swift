@@ -8,11 +8,70 @@
 import Foundation
 import CCardano
 
+public enum MIRPot {
+    case reserves
+    case treasury
+
+    init(mirPot: CCardano.MIRPot) {
+        switch mirPot {
+        case Reserves: self = .reserves
+        case Treasury: self = .treasury
+        default: fatalError("Unknown MIRPot type")
+        }
+    }
+
+    func withCMIRPot<T>(
+        fn: @escaping (CCardano.MIRPot) throws -> T
+    ) rethrows -> T {
+        switch self {
+        case .reserves: return try fn(Reserves)
+        case .treasury: return try fn(Treasury)
+        }
+    }
+}
+
+extension CKeyValue_StakeCredential__Coin: CType {}
+
+extension CKeyValue_StakeCredential__Coin: CKeyValue {
+    typealias Key = CCardano.StakeCredential
+    typealias Value = Coin
+}
+
+extension CArray_CKeyValue_StakeCredential__Coin: CArray {
+    typealias CElement = CKeyValue_StakeCredential__Coin
+
+    mutating func free() {}
+}
+
+extension Dictionary where Key == StakeCredential, Value == Coin {
+    func withCKVArray<T>(fn: @escaping (CArray_CKeyValue_StakeCredential__Coin) throws -> T) rethrows -> T {
+        try Array(self).withContiguousStorageIfAvailable { storage in
+            let mapped = storage.map { CKeyValue_StakeCredential__Coin(
+                key: $0.key.withCCredential { $0 },
+                val: $0.value
+            ) }
+            return try mapped.withUnsafeBufferPointer {
+                try fn(CArray_CKeyValue_StakeCredential__Coin(ptr: $0.baseAddress, len: UInt($0.count)))
+            }
+        }!
+    }
+}
+
 public struct MoveInstantaneousReward {
-    private var _data: Data
+    private var pot: MIRPot
+    public var rewards: Dictionary<StakeCredential, Coin>
     
     init(moveInstantaneousReward: CCardano.MoveInstantaneousReward) {
-        _data = moveInstantaneousReward._0.copied()
+        pot = MIRPot(mirPot: moveInstantaneousReward.pot)
+        let rewards = moveInstantaneousReward.rewards.copiedDictionary().map { key, value in
+            (key.copied(), value)
+        }
+        self.rewards = Dictionary(uniqueKeysWithValues: rewards)
+    }
+    
+    public init(pot: MIRPot) {
+        self.pot = pot
+        rewards = [:]
     }
     
     public init(bytes: Data) throws {
@@ -31,9 +90,9 @@ public struct MoveInstantaneousReward {
     func withCMoveInstantaneousReward<T>(
         fn: @escaping (CCardano.MoveInstantaneousReward) throws -> T
     ) rethrows -> T {
-        try _data.withCData { data in
-            try fn(CCardano.MoveInstantaneousReward(_0: data))
-        }
+        try fn(CCardano.MoveInstantaneousReward(
+            pot: pot.withCMIRPot { $0 }, rewards: rewards.withCKVArray { $0 }
+        ))
     }
 }
 

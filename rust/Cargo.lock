@@ -65,6 +65,7 @@ version = "0.0.1"
 dependencies = [
  "cardano-serialization-lib",
  "cbindgen",
+ "linked-hash-map",
 ]
 
 [[package]]

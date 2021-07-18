@@ -183,3 +183,15 @@ extension CCardano.StakeCredential {
         return data.owned()
     }
 }
+
+extension CCardano.StakeCredential: Equatable {
+    public static func == (lhs: CCardano.StakeCredential, rhs: CCardano.StakeCredential) -> Bool {
+        lhs.copied() == rhs.copied()
+    }
+}
+
+extension CCardano.StakeCredential: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        self.copied().hash(into: &hasher)
+    }
+}
