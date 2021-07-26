@@ -47,7 +47,7 @@ extension CCardano.Assets: CArray {
 
 extension Assets {
     func withCKVArray<T>(fn: @escaping (CCardano.Assets) throws -> T) rethrows -> T {
-        try withContiguousStorageIfAvailable { storage in
+        try Array(self).withContiguousStorageIfAvailable { storage in
             let mapped = storage.map { CCardano.Assets.CElement($0) }
             return try mapped.withUnsafeBufferPointer {
                 try fn(CCardano.Assets(ptr: $0.baseAddress, len: UInt($0.count)))

@@ -36,7 +36,7 @@ extension CCardano.MetadataMap: CArray {
 
 extension MetadataMap {
     func withCKVArray<T>(fn: @escaping (CCardano.MetadataMap) throws -> T) rethrows -> T {
-        try withContiguousStorageIfAvailable { storage in
+        try Array(self).withContiguousStorageIfAvailable { storage in
             let mapped = storage.map {
                 CCardano.MetadataMap.CElement(
                     key: $0.key.withCTransactionMetadatum { $0 },

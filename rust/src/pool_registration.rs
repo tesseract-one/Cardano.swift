@@ -68,6 +68,27 @@ impl From<RIpv4> for Ipv4 {
   }
 }
 
+#[no_mangle]
+pub unsafe extern "C" fn cardano_ipv4_to_bytes(
+  ipv4: Ipv4, result: &mut CData, error: &mut CError,
+) -> bool {
+  handle_exception_result(|| ipv4.try_into().map(|ipv4: RIpv4| ipv4.to_bytes().into()))
+    .response(result, error)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_ipv4_from_bytes(
+  data: CData, result: &mut Ipv4, error: &mut CError,
+) -> bool {
+  handle_exception_result(|| {
+    data
+      .unowned()
+      .and_then(|bytes| RIpv4::from_bytes(bytes.to_vec()).into_result())
+      .map(|ipv4| ipv4.into())
+  })
+  .response(result, error)
+}
+
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct Ipv6([u8; 16]);
@@ -84,6 +105,27 @@ impl From<RIpv6> for Ipv6 {
   fn from(ipv6: RIpv6) -> Self {
     Self(ipv6.ip().try_into().unwrap())
   }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_ipv6_to_bytes(
+  ipv6: Ipv6, result: &mut CData, error: &mut CError,
+) -> bool {
+  handle_exception_result(|| ipv6.try_into().map(|ipv6: RIpv6| ipv6.to_bytes().into()))
+    .response(result, error)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_ipv6_from_bytes(
+  data: CData, result: &mut Ipv6, error: &mut CError,
+) -> bool {
+  handle_exception_result(|| {
+    data
+      .unowned()
+      .and_then(|bytes| RIpv6::from_bytes(bytes.to_vec()).into_result())
+      .map(|ipv6| ipv6.into())
+  })
+  .response(result, error)
 }
 
 #[repr(C)]

@@ -2,6 +2,7 @@ use crate::address::pointer::Slot;
 use crate::array::*;
 use crate::asset_name::AssetName;
 use crate::certificate::Certificates;
+use crate::data::CData;
 use crate::error::CError;
 use crate::genesis_key_delegation::GenesisHash;
 use crate::linear_fee::Coin;
@@ -9,7 +10,7 @@ use crate::multi_asset::PolicyID;
 use crate::option::COption;
 use crate::panic::*;
 use crate::protocol_param_update::ProtocolParamUpdate;
-use crate::ptr::Free;
+use crate::ptr::*;
 use crate::transaction_input::TransactionInputs;
 use crate::transaction_output::TransactionOutputs;
 use crate::withdrawals::Withdrawals;
@@ -138,6 +139,30 @@ impl From<MetadataHash> for RMetadataHash {
   fn from(hash: MetadataHash) -> Self {
     hash.0.into()
   }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_metadata_hash_to_bytes(
+  metadata_hash: MetadataHash, result: &mut CData, error: &mut CError,
+) -> bool {
+  handle_exception(|| {
+    let metadata_hash: RMetadataHash = metadata_hash.into();
+    metadata_hash.to_bytes().into()
+  })
+  .response(result, error)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_metadata_hash_from_bytes(
+  data: CData, result: &mut MetadataHash, error: &mut CError,
+) -> bool {
+  handle_exception_result(|| {
+    data
+      .unowned()
+      .and_then(|bytes| RMetadataHash::from_bytes(bytes.to_vec()).into_result())
+      .map(|metadata_hash| metadata_hash.into())
+  })
+  .response(result, error)
 }
 
 pub type MintAssetsKeyValue = CKeyValue<AssetName, u64>;

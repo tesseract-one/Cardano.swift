@@ -113,7 +113,7 @@ extension CCardano.GeneralTransactionMetadata: CArray {
 
 extension GeneralTransactionMetadata {
     func withCKVArray<T>(fn: @escaping (CCardano.GeneralTransactionMetadata) throws -> T) rethrows -> T {
-        try withContiguousStorageIfAvailable { storage in
+        try Array(self).withContiguousStorageIfAvailable { storage in
             let mapped = storage.map { el in
                 el.value.withCTransactionMetadatum { value in
                     CCardano.GeneralTransactionMetadata.CElement((el.key, value))

@@ -10,15 +10,49 @@ import CCardano
 
 public typealias UnitInterval = CCardano.UnitInterval
 
-extension CCardano.UnitInterval: CType {}
+extension UnitInterval: CType {}
 
 public typealias Ipv4 = CCardano.Ipv4
 
-extension CCardano.Ipv4: CType {}
+extension Ipv4: CType {}
+
+extension Ipv4 {
+    public init(bytes: Data) throws {
+        self = try bytes.withCData { bytes in
+            RustResult<Self>.wrap { res, err in
+                cardano_ipv4_from_bytes(bytes, res, err)
+            }
+        }.get()
+    }
+    
+    public func data() throws -> Data {
+        var data = try RustResult<Self>.wrap { res, err in
+            cardano_ipv4_to_bytes(self, res, err)
+        }.get()
+        return data.owned()
+    }
+}
 
 public typealias Ipv6 = CCardano.Ipv6
 
-extension CCardano.Ipv6: CType {}
+extension Ipv6: CType {}
+
+extension Ipv6 {
+    public init(bytes: Data) throws {
+        self = try bytes.withCData { bytes in
+            RustResult<Self>.wrap { res, err in
+                cardano_ipv6_from_bytes(bytes, res, err)
+            }
+        }.get()
+    }
+    
+    public func data() throws -> Data {
+        var data = try RustResult<Self>.wrap { res, err in
+            cardano_ipv6_to_bytes(self, res, err)
+        }.get()
+        return data.owned()
+    }
+}
 
 extension COption_Port: COption {
     typealias Tag = COption_Port_Tag

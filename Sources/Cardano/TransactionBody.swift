@@ -27,7 +27,7 @@ extension CCardano.ProposedProtocolParameterUpdates: CArray {
 
 extension ProposedProtocolParameterUpdates {
     func withCKVArray<T>(fn: @escaping (CCardano.ProposedProtocolParameterUpdates) throws -> T) rethrows -> T {
-        try withContiguousStorageIfAvailable { storage in
+        try Array(self).withContiguousStorageIfAvailable { storage in
             let mapped = storage.map {CCardano.ProposedProtocolParameterUpdates.CElement(
                 key: $0.key,
                 val: $0.value.withCProtocolParamUpdate { $0 }
@@ -48,6 +48,11 @@ public struct Update {
             $0.copied()
         }
         epoch = update.epoch
+    }
+    
+    public init(proposedProtocolParameterUpdates: ProposedProtocolParameterUpdates, epoch: Epoch) {
+        self.proposedProtocolParameterUpdates = proposedProtocolParameterUpdates
+        self.epoch = epoch
     }
     
     func clonedCUpdate() throws -> CCardano.Update {
@@ -87,6 +92,23 @@ public typealias MetadataHash = CCardano.MetadataHash
 
 extension MetadataHash: CType {}
 
+extension MetadataHash {
+    public init(bytes: Data) throws {
+        self = try bytes.withCData { bytes in
+            RustResult<Self>.wrap { res, err in
+                cardano_metadata_hash_from_bytes(bytes, res, err)
+            }
+        }.get()
+    }
+    
+    public func data() throws -> Data {
+        var data = try RustResult<Self>.wrap { res, err in
+            cardano_metadata_hash_to_bytes(self, res, err)
+        }.get()
+        return data.owned()
+    }
+}
+
 public typealias MintAssets = Dictionary<AssetName, UInt64>
 
 extension CCardano.MintAssets: CArray {
@@ -99,7 +121,7 @@ extension CCardano.MintAssets: CArray {
 
 extension MintAssets {
     func withCKVArray<T>(fn: @escaping (CCardano.MintAssets) throws -> T) rethrows -> T {
-        try withContiguousStorageIfAvailable { storage in
+        try Array(self).withContiguousStorageIfAvailable { storage in
             let mapped = storage.map { CCardano.MintAssets.CElement($0) }
             return try mapped.withUnsafeBufferPointer {
                 try fn(CCardano.MintAssets(ptr: $0.baseAddress, len: UInt($0.count)))
@@ -127,7 +149,7 @@ extension CCardano.Mint: CArray {
 
 extension Mint {
     func withCKVArray<T>(fn: @escaping (CCardano.Mint) throws -> T) rethrows -> T {
-        try withContiguousStorageIfAvailable { storage in
+        try Array(self).withContiguousStorageIfAvailable { storage in
             let mapped = storage.map { el in
                 el.value.withCKVArray { arr in
                     CCardano.Mint.CElement((el.key, arr))

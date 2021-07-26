@@ -137,7 +137,7 @@ public enum StakeCredential: Equatable, Hashable {
         switch credential.tag {
         case Key: self = .keyHash(credential.key)
         case Script: self = .scriptHash(credential.script)
-        default: fatalError("Unknow StakeCredential type")
+        default: fatalError("Unknown StakeCredential type")
         }
     }
     
