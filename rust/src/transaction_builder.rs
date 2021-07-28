@@ -344,37 +344,41 @@ impl TryFrom<RTransactionBuilder> for TransactionBuilder {
 #[no_mangle]
 pub unsafe extern "C" fn cardano_transaction_builder_add_key_input(
   tb: TransactionBuilder, hash: Ed25519KeyHash, input: TransactionInput, amount: Value,
-  error: &mut CError,
+  result: &mut TransactionBuilder, error: &mut CError,
 ) -> bool {
   handle_exception_result(|| {
     tb.try_into()
       .zip(amount.try_into())
       .map(|(mut tb, amount): (RTransactionBuilder, RValue)| {
-        tb.add_key_input(&hash.into(), &input.into(), &amount)
+        tb.add_key_input(&hash.into(), &input.into(), &amount);
+        tb
       })
+      .and_then(|tb| tb.try_into())
   })
-  .response(&mut (), error)
+  .response(result, error)
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn cardano_transaction_builder_add_script_input(
   tb: TransactionBuilder, hash: ScriptHash, input: TransactionInput, amount: Value,
-  error: &mut CError,
+  result: &mut TransactionBuilder, error: &mut CError,
 ) -> bool {
   handle_exception_result(|| {
     tb.try_into()
       .zip(amount.try_into())
       .map(|(mut tb, amount): (RTransactionBuilder, RValue)| {
-        tb.add_script_input(&hash.into(), &input.into(), &amount)
+        tb.add_script_input(&hash.into(), &input.into(), &amount);
+        tb
       })
+      .and_then(|tb| tb.try_into())
   })
-  .response(&mut (), error)
+  .response(result, error)
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn cardano_transaction_builder_add_bootstrap_input(
   tb: TransactionBuilder, hash: ByronAddress, input: TransactionInput, amount: Value,
-  error: &mut CError,
+  result: &mut TransactionBuilder, error: &mut CError,
 ) -> bool {
   handle_exception_result(|| {
     tb.try_into()
@@ -382,17 +386,19 @@ pub unsafe extern "C" fn cardano_transaction_builder_add_bootstrap_input(
       .zip(amount.try_into())
       .map(
         |((mut tb, hash), amount): ((RTransactionBuilder, RByronAddress), RValue)| {
-          tb.add_bootstrap_input(&hash, &input.into(), &amount)
+          tb.add_bootstrap_input(&hash, &input.into(), &amount);
+          tb
         },
       )
+      .and_then(|tb| tb.try_into())
   })
-  .response(&mut (), error)
+  .response(result, error)
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn cardano_transaction_builder_add_input(
   tb: TransactionBuilder, address: Address, input: TransactionInput, amount: Value,
-  error: &mut CError,
+  result: &mut TransactionBuilder, error: &mut CError,
 ) -> bool {
   handle_exception_result(|| {
     tb.try_into()
@@ -400,11 +406,13 @@ pub unsafe extern "C" fn cardano_transaction_builder_add_input(
       .zip(amount.try_into())
       .map(
         |((mut tb, address), amount): ((RTransactionBuilder, RAddress), RValue)| {
-          tb.add_input(&address, &input.into(), &amount)
+          tb.add_input(&address, &input.into(), &amount);
+          tb
         },
       )
+      .and_then(|tb| tb.try_into())
   })
-  .response(&mut (), error)
+  .response(result, error)
 }
 
 #[no_mangle]
@@ -429,16 +437,20 @@ pub unsafe extern "C" fn cardano_transaction_builder_fee_for_input(
 
 #[no_mangle]
 pub unsafe extern "C" fn cardano_transaction_builder_add_output(
-  tb: TransactionBuilder, output: TransactionOutput, error: &mut CError,
+  tb: TransactionBuilder, output: TransactionOutput, result: &mut TransactionBuilder,
+  error: &mut CError,
 ) -> bool {
   handle_exception_result(|| {
-    tb.try_into().zip(output.try_into()).and_then(
-      |(mut tb, output): (RTransactionBuilder, RTransactionOutput)| {
-        tb.add_output(&output).into_result()
-      },
-    )
+    tb.try_into()
+      .zip(output.try_into())
+      .and_then(
+        |(mut tb, output): (RTransactionBuilder, RTransactionOutput)| {
+          tb.add_output(&output).into_result().map(|_| tb)
+        },
+      )
+      .and_then(|tb| tb.try_into())
   })
-  .response(&mut (), error)
+  .response(result, error)
 }
 
 #[no_mangle]
@@ -460,38 +472,56 @@ pub unsafe extern "C" fn cardano_transaction_builder_fee_for_output(
 
 #[no_mangle]
 pub unsafe extern "C" fn cardano_transaction_builder_set_certs(
-  tb: TransactionBuilder, certs: Certificates, error: &mut CError,
+  tb: TransactionBuilder, certs: Certificates, result: &mut TransactionBuilder, error: &mut CError,
 ) -> bool {
   handle_exception_result(|| {
     tb.try_into()
       .zip(certs.try_into())
-      .map(|(mut tb, certs): (RTransactionBuilder, RCertificates)| tb.set_certs(&certs))
+      .map(|(mut tb, certs): (RTransactionBuilder, RCertificates)| {
+        tb.set_certs(&certs);
+        tb
+      })
+      .and_then(|tb| tb.try_into())
   })
-  .response(&mut (), error)
+  .response(result, error)
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn cardano_transaction_builder_set_withdrawals(
-  tb: TransactionBuilder, withdrawals: Withdrawals, error: &mut CError,
+  tb: TransactionBuilder, withdrawals: Withdrawals, result: &mut TransactionBuilder,
+  error: &mut CError,
 ) -> bool {
   handle_exception_result(|| {
-    tb.try_into().zip(withdrawals.try_into()).map(
-      |(mut tb, withdrawals): (RTransactionBuilder, RWithdrawals)| tb.set_withdrawals(&withdrawals),
-    )
+    tb.try_into()
+      .zip(withdrawals.try_into())
+      .map(
+        |(mut tb, withdrawals): (RTransactionBuilder, RWithdrawals)| {
+          tb.set_withdrawals(&withdrawals);
+          tb
+        },
+      )
+      .and_then(|tb| tb.try_into())
   })
-  .response(&mut (), error)
+  .response(result, error)
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn cardano_transaction_builder_set_metadata(
-  tb: TransactionBuilder, metadata: TransactionMetadata, error: &mut CError,
+  tb: TransactionBuilder, metadata: TransactionMetadata, result: &mut TransactionBuilder,
+  error: &mut CError,
 ) -> bool {
   handle_exception_result(|| {
-    tb.try_into().zip(metadata.try_into()).map(
-      |(mut tb, metadata): (RTransactionBuilder, RTransactionMetadata)| tb.set_metadata(&metadata),
-    )
+    tb.try_into()
+      .zip(metadata.try_into())
+      .map(
+        |(mut tb, metadata): (RTransactionBuilder, RTransactionMetadata)| {
+          tb.set_metadata(&metadata);
+          tb
+        },
+      )
+      .and_then(|tb| tb.try_into())
   })
-  .response(&mut (), error)
+  .response(result, error)
 }
 
 #[no_mangle]
@@ -559,14 +589,20 @@ pub unsafe extern "C" fn cardano_transaction_builder_get_deposit(
   .response(result, error)
 }
 
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct TransactionBuilderBool(TransactionBuilder, bool);
+
 #[no_mangle]
 pub unsafe extern "C" fn cardano_transaction_builder_add_change_if_needed(
-  tb: TransactionBuilder, address: Address, result: &mut bool, error: &mut CError,
+  tb: TransactionBuilder, address: Address, result: &mut TransactionBuilderBool, error: &mut CError,
 ) -> bool {
   handle_exception_result(|| {
     tb.try_into().zip(address.try_into()).and_then(
       |(mut tb, address): (RTransactionBuilder, RAddress)| {
-        tb.add_change_if_needed(&address).into_result()
+        tb.add_change_if_needed(&address)
+          .into_result()
+          .and_then(|result| tb.try_into().map(|tb| TransactionBuilderBool(tb, result)))
       },
     )
   })

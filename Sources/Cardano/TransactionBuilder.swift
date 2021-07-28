@@ -212,44 +212,56 @@ public struct TransactionBuilder {
         self = transactionBuilder.owned()
     }
     
-    public func addKeyInput(hash: Ed25519KeyHash, input: TransactionInput, amount: Value) throws {
-        try withCTransactionBuilder { try $0.addKeyInput(hash: hash, input: input, amount: amount) }
+    public mutating func addKeyInput(hash: Ed25519KeyHash, input: TransactionInput, amount: Value) throws {
+        self = try withCTransactionBuilder {
+            try $0.addKeyInput(hash: hash, input: input, amount: amount)
+        }
     }
     
-    public func addScriptInput(hash: ScriptHash, input: TransactionInput, amount: Value) throws {
-        try withCTransactionBuilder { try $0.addScriptInput(hash: hash, input: input, amount: amount) }
+    public mutating func addScriptInput(hash: ScriptHash, input: TransactionInput, amount: Value) throws {
+        self = try withCTransactionBuilder {
+            try $0.addScriptInput(hash: hash, input: input, amount: amount)
+        }
     }
     
-    public func addBootstrapInput(hash: ByronAddress, input: TransactionInput, amount: Value) throws {
-        try withCTransactionBuilder { try $0.addBootstrapInput(hash: hash, input: input, amount: amount) }
+    public mutating func addBootstrapInput(hash: ByronAddress, input: TransactionInput, amount: Value) throws {
+        self = try withCTransactionBuilder {
+            try $0.addBootstrapInput(hash: hash, input: input, amount: amount)
+        }
     }
     
-    public func addInput(address: Address, input: TransactionInput, amount: Value) throws {
-        try withCTransactionBuilder { try $0.addInput(address: address, input: input, amount: amount) }
+    public mutating func addInput(address: Address, input: TransactionInput, amount: Value) throws {
+        self = try withCTransactionBuilder {
+            try $0.addInput(address: address, input: input, amount: amount)
+        }
     }
     
     public func feeForInput(address: Address, input: TransactionInput, amount: Value) throws -> Coin {
-        try withCTransactionBuilder { try $0.feeForInput(address: address, input: input, amount: amount) }
+        try withCTransactionBuilder {
+            try $0.feeForInput(address: address, input: input, amount: amount)
+        }
     }
     
-    public func addOutput(output: TransactionOutput) throws {
-        try withCTransactionBuilder { try $0.addOutput(output: output) }
+    public mutating func addOutput(output: TransactionOutput) throws {
+        self = try withCTransactionBuilder { try $0.addOutput(output: output) }
     }
     
     public func feeForOutput(output: TransactionOutput) throws -> Coin {
         try withCTransactionBuilder { try $0.feeForOutput(output: output) }
     }
     
-    public func setCerts(certs: Certificates) throws {
-        try withCTransactionBuilder { try $0.setCerts(certs: certs) }
+    public mutating func setCerts(certs: Certificates) throws {
+        self = try withCTransactionBuilder { try $0.setCerts(certs: certs) }
     }
     
-    public func setWithdrawals(withdrawals: Withdrawals) throws {
-        try withCTransactionBuilder { try $0.setWithdrawals(withdrawals: withdrawals) }
+    public mutating func setWithdrawals(withdrawals: Withdrawals) throws {
+        self = try withCTransactionBuilder {
+            try $0.setWithdrawals(withdrawals: withdrawals)
+        }
     }
     
-    public func setMetadata(metadata: TransactionMetadata) throws {
-        try withCTransactionBuilder { try $0.setMetadata(metadata: metadata) }
+    public mutating func setMetadata(metadata: TransactionMetadata) throws {
+        self = try withCTransactionBuilder { try $0.setMetadata(metadata: metadata) }
     }
     
     public func getExplicitInput() throws -> Value {
@@ -268,8 +280,12 @@ public struct TransactionBuilder {
         try withCTransactionBuilder { try $0.getDeposit() }
     }
     
-    public func addChangeIfNeeded(address: Address) throws -> Bool {
-        try withCTransactionBuilder { try $0.addChangeIfNeeded(address: address) }
+    public mutating func addChangeIfNeeded(address: Address) throws -> Bool {
+        let result = try withCTransactionBuilder {
+            try $0.addChangeIfNeeded(address: address)
+        }
+        self = result.0
+        return result.1
     }
     
     public func build() throws -> TransactionBody {
@@ -318,6 +334,8 @@ extension CCardano.TransactionBuilder: CPtr {
     }
 }
 
+extension CCardano.TransactionBuilderBool: CType {}
+
 extension CCardano.TransactionBuilder {
     public init(linearFee: LinearFee, minimumUtxoVal: Coin, poolDeposit: BigNum, keyDeposit: BigNum) throws {
         self = try RustResult<Self>.wrap { result, error in
@@ -325,40 +343,44 @@ extension CCardano.TransactionBuilder {
         }.get()
     }
     
-    public func addKeyInput(hash: Ed25519KeyHash, input: TransactionInput, amount: Value) throws {
-        try amount.withCValue { amount in
-            RustResult<Void>.wrap { error in
-                cardano_transaction_builder_add_key_input(self, hash, input, amount, error)
+    public func addKeyInput(hash: Ed25519KeyHash, input: TransactionInput, amount: Value) throws -> TransactionBuilder {
+        var transactionBuilder = try amount.withCValue { amount in
+            RustResult<Self>.wrap { result, error in
+                cardano_transaction_builder_add_key_input(self, hash, input, amount, result, error)
             }
         }.get()
+        return transactionBuilder.owned()
     }
     
-    public func addScriptInput(hash: ScriptHash, input: TransactionInput, amount: Value) throws {
-        try amount.withCValue { amount in
-            RustResult<Void>.wrap { error in
-                cardano_transaction_builder_add_script_input(self, hash, input, amount, error)
+    public func addScriptInput(hash: ScriptHash, input: TransactionInput, amount: Value) throws -> TransactionBuilder {
+        var transactionBuilder = try amount.withCValue { amount in
+            RustResult<Self>.wrap { result, error in
+                cardano_transaction_builder_add_script_input(self, hash, input, amount, result, error)
             }
         }.get()
+        return transactionBuilder.owned()
     }
     
-    public func addBootstrapInput(hash: ByronAddress, input: TransactionInput, amount: Value) throws {
-        try hash.withCAddress { hash in
+    public func addBootstrapInput(hash: ByronAddress, input: TransactionInput, amount: Value) throws -> TransactionBuilder {
+        var transactionBuilder = try hash.withCAddress { hash in
             amount.withCValue { amount in
-                RustResult<Void>.wrap { error in
-                    cardano_transaction_builder_add_bootstrap_input(self, hash, input, amount, error)
+                RustResult<Self>.wrap { result, error in
+                    cardano_transaction_builder_add_bootstrap_input(self, hash, input, amount, result, error)
                 }
             }
         }.get()
+        return transactionBuilder.owned()
     }
     
-    public func addInput(address: Address, input: TransactionInput, amount: Value) throws {
-        try address.withCAddress { address in
+    public func addInput(address: Address, input: TransactionInput, amount: Value) throws -> TransactionBuilder {
+        var transactionBuilder = try address.withCAddress { address in
             amount.withCValue { amount in
-                RustResult<Void>.wrap { error in
-                    cardano_transaction_builder_add_input(self, address, input, amount, error)
+                RustResult<Self>.wrap { result, error in
+                    cardano_transaction_builder_add_input(self, address, input, amount, result, error)
                 }
             }
         }.get()
+        return transactionBuilder.owned()
     }
     
     public func feeForInput(address: Address, input: TransactionInput, amount: Value) throws -> Coin {
@@ -371,12 +393,13 @@ extension CCardano.TransactionBuilder {
         }.get()
     }
     
-    public func addOutput(output: TransactionOutput) throws {
-        try output.withCTransactionOutput { output in
-            RustResult<Void>.wrap { error in
-                cardano_transaction_builder_add_output(self, output, error)
+    public func addOutput(output: TransactionOutput) throws -> TransactionBuilder {
+        var transactionBuilder = try output.withCTransactionOutput { output in
+            RustResult<Self>.wrap { result, error in
+                cardano_transaction_builder_add_output(self, output, result, error)
             }
         }.get()
+        return transactionBuilder.owned()
     }
     
     public func feeForOutput(output: TransactionOutput) throws -> Coin {
@@ -387,28 +410,31 @@ extension CCardano.TransactionBuilder {
         }.get()
     }
     
-    public func setCerts(certs: Certificates) throws {
-        try certs.withCArray { certs in
-            RustResult<Void>.wrap { error in
-                cardano_transaction_builder_set_certs(self, certs, error)
+    public func setCerts(certs: Certificates) throws -> TransactionBuilder {
+        var transactionBuilder = try certs.withCArray { certs in
+            RustResult<Self>.wrap { result, error in
+                cardano_transaction_builder_set_certs(self, certs, result, error)
             }
         }.get()
+        return transactionBuilder.owned()
     }
     
-    public func setWithdrawals(withdrawals: Withdrawals) throws {
-        try withdrawals.withCKVArray { withdrawals in
-            RustResult<Void>.wrap { error in
-                cardano_transaction_builder_set_withdrawals(self, withdrawals, error)
+    public func setWithdrawals(withdrawals: Withdrawals) throws -> TransactionBuilder {
+        var transactionBuilder = try withdrawals.withCKVArray { withdrawals in
+            RustResult<Self>.wrap { result, error in
+                cardano_transaction_builder_set_withdrawals(self, withdrawals, result, error)
             }
         }.get()
+        return transactionBuilder.owned()
     }
     
-    public func setMetadata(metadata: TransactionMetadata) throws {
-        try metadata.withCTransactionMetadata { metadata in
-            RustResult<Void>.wrap { error in
-                cardano_transaction_builder_set_metadata(self, metadata, error)
+    public func setMetadata(metadata: TransactionMetadata) throws -> TransactionBuilder {
+        var transactionBuilder = try metadata.withCTransactionMetadata { metadata in
+            RustResult<Self>.wrap { result, error in
+                cardano_transaction_builder_set_metadata(self, metadata, result, error)
             }
         }.get()
+        return transactionBuilder.owned()
     }
     
     public func getExplicitInput() throws -> Value {
@@ -438,12 +464,13 @@ extension CCardano.TransactionBuilder {
         }.get()
     }
     
-    public func addChangeIfNeeded(address: Address) throws -> Bool {
-        try address.withCAddress { address in
+    public func addChangeIfNeeded(address: Address) throws -> (TransactionBuilder, Bool) {
+        var transactionBuilderBool = try address.withCAddress { address in
             RustResult<Bool>.wrap { result, error in
                 cardano_transaction_builder_add_change_if_needed(self, address, result, error)
             }
         }.get()
+        return (transactionBuilderBool._0.owned(), transactionBuilderBool._1)
     }
 
     public func build() throws -> TransactionBody {
