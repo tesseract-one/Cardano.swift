@@ -55,4 +55,10 @@ extension Bip32PublicKey {
             cardano_bip32_public_key_derive(self, index, res, err)
         }.get()
     }
+    
+    public func toRawKey() throws -> PublicKey {
+        return try RustResult<PublicKey>.wrap { res, err in
+            cardano_bip32_public_key_to_raw_key(self, res, err)
+        }.get()
+    }
 }

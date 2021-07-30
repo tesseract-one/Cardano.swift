@@ -1,4 +1,5 @@
 use std::convert::{TryInto, TryFrom};
+use crate::private_key::PrivateKey;
 use super::data::CData;
 use super::ptr::Ptr;
 use super::error::CError;
@@ -48,11 +49,17 @@ pub unsafe extern "C" fn cardano_bip32_private_key_generate_ed25519_bip32(
   }).response(result, error)
 }
 
-// #[no_mangle]
-// pub unsafe extern "C" fn bip_32_private_key_to_raw_key(
-//   pk: Bip32PrivateKey, result: &mut PrivateKey, error: &mut CError
-// ) -> bool {
-// }
+#[no_mangle]
+pub unsafe extern "C" fn cardano_bip32_private_key_to_raw_key(
+  pk: Bip32PrivateKey, result: &mut PrivateKey, error: &mut CError
+) -> bool {
+  handle_exception_result(|| {
+    pk.try_into()
+      .map(|pk: RBip32PrivateKey| pk.to_raw_key())
+      .map(|pk| pk.into())
+  })
+  .response(result, error)
+}
 
 #[no_mangle]
 pub unsafe extern "C" fn cardano_bip32_private_key_to_public(
@@ -115,4 +122,41 @@ pub unsafe extern "C" fn cardano_bip32_private_key_from_bip39_entropy(
       .map(|(ent, pwd)| RBip32PrivateKey::from_bip39_entropy(ent, pwd))
       .map(|pk| pk.into())
   }).response(result, error)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_bip32_private_key_from_128_xprv(
+  data: CData, result: &mut Bip32PrivateKey, error: &mut CError,
+) -> bool {
+  handle_exception_result(|| {
+    data
+      .unowned()
+      .and_then(|bytes| RBip32PrivateKey::from_128_xprv(bytes).into_result())
+      .map(|pk| pk.into())
+  })
+  .response(result, error)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_bip32_private_key_to_128_xprv(
+  pk: Bip32PrivateKey, result: &mut CData, error: &mut CError,
+) -> bool {
+  handle_exception_result(|| {
+    pk.try_into()
+      .map(|pk: RBip32PrivateKey| pk.to_128_xprv())
+      .map(|bytes| bytes.into())
+  })
+  .response(result, error)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_bip32_private_key_chaincode(
+  pk: Bip32PrivateKey, result: &mut CData, error: &mut CError,
+) -> bool {
+  handle_exception_result(|| {
+    pk.try_into()
+      .map(|pk: RBip32PrivateKey| pk.chaincode())
+      .map(|bytes| bytes.into())
+  })
+  .response(result, error)
 }

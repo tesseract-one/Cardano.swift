@@ -41,6 +41,14 @@ extension Bip32PrivateKey {
         }.get()
     }
     
+    public init(xprv128: Data) throws {
+        self = try xprv128.withCData { xprv128 in
+            RustResult<Self>.wrap { res, err in
+                cardano_bip32_private_key_from_128_xprv(xprv128, res, err)
+            }
+        }.get()
+    }
+    
     public static func generate() throws -> Self {
         try RustResult<Self>.wrap { res, err in
             cardano_bip32_private_key_generate_ed25519_bip32(res, err)
@@ -61,6 +69,13 @@ extension Bip32PrivateKey {
         return str.owned()
     }
     
+    public func to128Xprv() throws -> Data {
+        var xprv128 = try RustResult<CData>.wrap { res, err in
+            cardano_bip32_private_key_to_128_xprv(self, res, err)
+        }.get()
+        return xprv128.owned()
+    }
+    
     public func publicKey() throws -> Bip32PublicKey {
         return try RustResult<Bip32PublicKey>.wrap { res, err in
             cardano_bip32_private_key_to_public(self, res, err)
@@ -71,5 +86,12 @@ extension Bip32PrivateKey {
         return try RustResult<Self>.wrap { res, err in
             cardano_bip32_private_key_derive(self, index, res, err)
         }.get()
+    }
+    
+    public func chaincode() throws -> Data {
+        var chaincode = try RustResult<CData>.wrap { res, err in
+            cardano_bip32_private_key_chaincode(self, res, err)
+        }.get()
+        return chaincode.owned()
     }
 }

@@ -1,5 +1,6 @@
 use crate::address::pointer::Slot;
 use crate::array::*;
+use crate::data::CData;
 use crate::error::CError;
 use crate::general_transaction_metadata::GeneralTransactionMetadata;
 use crate::option::COption;
@@ -402,6 +403,32 @@ impl TryFrom<RTransactionMetadata> for TransactionMetadata {
         native_scripts: native_scripts.into(),
       })
   }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_transaction_metadata_to_bytes(
+  transaction_metadata: TransactionMetadata, result: &mut CData, error: &mut CError,
+) -> bool {
+  handle_exception_result(|| {
+    transaction_metadata
+      .try_into()
+      .map(|transaction_metadata: RTransactionMetadata| transaction_metadata.to_bytes())
+      .map(|bytes| bytes.into())
+  })
+  .response(result, error)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_transaction_metadata_from_bytes(
+  data: CData, result: &mut TransactionMetadata, error: &mut CError,
+) -> bool {
+  handle_exception_result(|| {
+    data
+      .unowned()
+      .and_then(|bytes| RTransactionMetadata::from_bytes(bytes.to_vec()).into_result())
+      .and_then(|transaction_metadata| transaction_metadata.try_into())
+  })
+  .response(result, error)
 }
 
 #[no_mangle]

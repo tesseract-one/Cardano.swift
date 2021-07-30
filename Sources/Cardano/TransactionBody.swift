@@ -278,6 +278,15 @@ public struct TransactionBody {
         self.ttl = ttl
     }
     
+    public init(bytes: Data) throws {
+        var transactionBody = try CCardano.TransactionBody(bytes: bytes)
+        self = transactionBody.owned()
+    }
+    
+    public func bytes() throws -> Data {
+        try withCTransactionBody { try $0.bytes() }
+    }
+
     func clonedCTransactionBody() throws -> CCardano.TransactionBody {
         try withCTransactionBody { try $0.clone() }
     }
@@ -313,6 +322,21 @@ extension CCardano.TransactionBody: CPtr {
 }
 
 extension CCardano.TransactionBody {
+    public init(bytes: Data) throws {
+        self = try bytes.withCData { bytes in
+            RustResult<Self>.wrap { result, error in
+                cardano_transaction_body_from_bytes(bytes, result, error)
+            }
+        }.get()
+    }
+    
+    public func bytes() throws -> Data {
+        var bytes = try RustResult<Self>.wrap { result, error in
+            cardano_transaction_body_to_bytes(self, result, error)
+        }.get()
+        return bytes.owned()
+    }
+
     public func clone() throws -> Self {
         try RustResult<Self>.wrap { result, error in
             cardano_transaction_body_clone(self, result, error)

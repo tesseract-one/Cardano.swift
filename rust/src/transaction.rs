@@ -1,7 +1,8 @@
+use crate::data::CData;
 use crate::error::CError;
 use crate::option::COption;
 use crate::panic::*;
-use crate::ptr::Free;
+use crate::ptr::*;
 use crate::transaction_body::TransactionBody;
 use crate::transaction_metadata::TransactionMetadata;
 use crate::transaction_witness_set::TransactionWitnessSet;
@@ -55,6 +56,32 @@ impl TryFrom<RTransaction> for Transaction {
         metadata: metadata.into(),
       })
   }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_transaction_to_bytes(
+  transaction: Transaction, result: &mut CData, error: &mut CError,
+) -> bool {
+  handle_exception_result(|| {
+    transaction
+      .try_into()
+      .map(|transaction: RTransaction| transaction.to_bytes())
+      .map(|bytes| bytes.into())
+  })
+  .response(result, error)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_transaction_from_bytes(
+  data: CData, result: &mut Transaction, error: &mut CError,
+) -> bool {
+  handle_exception_result(|| {
+    data
+      .unowned()
+      .and_then(|bytes| RTransaction::from_bytes(bytes.to_vec()).into_result())
+      .and_then(|transaction| transaction.try_into())
+  })
+  .response(result, error)
 }
 
 #[no_mangle]

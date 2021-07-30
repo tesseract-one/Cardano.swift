@@ -32,6 +32,21 @@ public struct Transaction {
         metadata = transaction.metadata.get()?.copied()
     }
     
+    public init(body: TransactionBody, witnessSet: TransactionWitnessSet, metadata: TransactionMetadata?) {
+        self.body = body
+        self.witnessSet = witnessSet
+        self.metadata = metadata
+    }
+    
+    public init(bytes: Data) throws {
+        var transaction = try CCardano.Transaction(bytes: bytes)
+        self = transaction.owned()
+    }
+    
+    public func bytes() throws -> Data {
+        try withCTransaction { try $0.bytes() }
+    }
+    
     func clonedCTransaction() throws -> CCardano.Transaction {
         try withCTransaction { try $0.clone() }
     }
@@ -60,6 +75,21 @@ extension CCardano.Transaction: CPtr {
 }
 
 extension CCardano.Transaction {
+    public init(bytes: Data) throws {
+        self = try bytes.withCData { bytes in
+            RustResult<Self>.wrap { result, error in
+                cardano_transaction_from_bytes(bytes, result, error)
+            }
+        }.get()
+    }
+    
+    public func bytes() throws -> Data {
+        var bytes = try RustResult<Self>.wrap { result, error in
+            cardano_transaction_to_bytes(self, result, error)
+        }.get()
+        return bytes.owned()
+    }
+
     public func clone() throws -> Self {
         try RustResult<Self>.wrap { result, error in
             cardano_transaction_clone(self, result, error)

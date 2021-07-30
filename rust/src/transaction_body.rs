@@ -344,6 +344,32 @@ impl TryFrom<RTransactionBody> for TransactionBody {
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn cardano_transaction_body_to_bytes(
+  transaction_body: TransactionBody, result: &mut CData, error: &mut CError,
+) -> bool {
+  handle_exception_result(|| {
+    transaction_body
+      .try_into()
+      .map(|transaction_body: RTransactionBody| transaction_body.to_bytes())
+      .map(|bytes| bytes.into())
+  })
+  .response(result, error)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_transaction_body_from_bytes(
+  data: CData, result: &mut TransactionBody, error: &mut CError,
+) -> bool {
+  handle_exception_result(|| {
+    data
+      .unowned()
+      .and_then(|bytes| RTransactionBody::from_bytes(bytes.to_vec()).into_result())
+      .and_then(|transaction_body| transaction_body.try_into())
+  })
+  .response(result, error)
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn cardano_transaction_body_clone(
   transaction_body: TransactionBody, result: &mut TransactionBody, error: &mut CError,
 ) -> bool {

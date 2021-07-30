@@ -1,4 +1,5 @@
 use std::convert::{TryInto, TryFrom};
+use crate::public_key::PublicKey;
 use super::data::CData;
 use super::ptr::Ptr;
 use super::error::CError;
@@ -33,6 +34,18 @@ pub unsafe extern "C" fn cardano_bip32_public_key_derive(
       .and_then(|pk: RBip32PublicKey| pk.derive(index).into_result())
       .map(|pk| pk.into())
   }).response(result, error)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_bip32_public_key_to_raw_key(
+  pk: Bip32PublicKey, result: &mut PublicKey, error: &mut CError
+) -> bool {
+  handle_exception_result(|| {
+    pk.try_into()
+      .map(|pk: RBip32PublicKey| pk.to_raw_key())
+      .map(|pk| pk.into())
+  })
+  .response(result, error)
 }
 
 #[no_mangle]
