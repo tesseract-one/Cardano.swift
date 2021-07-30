@@ -22,7 +22,7 @@ extension GenesisHash {
     }
     
     public func data() throws -> Data {
-        var data = try RustResult<Self>.wrap { res, err in
+        var data = try RustResult<CData>.wrap { res, err in
             cardano_genesis_hash_to_bytes(self, res, err)
         }.get()
         return data.owned()
@@ -62,7 +62,7 @@ extension GenesisDelegateHash {
     }
     
     public func data() throws -> Data {
-        var data = try RustResult<Self>.wrap { res, err in
+        var data = try RustResult<CData>.wrap { res, err in
             cardano_genesis_delegate_hash_to_bytes(self, res, err)
         }.get()
         return data.owned()
@@ -83,7 +83,7 @@ extension VRFKeyHash {
     }
     
     public func data() throws -> Data {
-        var data = try RustResult<Self>.wrap { res, err in
+        var data = try RustResult<CData>.wrap { res, err in
             cardano_vrf_key_hash_to_bytes(self, res, err)
         }.get()
         return data.owned()

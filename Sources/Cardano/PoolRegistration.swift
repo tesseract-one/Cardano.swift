@@ -26,7 +26,7 @@ extension Ipv4 {
     }
     
     public func data() throws -> Data {
-        var data = try RustResult<Self>.wrap { res, err in
+        var data = try RustResult<CData>.wrap { res, err in
             cardano_ipv4_to_bytes(self, res, err)
         }.get()
         return data.owned()
@@ -47,7 +47,7 @@ extension Ipv6 {
     }
     
     public func data() throws -> Data {
-        var data = try RustResult<Self>.wrap { res, err in
+        var data = try RustResult<CData>.wrap { res, err in
             cardano_ipv6_to_bytes(self, res, err)
         }.get()
         return data.owned()

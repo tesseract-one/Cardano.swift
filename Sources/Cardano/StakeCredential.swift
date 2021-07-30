@@ -23,7 +23,7 @@ extension Ed25519KeyHash {
     }
     
     public func data() throws -> Data {
-        var data = try RustResult<Self>.wrap { res, err in
+        var data = try RustResult<CData>.wrap { res, err in
             cardano_ed25519_key_hash_to_bytes(self, res, err)
         }.get()
         return data.owned()
@@ -79,7 +79,7 @@ extension ScriptHash {
     }
     
     public func data() throws -> Data {
-        var data = try RustResult<Self>.wrap { res, err in
+        var data = try RustResult<CData>.wrap { res, err in
             cardano_script_hash_to_bytes(self, res, err)
         }.get()
         return data.owned()
@@ -177,7 +177,7 @@ extension CCardano.StakeCredential {
     }
     
     public func data() throws -> Data {
-        var data = try RustResult<Self>.wrap { res, err in
+        var data = try RustResult<CData>.wrap { res, err in
             cardano_stake_credential_to_bytes(self, res, err)
         }.get()
         return data.owned()

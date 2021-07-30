@@ -102,7 +102,7 @@ extension MetadataHash {
     }
     
     public func data() throws -> Data {
-        var data = try RustResult<Self>.wrap { res, err in
+        var data = try RustResult<CData>.wrap { res, err in
             cardano_metadata_hash_to_bytes(self, res, err)
         }.get()
         return data.owned()
@@ -331,7 +331,7 @@ extension CCardano.TransactionBody {
     }
     
     public func bytes() throws -> Data {
-        var bytes = try RustResult<Self>.wrap { result, error in
+        var bytes = try RustResult<CData>.wrap { result, error in
             cardano_transaction_body_to_bytes(self, result, error)
         }.get()
         return bytes.owned()

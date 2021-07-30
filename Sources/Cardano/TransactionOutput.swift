@@ -58,7 +58,7 @@ extension CCardano.TransactionOutput {
     }
     
     public func bytes() throws -> Data {
-        var bytes = try RustResult<Self>.wrap { result, error in
+        var bytes = try RustResult<CData>.wrap { result, error in
             cardano_transaction_output_to_bytes(self, result, error)
         }.get()
         return bytes.owned()
