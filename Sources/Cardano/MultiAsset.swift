@@ -34,7 +34,7 @@ extension MultiAsset {
     }
     
     func withCKVArray<T>(fn: @escaping (CCardano.MultiAsset) throws -> T) rethrows -> T {
-        try withContiguousStorageIfAvailable { storage in
+        try Array(self).withContiguousStorageIfAvailable { storage in
             let mapped = storage.map { el in
                 el.value.withCKVArray { arr in
                     CCardano.MultiAsset.CElement((el.key, arr))
