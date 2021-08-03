@@ -106,7 +106,7 @@ final class TransactionBuilderTests: XCTestCase {
         assert(addedChange)
         XCTAssertEqual(txBuilder.outputs.count, 2)
         XCTAssertEqual(
-            try txBuilder.getExplicitInput().checkedAdd(rhs: txBuilder.getExplicitInput()).coin,
+            try txBuilder.getExplicitInput().checkedAdd(rhs: txBuilder.getImplicitInput()).coin,
             try txBuilder.getExplicitOutput().checkedAdd(rhs: Value(coin: txBuilder.fee!)).coin
         )
         XCTAssertNoThrow(try txBuilder.build())
