@@ -59,10 +59,14 @@ public struct Value {
     func withCValue<T>(
         fn: @escaping (CCardano.Value) throws -> T
     ) rethrows -> T {
-        try fn(CCardano.Value(
-            coin: coin,
-            multiasset: multiasset.cOption { $0.withCKVArray { $0 } }
-        ))
+        try multiasset.withCOption(
+            with: { try $0.withCKVArray(fn: $1) }
+        ) { multiasset in
+            try fn(CCardano.Value(
+                coin: coin,
+                multiasset: multiasset
+            ))
+        }
     }
 }
 

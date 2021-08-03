@@ -54,11 +54,23 @@ public struct TransactionWitnessSet {
     func withCTransactionWitnessSet<T>(
         fn: @escaping (CCardano.TransactionWitnessSet) throws -> T
     ) rethrows -> T {
-        try fn(CCardano.TransactionWitnessSet(
-            vkeys: vkeys.cOption { $0.withCArray { $0 } },
-            scripts: scripts.cOption { $0.withCArray { $0 } },
-            bootstraps: bootstraps.cOption { $0.withCArray { $0 } }
-        ))
+        try vkeys.withCOption(
+            with: { try $0.withCArray(fn: $1) }
+        ) { vkeys in
+            try scripts.withCOption(
+                with: { try $0.withCArray(fn: $1) }
+            ) { scripts in
+                try bootstraps.withCOption(
+                    with: { try $0.withCArray(fn: $1) }
+                ) { bootstraps in
+                    try fn(CCardano.TransactionWitnessSet(
+                        vkeys: vkeys,
+                        scripts: scripts,
+                        bootstraps: bootstraps
+                    ))
+                }
+            }
+        }
     }
 }
 

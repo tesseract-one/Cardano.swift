@@ -306,10 +306,16 @@ public struct TransactionMetadata {
     func withCTransactionMetadata<T>(
         fn: @escaping (CCardano.TransactionMetadata) throws -> T
     ) rethrows -> T {
-        try fn(CCardano.TransactionMetadata(
-            general: general.withCKVArray { $0 },
-            native_scripts: nativeScripts.cOption { $0.withCArray { $0 }}
-        ))
+        try general.withCKVArray { general in
+            try nativeScripts.withCOption(
+                with: { try $0.withCArray(fn: $1) }
+            ) { nativeScripts in
+                try fn(CCardano.TransactionMetadata(
+                    general: general,
+                    native_scripts: nativeScripts
+                ))
+            }
+        }
     }
 }
 

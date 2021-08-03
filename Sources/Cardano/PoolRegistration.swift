@@ -556,17 +556,27 @@ public struct PoolParams {
     func withCPoolParams<T>(
         fn: @escaping (CCardano.PoolParams) throws -> T
     ) rethrows -> T {
-        try fn(CCardano.PoolParams(
-            operator_: `operator`,
-            vrf_keyhash: vrfKeyhash,
-            pledge: pledge,
-            cost: cost,
-            margin: margin,
-            reward_account: rewardAccount.withCRewardAddress { $0 },
-            pool_owners: poolOwners.withCArray { $0 },
-            relays: relays.withCArray { $0 },
-            pool_metadata: poolMetadata.cOption { $0.withCPoolMetadata { $0 } }
-        ))
+        try rewardAccount.withCRewardAddress { rewardAccount in
+            try poolOwners.withCArray { poolOwners in
+                try relays.withCArray { relays in
+                    try poolMetadata.withCOption(
+                        with: { try $0.withCPoolMetadata(fn: $1) }
+                    ) { poolMetadata in
+                        try fn(CCardano.PoolParams(
+                            operator_: `operator`,
+                            vrf_keyhash: vrfKeyhash,
+                            pledge: pledge,
+                            cost: cost,
+                            margin: margin,
+                            reward_account: rewardAccount,
+                            pool_owners: poolOwners,
+                            relays: relays,
+                            pool_metadata: poolMetadata
+                        ))
+                    }
+                }
+            }
+        }
     }
 }
 

@@ -294,18 +294,38 @@ public struct TransactionBody {
     func withCTransactionBody<T>(
         fn: @escaping (CCardano.TransactionBody) throws -> T
     ) rethrows -> T {
-        try fn(CCardano.TransactionBody(
-            inputs: inputs.withCArray { $0 },
-            outputs: outputs.withCArray { $0 },
-            fee: fee,
-            ttl: ttl.cOption(),
-            certs: certs.cOption { $0.withCArray { $0 } },
-            withdrawals: withdrawals.cOption { $0.withCKVArray { $0 } },
-            update: update.cOption { $0.withCUpdate { $0 } },
-            metadata_hash: metadataHash.cOption(),
-            validity_start_interval: validityStartInterval.cOption(),
-            mint: mint.cOption { $0.withCKVArray { $0 } }
-        ))
+        try inputs.withCArray { inputs in
+            try outputs.withCArray { outputs in
+                try certs.withCOption(
+                    with: { try $0.withCArray(fn: $1) }
+                ) { certs in
+                    try withdrawals.withCOption(
+                        with: { try $0.withCKVArray(fn: $1) }
+                    ) { withdrawals in
+                        try update.withCOption(
+                            with: { try $0.withCUpdate(fn: $1) }
+                        ) { update in
+                            try mint.withCOption(
+                                with: { try $0.withCKVArray(fn: $1) }
+                            ) { mint in
+                                try fn(CCardano.TransactionBody(
+                                    inputs: inputs,
+                                    outputs: outputs,
+                                    fee: fee,
+                                    ttl: ttl.cOption(),
+                                    certs: certs,
+                                    withdrawals: withdrawals,
+                                    update: update,
+                                    metadata_hash: metadataHash.cOption(),
+                                    validity_start_interval: validityStartInterval.cOption(),
+                                    mint: mint
+                                ))
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

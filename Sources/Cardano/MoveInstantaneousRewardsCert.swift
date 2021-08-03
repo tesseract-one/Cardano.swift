@@ -90,9 +90,11 @@ public struct MoveInstantaneousReward {
     func withCMoveInstantaneousReward<T>(
         fn: @escaping (CCardano.MoveInstantaneousReward) throws -> T
     ) rethrows -> T {
-        try fn(CCardano.MoveInstantaneousReward(
-            pot: pot.withCMIRPot { $0 }, rewards: rewards.withCKVArray { $0 }
-        ))
+        try pot.withCMIRPot { pot in
+            try rewards.withCKVArray { rewards in
+                try fn(CCardano.MoveInstantaneousReward(pot: pot, rewards: rewards))
+            }
+        }
     }
 }
 

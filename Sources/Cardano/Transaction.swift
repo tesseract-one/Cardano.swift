@@ -54,11 +54,15 @@ public struct Transaction {
     func withCTransaction<T>(
         fn: @escaping (CCardano.Transaction) throws -> T
     ) rethrows -> T {
-        try fn(CCardano.Transaction(
-            body: body.withCTransactionBody { $0 },
-            witness_set: witnessSet.withCTransactionWitnessSet { $0 },
-            metadata: metadata.cOption { $0.withCTransactionMetadata { $0 } }
-        ))
+        try metadata.withCOption(
+            with: { try $0.withCTransactionMetadata(fn: $1) }
+        ) { metadata in
+            try fn(CCardano.Transaction(
+                body: body.withCTransactionBody { $0 },
+                witness_set: witnessSet.withCTransactionWitnessSet { $0 },
+                metadata: metadata
+            ))
+        }
     }
 }
 

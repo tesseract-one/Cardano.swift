@@ -65,11 +65,17 @@ public struct MockWitnessSet {
     func withCMockWitnessSet<T>(
         fn: @escaping (CCardano.MockWitnessSet) throws -> T
     ) rethrows -> T {
-        try fn(CCardano.MockWitnessSet(
-            vkeys: vkeys.withCArray { $0 },
-            scripts: scripts.withCArray { $0 },
-            bootstraps: bootstraps.withCArray { $0 }
-        ))
+        try vkeys.withCArray { vkeys in
+            try scripts.withCArray { scripts in
+                try bootstraps.withCArray { bootstraps in
+                    try fn(CCardano.MockWitnessSet(
+                        vkeys: vkeys,
+                        scripts: scripts,
+                        bootstraps: bootstraps
+                    ))
+                }
+            }
+        }
     }
 }
 
@@ -303,22 +309,44 @@ public struct TransactionBuilder {
     func withCTransactionBuilder<T>(
         fn: @escaping (CCardano.TransactionBuilder) throws -> T
     ) rethrows -> T {
-        try fn(CCardano.TransactionBuilder(
-            minimum_utxo_val: minimumUtxoVal,
-            pool_deposit: poolDeposit,
-            key_deposit: keyDeposit,
-            fee_algo: feeAlgo,
-            inputs: inputs.withCArray { $0 },
-            outputs: outputs.withCArray { $0 },
-            fee: fee.cOption(),
-            ttl: ttl.cOption(),
-            certs: certs.cOption { $0.withCArray { $0 } },
-            withdrawals: withdrawals.cOption { $0.withCKVArray { $0 } },
-            metadata: metadata.cOption { $0.withCTransactionMetadata { $0 } },
-            validity_start_interval: validityStartInterval.cOption(),
-            input_types: inputTypes.withCMockWitnessSet { $0 },
-            mint: mint.cOption { $0.withCKVArray { $0 } }
-        ))
+        try inputs.withCArray { inputs in
+            try outputs.withCArray { outputs in
+                try certs.withCOption(
+                    with: { try $0.withCArray(fn: $1) }
+                ) { certs in
+                    try withdrawals.withCOption(
+                        with: { try $0.withCKVArray(fn: $1) }
+                    ) { withdrawals in
+                        try metadata.withCOption(
+                            with: { try $0.withCTransactionMetadata(fn: $1) }
+                        ) { metadata in
+                            try inputTypes.withCMockWitnessSet { inputTypes in
+                                try mint.withCOption(
+                                    with: { try $0.withCKVArray(fn: $1) }
+                                ) { mint in
+                                    try fn(CCardano.TransactionBuilder(
+                                        minimum_utxo_val: minimumUtxoVal,
+                                        pool_deposit: poolDeposit,
+                                        key_deposit: keyDeposit,
+                                        fee_algo: feeAlgo,
+                                        inputs: inputs,
+                                        outputs: outputs,
+                                        fee: fee.cOption(),
+                                        ttl: ttl.cOption(),
+                                        certs: certs,
+                                        withdrawals: withdrawals,
+                                        metadata: metadata,
+                                        validity_start_interval: validityStartInterval.cOption(),
+                                        input_types: inputTypes,
+                                        mint: mint
+                                    ))
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

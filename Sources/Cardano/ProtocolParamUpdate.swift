@@ -169,24 +169,28 @@ public struct ProtocolParamUpdate {
     func withCProtocolParamUpdate<T>(
         fn: @escaping (CCardano.ProtocolParamUpdate) throws -> T
     ) rethrows -> T {
-        try fn(CCardano.ProtocolParamUpdate(
-            minfee_a: minfeeA.cOption(),
-            minfee_b: minfeeB.cOption(),
-            max_block_body_size: maxBlockBodySize.cOption(),
-            max_tx_size: maxTxSize.cOption(),
-            max_block_header_size: maxBlockHeaderSize.cOption(),
-            key_deposit: keyDeposit.cOption(),
-            pool_deposit: poolDeposit.cOption(),
-            max_epoch: maxEpoch.cOption(),
-            n_opt: nOpt.cOption(),
-            pool_pledge_influence: poolPledgeInfluence.cOption(),
-            expansion_rate: expansionRate.cOption(),
-            treasury_growth_rate: treasuryGrowthRate.cOption(),
-            d: d.cOption(),
-            extra_entropy: extraEntropy.cOption(),
-            protocol_version: protocolVersion.cOption { $0.withCArray { $0 } },
-            min_utxo_value: minUtxoValue.cOption()
-        ))
+        try protocolVersion.withCOption(
+            with: { try $0.withCArray(fn: $1) }
+        ) { protocolVersion in
+            try fn(CCardano.ProtocolParamUpdate(
+                minfee_a: minfeeA.cOption(),
+                minfee_b: minfeeB.cOption(),
+                max_block_body_size: maxBlockBodySize.cOption(),
+                max_tx_size: maxTxSize.cOption(),
+                max_block_header_size: maxBlockHeaderSize.cOption(),
+                key_deposit: keyDeposit.cOption(),
+                pool_deposit: poolDeposit.cOption(),
+                max_epoch: maxEpoch.cOption(),
+                n_opt: nOpt.cOption(),
+                pool_pledge_influence: poolPledgeInfluence.cOption(),
+                expansion_rate: expansionRate.cOption(),
+                treasury_growth_rate: treasuryGrowthRate.cOption(),
+                d: d.cOption(),
+                extra_entropy: extraEntropy.cOption(),
+                protocol_version: protocolVersion,
+                min_utxo_value: minUtxoValue.cOption()
+            ))
+        }
     }
 }
 

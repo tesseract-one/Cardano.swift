@@ -29,10 +29,14 @@ public struct TransactionOutput {
     func withCTransactionOutput<T>(
         fn: @escaping (CCardano.TransactionOutput) throws -> T
     ) rethrows -> T {
-        try fn(CCardano.TransactionOutput(
-            address: address.withCAddress { $0 },
-            amount: amount.withCValue { $0 }
-        ))
+        try address.withCAddress { address in
+            try amount.withCValue { amount in
+                try fn(CCardano.TransactionOutput(
+                    address: address,
+                    amount: amount
+                ))
+            }
+        }
     }
 }
 
