@@ -43,8 +43,12 @@ final class CardanoTests: XCTestCase {
         var transactionWitnessSet = TransactionWitnessSet()
         transactionWitnessSet.vkeys = vkeys
         transactionWitnessSet.bootstraps = bootstraps
-        XCTAssertNoThrow(transactionWitnessSet.vkeys?.withCArray { $0 })
-        XCTAssertNoThrow(transactionWitnessSet.bootstraps?.withCArray { $0 })
+        XCTAssertNoThrow(transactionWitnessSet.vkeys?.withCArray {
+            XCTAssertEqual($0.len, 1)
+        })
+        XCTAssertNoThrow(transactionWitnessSet.bootstraps?.withCArray {
+            XCTAssertEqual($0.len, 1)
+        })
     }
     
     func testMoveInstantaneousReward() throws {

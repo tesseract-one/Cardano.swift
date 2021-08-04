@@ -41,8 +41,6 @@ extension CCardano.TransactionInputs: CArray {
 
 extension TransactionInputs {
     func withCArray<T>(fn: @escaping (CCardano.TransactionInputs) throws -> T) rethrows -> T {
-        try withContiguousStorageIfAvailable { storage in
-            try fn(CCardano.TransactionInputs(ptr: storage.baseAddress, len: UInt(storage.count)))
-        }!
+        try withCArr(fn: fn)
     }
 }

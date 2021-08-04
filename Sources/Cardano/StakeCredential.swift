@@ -61,9 +61,7 @@ extension CCardano.Ed25519KeyHashes: CArray {
 
 extension Ed25519KeyHashes {
     func withCArray<T>(fn: @escaping (CCardano.Ed25519KeyHashes) throws -> T) rethrows -> T {
-        try withContiguousStorageIfAvailable { storage in
-            try fn(CCardano.Ed25519KeyHashes(ptr: storage.baseAddress, len: UInt(storage.count)))
-        }!
+        try withCArr(fn: fn)
     }
 }
 

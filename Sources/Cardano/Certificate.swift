@@ -113,11 +113,6 @@ extension CCardano.Certificates: CArray {
 
 extension Certificates {
     func withCArray<T>(fn: @escaping (CCardano.Certificates) throws -> T) rethrows -> T {
-        try withContiguousStorageIfAvailable { storage in
-            let mapped = storage.map { $0.withCCertificate { $0 } }
-            return try mapped.withUnsafeBufferPointer {
-                try fn(CCardano.Certificates(ptr: $0.baseAddress, len: UInt($0.count)))
-            }
-        }!
+        try withCArray(with: { try $0.withCCertificate(fn: $1) }, fn: fn)
     }
 }

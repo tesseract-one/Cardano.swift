@@ -45,15 +45,7 @@ extension CArray_CKeyValue_StakeCredential__Coin: CArray {
 
 extension Dictionary where Key == StakeCredential, Value == Coin {
     func withCKVArray<T>(fn: @escaping (CArray_CKeyValue_StakeCredential__Coin) throws -> T) rethrows -> T {
-        try Array(self).withContiguousStorageIfAvailable { storage in
-            let mapped = storage.map { CKeyValue_StakeCredential__Coin(
-                key: $0.key.withCCredential { $0 },
-                val: $0.value
-            ) }
-            return try mapped.withUnsafeBufferPointer {
-                try fn(CArray_CKeyValue_StakeCredential__Coin(ptr: $0.baseAddress, len: UInt($0.count)))
-            }
-        }!
+        try withCKVArray(withKey: { try $0.withCCredential(fn: $1) }, fn: fn)
     }
 }
 

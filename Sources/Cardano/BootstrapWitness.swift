@@ -75,11 +75,6 @@ extension CCardano.BootstrapWitnesses: CArray {
 
 extension BootstrapWitnesses {
     func withCArray<T>(fn: @escaping (CCardano.BootstrapWitnesses) throws -> T) rethrows -> T {
-        try withContiguousStorageIfAvailable { storage in
-            let mapped = storage.map { $0.withCBootstrapWitness { $0 } }
-            return try mapped.withUnsafeBufferPointer {
-                try fn(CCardano.BootstrapWitnesses(ptr: $0.baseAddress, len: UInt($0.count)))
-            }
-        }!
+        try withCArray(with: { try $0.withCBootstrapWitness(fn: $1) }, fn: fn)
     }
 }

@@ -10,9 +10,7 @@ import CCardano
 
 extension Set where Element == Ed25519KeyHash {
     func withCArray<T>(fn: @escaping (CArray_Ed25519KeyHash) throws -> T) rethrows -> T {
-        try Array(self).withContiguousStorageIfAvailable { storage in
-            try fn(CArray_Ed25519KeyHash(ptr: storage.baseAddress, len: UInt(storage.count)))
-        }!
+        try Array(self).withCArray(fn: fn)
     }
 }
 
@@ -24,9 +22,7 @@ extension CArray_ScriptHash: CArray {
 
 extension Set where Element == ScriptHash {
     func withCArray<T>(fn: @escaping (CArray_ScriptHash) throws -> T) rethrows -> T {
-        try Array(self).withContiguousStorageIfAvailable { storage in
-            try fn(CArray_ScriptHash(ptr: storage.baseAddress, len: UInt(storage.count)))
-        }!
+        try Array(self).withCArr(fn: fn)
     }
 }
 
@@ -38,12 +34,7 @@ extension CArray_CData: CArray {
 
 extension Set where Element == Data {
     func withCArray<T>(fn: @escaping (CArray_CData) throws -> T) rethrows -> T {
-        try Array(self).withContiguousStorageIfAvailable { storage in
-            let mapped = storage.map { $0.withCData { $0 } }
-            return try mapped.withUnsafeBufferPointer {
-                try fn(CArray_CData(ptr: $0.baseAddress, len: UInt($0.count)))
-            }
-        }!
+        try Array(self).withCArray(with: { try $0.withCData(fn: $1) }, fn: fn)
     }
 }
 
@@ -149,12 +140,7 @@ extension CArray_TxBuilderInput: CArray {
 
 extension Array where Element == TxBuilderInput {
     func withCArray<T>(fn: @escaping (CArray_TxBuilderInput) throws -> T) rethrows -> T {
-        try withContiguousStorageIfAvailable { storage in
-            let mapped = storage.map { $0.withCTxBuilderInput { $0 } }
-            return try mapped.withUnsafeBufferPointer {
-                try fn(CArray_TxBuilderInput(ptr: $0.baseAddress, len: UInt($0.count)))
-            }
-        }!
+        try withCArray(with: { try $0.withCTxBuilderInput(fn: $1) }, fn: fn)
     }
 }
 

@@ -20,8 +20,6 @@ extension CCardano.TransactionMetadatumLabels: CArray {
 
 extension TransactionMetadatumLabels {
     func withCArray<T>(fn: @escaping (CCardano.TransactionMetadatumLabels) throws -> T) rethrows -> T {
-        try withContiguousStorageIfAvailable {
-            return try fn(CCardano.TransactionMetadatumLabels(ptr: $0.baseAddress, len: UInt($0.count)))
-        }!
+        try withCArr(fn: fn)
     }
 }

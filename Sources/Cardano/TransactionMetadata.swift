@@ -255,12 +255,7 @@ extension CCardano.NativeScripts: CArray {
 
 extension NativeScripts {
     func withCArray<T>(fn: @escaping (CCardano.NativeScripts) throws -> T) rethrows -> T {
-        try withContiguousStorageIfAvailable { storage in
-            let mapped = storage.map { $0.withCNativeScript { $0 } }
-            return try mapped.withUnsafeBufferPointer {
-                try fn(CCardano.NativeScripts(ptr: $0.baseAddress, len: UInt($0.count)))
-            }
-        }!
+        try withCArray(with: { try $0.withCNativeScript(fn: $1) }, fn: fn)
     }
 }
 

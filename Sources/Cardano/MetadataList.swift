@@ -20,11 +20,6 @@ extension CCardano.MetadataList: CArray {
 
 extension MetadataList {
     func withCArray<T>(fn: @escaping (CCardano.MetadataList) throws -> T) rethrows -> T {
-        try withContiguousStorageIfAvailable { storage in
-            let mapped = storage.map { $0.withCTransactionMetadatum { $0 } }
-            return try mapped.withUnsafeBufferPointer {
-                try fn(CCardano.MetadataList(ptr: $0.baseAddress, len: UInt($0.count)))
-            }
-        }!
+        try withCArray(with: { try $0.withCTransactionMetadatum(fn: $1) }, fn: fn)
     }
 }

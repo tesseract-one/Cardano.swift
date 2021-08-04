@@ -27,15 +27,7 @@ extension CCardano.ProposedProtocolParameterUpdates: CArray {
 
 extension ProposedProtocolParameterUpdates {
     func withCKVArray<T>(fn: @escaping (CCardano.ProposedProtocolParameterUpdates) throws -> T) rethrows -> T {
-        try Array(self).withContiguousStorageIfAvailable { storage in
-            let mapped = storage.map {CCardano.ProposedProtocolParameterUpdates.CElement(
-                key: $0.key,
-                val: $0.value.withCProtocolParamUpdate { $0 }
-            )}
-            return try mapped.withUnsafeBufferPointer {
-                try fn(CCardano.ProposedProtocolParameterUpdates(ptr: $0.baseAddress, len: UInt($0.count)))
-            }
-        }!
+        try withCKVArray(withValue: { try $0.withCProtocolParamUpdate(fn: $1) }, fn: fn)
     }
 }
 
@@ -121,12 +113,7 @@ extension CCardano.MintAssets: CArray {
 
 extension MintAssets {
     func withCKVArray<T>(fn: @escaping (CCardano.MintAssets) throws -> T) rethrows -> T {
-        try Array(self).withContiguousStorageIfAvailable { storage in
-            let mapped = storage.map { CCardano.MintAssets.CElement($0) }
-            return try mapped.withUnsafeBufferPointer {
-                try fn(CCardano.MintAssets(ptr: $0.baseAddress, len: UInt($0.count)))
-            }
-        }!
+        try withCKVArr(fn: fn)
     }
 }
 
@@ -149,16 +136,7 @@ extension CCardano.Mint: CArray {
 
 extension Mint {
     func withCKVArray<T>(fn: @escaping (CCardano.Mint) throws -> T) rethrows -> T {
-        try Array(self).withContiguousStorageIfAvailable { storage in
-            let mapped = storage.map { el in
-                el.value.withCKVArray { arr in
-                    CCardano.Mint.CElement((el.key, arr))
-                }
-            }
-            return try mapped.withUnsafeBufferPointer {
-                try fn(CCardano.Mint(ptr: $0.baseAddress, len: UInt($0.count)))
-            }
-        }!
+        try withCKVArray(withValue: { try $0.withCKVArray(fn: $1) }, fn: fn)
     }
 }
 

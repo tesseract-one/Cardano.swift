@@ -391,12 +391,7 @@ extension CCardano.Relays: CArray {
 
 extension Relays {
     func withCArray<T>(fn: @escaping (CCardano.Relays) throws -> T) rethrows -> T {
-        try withContiguousStorageIfAvailable { storage in
-            let mapped = storage.map { $0.withCRelay { $0 } }
-            return try mapped.withUnsafeBufferPointer {
-                try fn(CCardano.Relays(ptr: $0.baseAddress, len: UInt($0.count)))
-            }
-        }!
+        try withCArray(with: { try $0.withCRelay(fn: $1) }, fn: fn)
     }
 }
 

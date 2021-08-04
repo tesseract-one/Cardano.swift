@@ -27,14 +27,6 @@ extension CCardano.Withdrawals: CArray {
 
 extension Withdrawals {
     func withCKVArray<T>(fn: @escaping (CCardano.Withdrawals) throws -> T) rethrows -> T {
-        try Array(self).withContiguousStorageIfAvailable { storage in
-            let mapped = storage.map { CCardano.Withdrawals.CElement(
-                key: $0.key.withCRewardAddress { $0 },
-                val: $0.value
-            ) }
-            return try mapped.withUnsafeBufferPointer {
-                try fn(CCardano.Withdrawals(ptr: $0.baseAddress, len: UInt($0.count)))
-            }
-        }!
+        try withCKVArray(withKey: { try $0.withCRewardAddress(fn: $1) }, fn: fn)
     }
 }

@@ -36,16 +36,10 @@ extension CCardano.MetadataMap: CArray {
 
 extension MetadataMap {
     func withCKVArray<T>(fn: @escaping (CCardano.MetadataMap) throws -> T) rethrows -> T {
-        try Array(self).withContiguousStorageIfAvailable { storage in
-            let mapped = storage.map {
-                CCardano.MetadataMap.CElement(
-                    key: $0.key.withCTransactionMetadatum { $0 },
-                    val: $0.value.withCTransactionMetadatum { $0 }
-                )
-            }
-            return try mapped.withUnsafeBufferPointer {
-                try fn(CCardano.MetadataMap(ptr: $0.baseAddress, len: UInt($0.count)))
-            }
-        }!
+        try withCKVArray(
+            withKey: { try $0.withCTransactionMetadatum(fn: $1) },
+            withValue: { try $0.withCTransactionMetadatum(fn: $1) },
+            fn: fn
+        )
     }
 }

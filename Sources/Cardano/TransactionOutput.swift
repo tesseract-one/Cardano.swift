@@ -87,11 +87,6 @@ extension CCardano.TransactionOutputs: CArray {
 
 extension TransactionOutputs {
     func withCArray<T>(fn: @escaping (CCardano.TransactionOutputs) throws -> T) rethrows -> T {
-        try withContiguousStorageIfAvailable { storage in
-            let mapped = storage.map { $0.withCTransactionOutput { $0 } }
-            return try mapped.withUnsafeBufferPointer {
-                try fn(CCardano.TransactionOutputs(ptr: $0.baseAddress, len: UInt($0.count)))
-            }
-        }!
+        try withCArray(with: { try $0.withCTransactionOutput(fn: $1) }, fn: fn)
     }
 }

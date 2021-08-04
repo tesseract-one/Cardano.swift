@@ -30,9 +30,7 @@ extension CCardano.ProtocolVersions: CArray {
 
 extension ProtocolVersions {
     func withCArray<T>(fn: @escaping (CCardano.ProtocolVersions) throws -> T) rethrows -> T {
-        try withContiguousStorageIfAvailable { storage in
-            try fn(CCardano.ProtocolVersions(ptr: storage.baseAddress, len: UInt(storage.count)))
-        }!
+        try withCArr(fn: fn)
     }
 }
 
