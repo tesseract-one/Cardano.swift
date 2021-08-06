@@ -14,6 +14,16 @@ public typealias Nonce = CCardano.Nonce
 
 extension CCardano.Nonce: CType {}
 
+extension CCardano.Nonce {
+    public init(nonceHash: Data) throws {
+        fatalError()
+    }
+    
+    public func bytes() throws -> Data {
+        fatalError()
+    }
+}
+
 public typealias ProtocolVersion = CCardano.ProtocolVersion
 
 extension CCardano.ProtocolVersion: CType {}

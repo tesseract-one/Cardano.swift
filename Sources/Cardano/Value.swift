@@ -8,6 +8,12 @@
 import Foundation
 import CCardano
 
+public enum Ordering {
+    case less
+    case equal
+    case greater
+}
+
 extension COption_MultiAsset: COption {
     typealias Tag = COption_MultiAsset_Tag
     typealias Value = CCardano.MultiAsset
@@ -50,6 +56,10 @@ public struct Value {
     
     public func compare(rhs: Value) throws -> Int8? {
         try withCValue { try $0.compare(rhs: rhs) }
+    }
+    
+    public func partialCmp(other: Value) throws -> Ordering? {
+        fatalError()
     }
     
     func clonedCValue() throws -> CCardano.Value {

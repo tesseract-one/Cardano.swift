@@ -155,6 +155,10 @@ extension CCardano.ScriptNOfK {
     }
 }
 
+public enum ScriptHashNamespace {
+    case nativeScript
+}
+
 public enum NativeScript {
     case scriptPubkey(ScriptPubkey)
     case scriptAll(ScriptAll)
@@ -173,6 +177,10 @@ public enum NativeScript {
         case TimelockExpiryKind: self = .timelockExpiry(nativeScript.timelock_expiry_kind)
         default: fatalError("Unknown NativeScript type")
         }
+    }
+    
+    public func hash(namespace: ScriptHashNamespace) throws -> Ed25519KeyHash {
+        fatalError()
     }
     
     func clonedCNativeScript() throws -> CCardano.NativeScript {

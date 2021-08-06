@@ -28,6 +28,10 @@ public struct BootstrapWitness {
         self.attributes = attributes
     }
     
+    public init(txBodyHash: TransactionHash, addr: ByronAddress, key: Bip32PrivateKey) throws {
+        fatalError()
+    }
+    
     func clonedCBootstrapWitness() throws -> CCardano.BootstrapWitness {
         try withCBootstrapWitness { try $0.clone() }
     }

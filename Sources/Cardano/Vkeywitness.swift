@@ -12,6 +12,12 @@ public typealias Vkeywitness = CCardano.Vkeywitness
 
 extension Vkeywitness: CType {}
 
+extension CCardano.Vkeywitness {
+    public init(txBodyHash: TransactionHash, sk: PrivateKey) throws {
+        fatalError()
+    }
+}
+
 public typealias Vkeywitnesses = Array<Vkeywitness>
 
 extension CCardano.Vkeywitnesses: CArray {

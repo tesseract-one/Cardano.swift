@@ -20,8 +20,36 @@ public struct ByronAddress {
         self = address.owned()
     }
     
+    public init(address: Address) throws {
+        fatalError()
+    }
+    
     public func base58() throws -> String {
         try withCAddress { try $0.base58() }
+    }
+    
+    public func byronProtocolMagic() throws -> UInt32 {
+        fatalError()
+    }
+    
+    public func networkId() throws -> UInt8 {
+        fatalError()
+    }
+    
+    public func bytes() throws -> Data {
+        fatalError()
+    }
+    
+    public func toAddress() throws -> Address {
+        fatalError()
+    }
+    
+    static public func isValid(s: String) throws -> Bool {
+        fatalError()
+    }
+    
+    static public func icarusFromKey(key: Bip32PublicKey, protocolMagic: UInt32) throws -> Self {
+        fatalError()
     }
     
     func clonedCAddress() throws -> CCardano.ByronAddress {

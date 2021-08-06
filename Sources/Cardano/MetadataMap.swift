@@ -42,4 +42,12 @@ extension MetadataMap {
             fn: fn
         )
     }
+    
+    public func getStr(key: String) -> TransactionMetadatum {
+        fatalError()
+    }
+    
+    public func getI32(key: Int32) -> TransactionMetadatum {
+        fatalError()
+    }
 }

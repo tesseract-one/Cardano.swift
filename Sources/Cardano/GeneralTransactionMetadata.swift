@@ -8,6 +8,12 @@
 import Foundation
 import CCardano
 
+public enum MetadataJsonSchema {
+    case noConversions
+    case basicConversions
+    case detailedSchema
+}
+
 public enum TransactionMetadatum: Equatable, Hashable {
     case metadataMap(MetadataMap)
     case metadataList(MetadataList)
@@ -32,6 +38,42 @@ public enum TransactionMetadatum: Equatable, Hashable {
         }
     }
     
+    public func asMap() -> MetadataMap {
+        fatalError()
+    }
+    
+    public func asList() -> MetadataList {
+        fatalError()
+    }
+    
+    public func asInt() -> UInt64 {
+        fatalError()
+    }
+    
+    public func asBytes() -> Data {
+        fatalError()
+    }
+    
+    public func asText() -> String {
+        fatalError()
+    }
+    
+    static public func encodeArbitraryBytesAsMetadatum(bytes: Data) throws -> Self {
+        fatalError()
+    }
+    
+    static public func decodeArbitraryBytesFromMetadatum(metadata: Self) throws -> Data {
+        fatalError()
+    }
+    
+    static public func encodeJsonStrToMetadatum(json: String, schema: MetadataJsonSchema) throws -> Self {
+        fatalError()
+    }
+    
+    static public func decodeMetadatumToJsonStr(metadatum: TransactionMetadatum, schema: MetadataJsonSchema) throws -> String {
+        fatalError()
+    }
+    
     func clonedCTransactionMetadatum() throws -> CCardano.TransactionMetadatum {
         try withCTransactionMetadatum { try $0.clone() }
     }
@@ -54,7 +96,25 @@ public enum TransactionMetadatum: Equatable, Hashable {
                 tm.metadata_map_kind = metadataMap
                 return try fn(tm)
             }
-        default: return try fn(CCardano.TransactionMetadatum())
+        case .int(let int):
+            var tm = CCardano.TransactionMetadatum()
+            tm.tag = IntKind
+            tm.int_kind = int
+            return try fn(tm)
+        case .bytes(let bytes):
+            return try bytes.withCData { bytes in
+                var tm = CCardano.TransactionMetadatum()
+                tm.tag = BytesKind
+                tm.bytes_kind = bytes
+                return try fn(tm)
+            }
+        case .text(let text):
+            return try text.withCharPtr { text in
+                var tm = CCardano.TransactionMetadatum()
+                tm.tag = TextKind
+                tm.text_kind = text
+                return try fn(tm)
+            }
         }
     }
 }

@@ -32,3 +32,13 @@ extension CData: CPtr {
         cardano_data_free(&self)
     }
 }
+
+extension Data {
+    public init?(hex: String) {
+        fatalError()
+    }
+    
+    public func hex(prefix: Bool = true) -> String {
+        fatalError()
+    }
+}

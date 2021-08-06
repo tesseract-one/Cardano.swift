@@ -21,6 +21,10 @@ extension TransactionHash {
         }.get()
     }
     
+    public init(txBody: TransactionBody) throws {
+        fatalError()
+    }
+    
     public func bytes() throws -> Data {
         var bytes = try RustResult<CData>.wrap { result, error in
             cardano_transaction_hash_to_bytes(self, result, error)

@@ -8,8 +8,27 @@
 import Foundation
 import CCardano
 
-public typealias PointerAddress = CCardano.PointerAddress
-public typealias EnterpriseAddress = CCardano.EnterpriseAddress
+public typealias Pointer = CCardano.Pointer
+
+public struct EnterpriseAddress {
+    public init(network: NetworkId, payment: StakeCredential) {
+        fatalError()
+    }
+    
+    public func toAddress() throws -> Address {
+        fatalError()
+    }
+}
+
+public struct PointerAddress {
+    public init(network: NetworkId, payment: StakeCredential, stake: Pointer) {
+        fatalError()
+    }
+    
+    public func toAddress() throws -> Address {
+        fatalError()
+    }
+}
 
 public struct RewardAddress: Equatable, Hashable {
     private var network: NetworkId
@@ -23,6 +42,10 @@ public struct RewardAddress: Equatable, Hashable {
     public init(network: NetworkId, payment: StakeCredential) {
         self.network = network
         self.payment = payment
+    }
+    
+    public func toAddress() throws -> Address {
+        fatalError()
     }
     
     func withCRewardAddress<T>(
@@ -67,8 +90,8 @@ public enum Address {
         switch address.tag {
         case Base: self = .base(address.base)
         case Byron: self = .byron(address.byron.copied())
-        case Ptr: self = .pointer(address.ptr)
-        case Enterprise: self = .enterprise(address.enterprise)
+        case Ptr: fatalError()
+        case Enterprise: fatalError()
         case Reward: self = .reward(address.reward.copied())
         default: fatalError("Unknown address type")
         }
@@ -151,16 +174,14 @@ public enum Address {
                 address.byron = byron
                 return try fn(address)
             }
-        case .pointer(let ptr):
+        case .pointer(_):
             var address = CCardano.Address()
             address.tag = Ptr
-            address.ptr = ptr
-            return try fn(address)
-        case .enterprise(let ent):
+            fatalError()
+        case .enterprise(_):
             var address = CCardano.Address()
             address.tag = Enterprise
-            address.enterprise = ent
-            return try fn(address)
+            fatalError()
         case .reward(let rew):
             return try rew.withCRewardAddress { rew in
                 var address = CCardano.Address()
@@ -172,8 +193,6 @@ public enum Address {
     }
 }
 
-extension PointerAddress: CType {}
-extension EnterpriseAddress: CType {}
 extension NetworkId: CType {}
 
 extension CCardano.Address: CPtr {
@@ -230,4 +249,12 @@ extension CCardano.Address {
             cardano_address_clone(self, result, error)
         }.get()
     }
+}
+
+public func variableNatEncode(num: UInt64) -> Data {
+    fatalError()
+}
+
+public func variableNatDecode(bytes: Data) -> (UInt64, UInt32) {
+    fatalError()
 }
