@@ -10,75 +10,6 @@ import CCardano
 
 public typealias Pointer = CCardano.Pointer
 
-public struct EnterpriseAddress {
-    public init(network: NetworkId, payment: StakeCredential) {
-        fatalError()
-    }
-    
-    public func toAddress() throws -> Address {
-        fatalError()
-    }
-}
-
-public struct PointerAddress {
-    public init(network: NetworkId, payment: StakeCredential, stake: Pointer) {
-        fatalError()
-    }
-    
-    public func toAddress() throws -> Address {
-        fatalError()
-    }
-}
-
-public struct RewardAddress: Equatable, Hashable {
-    private var network: NetworkId
-    public private(set) var payment: StakeCredential
-    
-    init(rewardAddress: CCardano.RewardAddress) {
-        network = rewardAddress.network
-        payment = rewardAddress.payment.copied()
-    }
-    
-    public init(network: NetworkId, payment: StakeCredential) {
-        self.network = network
-        self.payment = payment
-    }
-    
-    public func toAddress() throws -> Address {
-        fatalError()
-    }
-    
-    func withCRewardAddress<T>(
-        fn: @escaping (CCardano.RewardAddress) throws -> T
-    ) rethrows -> T {
-        try payment.withCCredential { payment in
-            try fn(CCardano.RewardAddress(network: network, payment: payment))
-        }
-    }
-}
-
-extension CCardano.RewardAddress: Equatable {
-    public static func == (lhs: CCardano.RewardAddress, rhs: CCardano.RewardAddress) -> Bool {
-        return lhs.copied() == rhs.copied()
-    }
-}
-
-extension CCardano.RewardAddress: Hashable {
-    public func hash(into hasher: inout Hasher) {
-        self.copied().hash(into: &hasher)
-    }
-}
-
-extension CCardano.RewardAddress: CPtr {
-    typealias Val = RewardAddress
-    
-    func copied() -> RewardAddress {
-        RewardAddress(rewardAddress: self)
-    }
-    
-    mutating func free() {}
-}
-
 public enum Address {
     case base(BaseAddress)
     case pointer(PointerAddress)
@@ -90,8 +21,8 @@ public enum Address {
         switch address.tag {
         case Base: self = .base(address.base)
         case Byron: self = .byron(address.byron.copied())
-        case Ptr: fatalError()
-        case Enterprise: fatalError()
+        case Ptr: self = .pointer(address.ptr.copied())
+        case Enterprise: self = .enterprise(address.enterprise.copied())
         case Reward: self = .reward(address.reward.copied())
         default: fatalError("Unknown address type")
         }
@@ -174,14 +105,20 @@ public enum Address {
                 address.byron = byron
                 return try fn(address)
             }
-        case .pointer(_):
-            var address = CCardano.Address()
-            address.tag = Ptr
-            fatalError()
-        case .enterprise(_):
-            var address = CCardano.Address()
-            address.tag = Enterprise
-            fatalError()
+        case .pointer(let ptr):
+            return try ptr.withCPointerAddress { ptr in
+                var address = CCardano.Address()
+                address.tag = Ptr
+                address.ptr = ptr
+                return try fn(address)
+            }
+        case .enterprise(let ent):
+            return try ent.withCEnterpriseAddress { ent in
+                var address = CCardano.Address()
+                address.tag = Enterprise
+                address.enterprise = ent
+                return try fn(address)
+            }
         case .reward(let rew):
             return try rew.withCRewardAddress { rew in
                 var address = CCardano.Address()

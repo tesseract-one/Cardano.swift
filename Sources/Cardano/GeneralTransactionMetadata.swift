@@ -38,24 +38,39 @@ public enum TransactionMetadatum: Equatable, Hashable {
         }
     }
     
-    public func asMap() -> MetadataMap {
-        fatalError()
+    var map: MetadataMap? {
+        guard case .metadataMap(let map) = self else {
+            return nil
+        }
+        return map
     }
     
-    public func asList() -> MetadataList {
-        fatalError()
+    var list: MetadataList? {
+        guard case .metadataList(let list) = self else {
+            return nil
+        }
+        return list
     }
     
-    public func asInt() -> UInt64 {
-        fatalError()
+    var int: UInt64? {
+        guard case .int(let int) = self else {
+            return nil
+        }
+        return int
     }
     
-    public func asBytes() -> Data {
-        fatalError()
+    var bytes: Data? {
+        guard case .bytes(let bytes) = self else {
+            return nil
+        }
+        return bytes
     }
     
-    public func asText() -> String {
-        fatalError()
+    var text: String? {
+        guard case .text(let text) = self else {
+            return nil
+        }
+        return text
     }
     
     static public func encodeArbitraryBytesAsMetadatum(bytes: Data) throws -> Self {

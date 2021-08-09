@@ -11,7 +11,15 @@ import XCTest
 
 final class MetadataTests: XCTestCase {
     private func jsonEncodingCheckExampleMetadatum(metadata: TransactionMetadatum) {
-        fatalError()
+        let map = metadata.map!
+        XCTAssertEqual(map[TransactionMetadatum.bytes(Data(hex: "8badf00d")!)]?.bytes, Data(hex: "deadbeef")!)
+        XCTAssertEqual(map.getI32(key: 9).int, 5)
+        let innerMap = map.getStr(key: "obj").map!
+        let a = innerMap.getStr(key: "a").list!
+        let a1 = a[0].map!
+        XCTAssertEqual(a1.getI32(key: 5).int, 2)
+        let a2 = a[1].map!
+        XCTAssertEqual(a2.keys.count, 0)
     }
     
     func testBinaryEncoding() throws {
@@ -35,12 +43,12 @@ final class MetadataTests: XCTestCase {
         let metadata = try TransactionMetadatum.encodeJsonStrToMetadatum(
             json: inputStr, schema: MetadataJsonSchema.noConversions
         )
-        let map = metadata.asMap()
-        XCTAssertEqual(map.getStr(key: "receiver_id").asText(), "SJKdj34k3jjKFDKfjFUDfdjkfd")
-        XCTAssertEqual(map.getStr(key: "sender_id").asText(), "jkfdsufjdk34h3Sdfjdhfduf873")
-        XCTAssertEqual(map.getStr(key: "comment").asText(), "happy birthday")
-        let tags = map.getStr(key: "tags").asList()
-        let tagsI32 = tags.map { Int32($0.asInt()) }
+        let map = metadata.map!
+        XCTAssertEqual(map.getStr(key: "receiver_id").text, "SJKdj34k3jjKFDKfjFUDfdjkfd")
+        XCTAssertEqual(map.getStr(key: "sender_id").text, "jkfdsufjdk34h3Sdfjdhfduf873")
+        XCTAssertEqual(map.getStr(key: "comment").text, "happy birthday")
+        let tags = map.getStr(key: "tags").list!
+        let tagsI32 = tags.map { Int32($0.int!) }
         XCTAssertEqual(tagsI32, [0, 264, -1024, 32])
         let outputStr = try TransactionMetadatum.decodeMetadatumToJsonStr(
             metadatum: metadata, schema: MetadataJsonSchema.noConversions
@@ -127,15 +135,15 @@ final class MetadataTests: XCTestCase {
         let metadata = try TransactionMetadatum.encodeJsonStrToMetadatum(
             json: inputStr, schema: MetadataJsonSchema.detailedSchema
         )
-        let map = metadata.asMap()
+        let map = metadata.map!
         let key = Array(map.keys)[0]
-        XCTAssertEqual(map[key]?.asInt(), 5)
-        let keyList = key.asList()
+        XCTAssertEqual(map[key]?.int, 5)
+        let keyList = key.list!
         XCTAssertEqual(keyList.count, 2)
-        let keyMap = keyList[0].asMap()
-        XCTAssertEqual(Int32(keyMap.getI32(key: 5).asInt()), -7)
-        XCTAssertEqual(keyMap.getStr(key: "hello").asText(), "world")
-        let keyBytes = keyList[1].asBytes()
+        let keyMap = keyList[0].map!
+        XCTAssertEqual(Int32(keyMap.getI32(key: 5).int!), -7)
+        XCTAssertEqual(keyMap.getStr(key: "hello").text, "world")
+        let keyBytes = keyList[1].bytes
         XCTAssertEqual(keyBytes, Data(hex: "ff00ff00"))
         let outputStr = try TransactionMetadatum.decodeMetadatumToJsonStr(
             metadatum: metadata, schema: MetadataJsonSchema.detailedSchema
