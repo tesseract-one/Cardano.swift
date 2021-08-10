@@ -29,7 +29,8 @@ public struct BootstrapWitness {
     }
     
     public init(txBodyHash: TransactionHash, addr: ByronAddress, key: Bip32PrivateKey) throws {
-        fatalError()
+        var bootstrapWitness = try CCardano.BootstrapWitness(txBodyHash: txBodyHash, addr: addr, key: key)
+        self = bootstrapWitness.owned()
     }
     
     func clonedCBootstrapWitness() throws -> CCardano.BootstrapWitness {
@@ -41,7 +42,12 @@ public struct BootstrapWitness {
     ) rethrows -> T {
         try chainCode.withCData { chainCode in
             try attributes.withCData { attributes in
-                try fn(CCardano.BootstrapWitness(vkey: vkey, signature: signature, chain_code: chainCode, attributes: attributes))
+                try fn(CCardano.BootstrapWitness(
+                    vkey: vkey,
+                    signature: signature,
+                    chain_code: chainCode,
+                    attributes: attributes
+                ))
             }
         }
     }
@@ -60,6 +66,14 @@ extension CCardano.BootstrapWitness: CPtr {
 }
 
 extension CCardano.BootstrapWitness {
+    public init(txBodyHash: TransactionHash, addr: ByronAddress, key: Bip32PrivateKey) throws {
+        self = try addr.withCAddress { addr in
+            RustResult<Self>.wrap { result, error in
+                cardano_bootstrap_witness_make_icarus_bootstrap_witness(txBodyHash, addr, key, result, error)
+            }
+        }.get()
+    }
+    
     public func clone() throws -> Self {
         try RustResult<Self>.wrap { result, error in
             cardano_bootstrap_witness_clone(self, result, error)

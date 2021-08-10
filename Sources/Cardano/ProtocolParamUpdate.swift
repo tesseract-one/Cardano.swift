@@ -16,11 +16,18 @@ extension CCardano.Nonce: CType {}
 
 extension CCardano.Nonce {
     public init(nonceHash: Data) throws {
-        fatalError()
+        self = try nonceHash.withCData { nonceHash in
+            RustResult<Self>.wrap { res, err in
+                cardano_nonce_new_from_hash(nonceHash, res, err)
+            }
+        }.get()
     }
     
     public func bytes() throws -> Data {
-        fatalError()
+        var data = try RustResult<CData>.wrap { res, err in
+            cardano_nonce_to_bytes(self, res, err)
+        }.get()
+        return data.owned()
     }
 }
 

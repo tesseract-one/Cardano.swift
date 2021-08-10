@@ -43,11 +43,11 @@ extension MetadataMap {
         )
     }
     
-    public func getStr(key: String) -> TransactionMetadatum {
-        fatalError()
+    public func getStr(key: String) -> TransactionMetadatum? {
+        self[TransactionMetadatum.text(key)]
     }
     
-    public func getI32(key: Int32) -> TransactionMetadatum {
-        fatalError()
+    public func getI32(key: Int32) -> TransactionMetadatum? {
+        self[TransactionMetadatum.int(UInt64(key))]
     }
 }

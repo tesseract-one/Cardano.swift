@@ -22,10 +22,6 @@ public struct RewardAddress: Equatable, Hashable {
         self.payment = payment
     }
     
-    public func toAddress() throws -> Address {
-        fatalError()
-    }
-    
     func withCRewardAddress<T>(
         fn: @escaping (CCardano.RewardAddress) throws -> T
     ) rethrows -> T {

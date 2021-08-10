@@ -83,5 +83,6 @@ extension CPtr {
 }
 
 extension Int8: CType {}
+extension UInt32: CType {}
 extension UInt64: CType {}
 extension Bool: CType {}

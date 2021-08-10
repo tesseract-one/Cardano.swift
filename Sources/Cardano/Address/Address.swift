@@ -187,11 +187,3 @@ extension CCardano.Address {
         }.get()
     }
 }
-
-public func variableNatEncode(num: UInt64) -> Data {
-    fatalError()
-}
-
-public func variableNatDecode(bytes: Data) -> (UInt64, UInt32) {
-    fatalError()
-}

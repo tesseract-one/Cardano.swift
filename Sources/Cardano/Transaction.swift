@@ -47,6 +47,10 @@ public struct Transaction {
         try withCTransaction { try $0.bytes() }
     }
     
+    public func minFee(linearFee: LinearFee) throws -> Coin {
+        try withCTransaction { try $0.minFee(linearFee: linearFee) }
+    }
+    
     func clonedCTransaction() throws -> CCardano.Transaction {
         try withCTransaction { try $0.clone() }
     }
@@ -87,6 +91,12 @@ extension CCardano.Transaction {
         }.get()
     }
     
+    public func minFee(linearFee: LinearFee) throws -> Coin {
+        try RustResult<Coin>.wrap { result, error in
+            cardano_transaction_min_fee(self, linearFee, result, error)
+        }.get()
+    }
+
     public func bytes() throws -> Data {
         var bytes = try RustResult<CData>.wrap { result, error in
             cardano_transaction_to_bytes(self, result, error)

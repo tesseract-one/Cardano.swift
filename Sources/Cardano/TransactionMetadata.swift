@@ -157,6 +157,21 @@ extension CCardano.ScriptNOfK {
 
 public enum ScriptHashNamespace {
     case nativeScript
+    
+    init(namespace: CCardano.ScriptHashNamespace) {
+        switch namespace {
+        case NativeScriptKind: self = .nativeScript
+        default: fatalError("Unknown ScriptHashNamespace type")
+        }
+    }
+    
+    func withCScriptHashNamespace<T>(
+        fn: @escaping (CCardano.ScriptHashNamespace) throws -> T
+    ) rethrows -> T {
+        switch self {
+        case .nativeScript: return try fn(NativeScriptKind)
+        }
+    }
 }
 
 public enum NativeScript {
@@ -180,7 +195,7 @@ public enum NativeScript {
     }
     
     public func hash(namespace: ScriptHashNamespace) throws -> Ed25519KeyHash {
-        fatalError()
+        try withCNativeScript { try $0.hash(namespace: namespace) }
     }
     
     func clonedCNativeScript() throws -> CCardano.NativeScript {
@@ -244,6 +259,14 @@ extension CCardano.NativeScript: CPtr {
 }
 
 extension CCardano.NativeScript {
+    public func hash(namespace: ScriptHashNamespace) throws -> Ed25519KeyHash {
+        try namespace.withCScriptHashNamespace { namespace in
+            RustResult<Ed25519KeyHash>.wrap { result, error in
+                cardano_native_script_hash(self, namespace, result, error)
+            }
+        }.get()
+    }
+    
     public func clone() throws -> Self {
         try RustResult<Self>.wrap { result, error in
             cardano_native_script_clone(self, result, error)

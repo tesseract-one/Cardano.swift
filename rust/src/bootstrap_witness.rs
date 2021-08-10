@@ -1,15 +1,18 @@
+use crate::address::byron::ByronAddress;
 use crate::array::CArray;
+use crate::bip32_private_key::Bip32PrivateKey;
 use crate::data::CData;
 use crate::ed25519_signature::Ed25519Signature;
 use crate::error::CError;
 use crate::panic::*;
 use crate::ptr::*;
+use crate::transaction_hash::TransactionHash;
 use crate::vkey::Vkey;
-use cardano_serialization_lib::crypto::{
-  BootstrapWitness as RBootstrapWitness, BootstrapWitnesses as RBootstrapWitnesses,
+use cardano_serialization_lib::{
+  crypto::{BootstrapWitness as RBootstrapWitness, BootstrapWitnesses as RBootstrapWitnesses},
+  utils::make_icarus_bootstrap_witness,
 };
-use std::convert::TryFrom;
-use std::convert::TryInto;
+use std::convert::{TryFrom, TryInto};
 
 #[repr(C)]
 #[derive(Copy)]
@@ -65,6 +68,21 @@ impl From<RBootstrapWitness> for BootstrapWitness {
       attributes: bootstrap_witness.attributes().into(),
     }
   }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_bootstrap_witness_make_icarus_bootstrap_witness(
+  tx_body_hash: TransactionHash, addr: ByronAddress, key: Bip32PrivateKey,
+  result: &mut BootstrapWitness, error: &mut CError,
+) -> bool {
+  handle_exception_result(|| {
+    addr
+      .try_into()
+      .zip(key.try_into())
+      .map(|(addr, key)| make_icarus_bootstrap_witness(&tx_body_hash.into(), &addr, &key))
+      .map(|bootstrap_witness| bootstrap_witness.into())
+  })
+  .response(result, error)
 }
 
 #[no_mangle]

@@ -7,14 +7,36 @@ use crate::option::COption;
 use crate::panic::*;
 use crate::ptr::*;
 use crate::stake_credential::Ed25519KeyHash;
-use cardano_serialization_lib::NativeScriptKind;
 use cardano_serialization_lib::{
   metadata::TransactionMetadata as RTransactionMetadata, NativeScript as RNativeScript,
-  NativeScripts as RNativeScripts, ScriptAll as RScriptAll, ScriptAny as RScriptAny,
-  ScriptNOfK as RScriptNOfK, ScriptPubkey as RScriptPubkey, TimelockExpiry as RTimelockExpiry,
+  NativeScriptKind, NativeScripts as RNativeScripts, ScriptAll as RScriptAll,
+  ScriptAny as RScriptAny, ScriptHashNamespace as RScriptHashNamespace, ScriptNOfK as RScriptNOfK,
+  ScriptPubkey as RScriptPubkey, TimelockExpiry as RTimelockExpiry,
   TimelockStart as RTimelockStart,
 };
 use std::convert::{TryFrom, TryInto};
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub enum ScriptHashNamespace {
+  NativeScriptKind,
+}
+
+impl From<ScriptHashNamespace> for RScriptHashNamespace {
+  fn from(script_hash_namespace: ScriptHashNamespace) -> Self {
+    match script_hash_namespace {
+      ScriptHashNamespace::NativeScriptKind => Self::NativeScript,
+    }
+  }
+}
+
+impl From<RScriptHashNamespace> for ScriptHashNamespace {
+  fn from(script_hash_namespace: RScriptHashNamespace) -> Self {
+    match script_hash_namespace {
+      RScriptHashNamespace::NativeScript => Self::NativeScriptKind,
+    }
+  }
+}
 
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -100,6 +122,20 @@ impl TryFrom<RNativeScript> for NativeScript {
         .map(|timelock_expiry| Self::TimelockExpiryKind(timelock_expiry.into())),
     }
   }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_native_script_hash(
+  native_script: NativeScript, namespace: ScriptHashNamespace, result: &mut Ed25519KeyHash,
+  error: &mut CError,
+) -> bool {
+  handle_exception_result(|| {
+    native_script
+      .try_into()
+      .map(|native_script: RNativeScript| native_script.hash(namespace.into()))
+      .and_then(|key_hash| key_hash.try_into())
+  })
+  .response(result, error)
 }
 
 #[no_mangle]

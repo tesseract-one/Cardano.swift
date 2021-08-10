@@ -22,10 +22,6 @@ public struct EnterpriseAddress {
         self.payment = payment
     }
     
-    public func toAddress() throws -> Address {
-        fatalError()
-    }
-    
     func withCEnterpriseAddress<T>(
         fn: @escaping (CCardano.EnterpriseAddress) throws -> T
     ) rethrows -> T {

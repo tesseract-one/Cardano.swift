@@ -14,7 +14,9 @@ extension Vkeywitness: CType {}
 
 extension CCardano.Vkeywitness {
     public init(txBodyHash: TransactionHash, sk: PrivateKey) throws {
-        fatalError()
+        self = try RustResult<Self>.wrap { res, err in
+            cardano_vkeywitness_make_vkey_witness(txBodyHash, sk, res, err)
+        }.get()
     }
 }
 

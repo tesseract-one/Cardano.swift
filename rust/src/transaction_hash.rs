@@ -2,7 +2,10 @@ use super::data::CData;
 use super::error::CError;
 use super::panic::*;
 use super::ptr::Ptr;
-use cardano_serialization_lib::crypto::TransactionHash as RTransactionHash;
+use crate::transaction_body::TransactionBody;
+use cardano_serialization_lib::{
+  crypto::TransactionHash as RTransactionHash, utils::hash_transaction,
+};
 use std::convert::{TryFrom, TryInto};
 
 #[repr(C)]
@@ -28,8 +31,21 @@ impl From<TransactionHash> for RTransactionHash {
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn cardano_transaction_hash_hash_transaction(
+  tx_body: TransactionBody, result: &mut TransactionHash, error: &mut CError,
+) -> bool {
+  handle_exception_result(|| {
+    tx_body
+      .try_into()
+      .map(|tx_body| hash_transaction(&tx_body))
+      .and_then(|transaction_hash| transaction_hash.try_into())
+  })
+  .response(result, error)
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn cardano_transaction_hash_to_bytes(
-  transaction_hash: TransactionHash, result: &mut CData, error: &mut CError
+  transaction_hash: TransactionHash, result: &mut CData, error: &mut CError,
 ) -> bool {
   handle_exception(|| {
     let transaction_hash: RTransactionHash = transaction_hash.into();
@@ -40,7 +56,7 @@ pub unsafe extern "C" fn cardano_transaction_hash_to_bytes(
 
 #[no_mangle]
 pub unsafe extern "C" fn cardano_transaction_hash_from_bytes(
-  data: CData, result: &mut TransactionHash, error: &mut CError
+  data: CData, result: &mut TransactionHash, error: &mut CError,
 ) -> bool {
   handle_exception_result(|| {
     data

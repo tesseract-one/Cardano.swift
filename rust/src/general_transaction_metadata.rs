@@ -9,12 +9,43 @@ use crate::string::*;
 use crate::transaction_metadatum_labels::TransactionMetadatumLabel;
 use cardano_serialization_lib::{
   metadata::{
+    decode_arbitrary_bytes_from_metadatum, decode_metadatum_to_json_str,
+    encode_arbitrary_bytes_as_metadatum, encode_json_str_to_metadatum,
     GeneralTransactionMetadata as RGeneralTransactionMetadata,
-    TransactionMetadatum as RTransactionMetadatum, TransactionMetadatumKind,
+    MetadataJsonSchema as RMetadataJsonSchema, TransactionMetadatum as RTransactionMetadatum,
+    TransactionMetadatumKind,
   },
   utils::{from_bignum, to_bignum, Int},
 };
 use std::convert::{TryFrom, TryInto};
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub enum MetadataJsonSchema {
+  NoConversions,
+  BasicConversions,
+  DetailedSchema,
+}
+
+impl From<MetadataJsonSchema> for RMetadataJsonSchema {
+  fn from(metadata_json_schema: MetadataJsonSchema) -> Self {
+    match metadata_json_schema {
+      MetadataJsonSchema::NoConversions => Self::NoConversions,
+      MetadataJsonSchema::BasicConversions => Self::BasicConversions,
+      MetadataJsonSchema::DetailedSchema => Self::DetailedSchema,
+    }
+  }
+}
+
+impl From<RMetadataJsonSchema> for MetadataJsonSchema {
+  fn from(metadata_json_schema: RMetadataJsonSchema) -> Self {
+    match metadata_json_schema {
+      RMetadataJsonSchema::NoConversions => Self::NoConversions,
+      RMetadataJsonSchema::BasicConversions => Self::BasicConversions,
+      RMetadataJsonSchema::DetailedSchema => Self::DetailedSchema,
+    }
+  }
+}
 
 #[repr(C)]
 #[derive(Copy)]
@@ -114,6 +145,63 @@ impl TryFrom<RTransactionMetadatum> for TransactionMetadatum {
         .map(|text| Self::TextKind(text.into_cstr())),
     }
   }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_transaction_metadatum_encode_arbitrary_bytes_as_metadatum(
+  bytes: CData, result: &mut TransactionMetadatum, error: &mut CError,
+) -> bool {
+  handle_exception_result(|| {
+    bytes
+      .unowned()
+      .map(|bytes| encode_arbitrary_bytes_as_metadatum(bytes))
+      .and_then(|transaction_metadatum| transaction_metadatum.try_into())
+  })
+  .response(result, error)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_transaction_metadatum_decode_arbitrary_bytes_from_metadatum(
+  transaction_metadatum: TransactionMetadatum, result: &mut CData, error: &mut CError,
+) -> bool {
+  handle_exception_result(|| {
+    transaction_metadatum
+      .try_into()
+      .and_then(|transaction_metadatum| {
+        decode_arbitrary_bytes_from_metadatum(&transaction_metadatum).into_result()
+      })
+      .map(|bytes| bytes.into())
+  })
+  .response(result, error)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_transaction_metadatum_encode_json_str_to_metadatum(
+  json: CharPtr, schema: MetadataJsonSchema, result: &mut TransactionMetadatum, error: &mut CError,
+) -> bool {
+  handle_exception_result(|| {
+    json
+      .unowned()
+      .and_then(|json| encode_json_str_to_metadatum(json.to_string(), schema.into()).into_result())
+      .and_then(|transaction_metadatum| transaction_metadatum.try_into())
+  })
+  .response(result, error)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_transaction_metadatum_decode_metadatum_to_json_str(
+  transaction_metadatum: TransactionMetadatum, schema: MetadataJsonSchema, result: &mut CharPtr,
+  error: &mut CError,
+) -> bool {
+  handle_exception_result(|| {
+    transaction_metadatum
+      .try_into()
+      .and_then(|transaction_metadatum| {
+        decode_metadatum_to_json_str(&transaction_metadatum, schema.into()).into_result()
+      })
+      .map(|bytes| bytes.into_cstr())
+  })
+  .response(result, error)
 }
 
 #[no_mangle]

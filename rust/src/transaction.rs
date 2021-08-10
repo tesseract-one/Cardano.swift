@@ -1,12 +1,13 @@
 use crate::data::CData;
 use crate::error::CError;
+use crate::linear_fee::*;
 use crate::option::COption;
 use crate::panic::*;
 use crate::ptr::*;
 use crate::transaction_body::TransactionBody;
 use crate::transaction_metadata::TransactionMetadata;
 use crate::transaction_witness_set::TransactionWitnessSet;
-use cardano_serialization_lib::Transaction as RTransaction;
+use cardano_serialization_lib::{fees::min_fee, utils::from_bignum, Transaction as RTransaction};
 use std::convert::{TryFrom, TryInto};
 
 #[repr(C)]
@@ -56,6 +57,19 @@ impl TryFrom<RTransaction> for Transaction {
         metadata: metadata.into(),
       })
   }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_transaction_min_fee(
+  transaction: Transaction, linear_fee: LinearFee, result: &mut Coin, error: &mut CError,
+) -> bool {
+  handle_exception_result(|| {
+    transaction
+      .try_into()
+      .and_then(|transaction| min_fee(&transaction, &linear_fee.into()).into_result())
+      .map(|coin| from_bignum(&coin))
+  })
+  .response(result, error)
 }
 
 #[no_mangle]

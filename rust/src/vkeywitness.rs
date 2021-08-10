@@ -2,10 +2,13 @@ use crate::array::CArray;
 use crate::ed25519_signature::Ed25519Signature;
 use crate::error::CError;
 use crate::panic::*;
+use crate::private_key::PrivateKey;
 use crate::ptr::*;
+use crate::transaction_hash::TransactionHash;
 use crate::vkey::Vkey;
-use cardano_serialization_lib::crypto::{
-  Vkeywitness as RVkeywitness, Vkeywitnesses as RVkeywitnesses,
+use cardano_serialization_lib::{
+  crypto::{Vkeywitness as RVkeywitness, Vkeywitnesses as RVkeywitnesses},
+  utils::make_vkey_witness,
 };
 use std::convert::{TryFrom, TryInto};
 
@@ -39,6 +42,18 @@ impl From<RVkeywitness> for Vkeywitness {
       signature: vkeywitness.signature().into(),
     }
   }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_vkeywitness_make_vkey_witness(
+  tx_body_hash: TransactionHash, sk: PrivateKey, result: &mut Vkeywitness, error: &mut CError,
+) -> bool {
+  handle_exception_result(|| {
+    sk.try_into()
+      .map(|sk| make_vkey_witness(&tx_body_hash.into(), &sk))
+      .map(|vkeywitness| vkeywitness.into())
+  })
+  .response(result, error)
 }
 
 pub type Vkeywitnesses = CArray<Vkeywitness>;

@@ -29,21 +29,6 @@ final class AddressTests: XCTestCase {
         index | 0x80_00_00_00
     }
     
-    func testVariableNatEncoding() {
-        let cases: [UInt64] = [
-            0,
-            127,
-            128,
-            255,
-            256275757658493284
-        ]
-        for c in cases {
-            let encoded = variableNatEncode(num: c)
-            let decoded = variableNatDecode(bytes: encoded).0
-            XCTAssertEqual(c, decoded)
-        }
-    }
-    
     func testBaseSerializeConsistency() throws {
         let base = BaseAddress(
             network: 5,
@@ -61,7 +46,7 @@ final class AddressTests: XCTestCase {
             payment: StakeCredential.keyHash(try Ed25519KeyHash(bytes: Data(repeating: 23, count: 28))),
             stake: Pointer(slot: 2354556573, tx_index: 127, cert_index: 0)
         )
-        let addr = try ptr.toAddress()
+        let addr = Address.pointer(ptr)
         let addr2 = try Address(bytes: addr.bytes())
         XCTAssertEqual(try addr.bytes(), try addr2.bytes())
     }
@@ -71,7 +56,7 @@ final class AddressTests: XCTestCase {
             network: 64,
             payment: StakeCredential.keyHash(try Ed25519KeyHash(bytes: Data(repeating: 23, count: 28)))
         )
-        let addr = try enterprise.toAddress()
+        let addr = Address.enterprise(enterprise)
         let addr2 = try Address(bytes: try addr.bytes())
         XCTAssertEqual(try addr.bytes(), try addr2.bytes())
     }
@@ -81,7 +66,7 @@ final class AddressTests: XCTestCase {
             network: 9,
             payment: StakeCredential.scriptHash(try ScriptHash(bytes: Data(repeating: 127, count: 28)))
         )
-        let addr = try reward.toAddress()
+        let addr = Address.reward(reward)
         let addr2 = try Address(bytes: try addr.bytes())
         XCTAssertEqual(try addr.bytes(), try addr2.bytes())
     }
@@ -146,18 +131,18 @@ final class AddressTests: XCTestCase {
             .derive(index: 0)
             .publicKey()
         let spendCred = StakeCredential.keyHash(try spend.toRawKey().hash())
-        let addrNet0 = try EnterpriseAddress(
+        let addrNet0 = Address.enterprise(EnterpriseAddress(
             network: NetworkInfo.testnet.network_id,
             payment: spendCred
-        ).toAddress()
+        ))
         XCTAssertEqual(
             try addrNet0.bech32(),
             "addr_test1vz2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzerspjrlsz"
         )
-        let addrNet3 = try EnterpriseAddress(
+        let addrNet3 = Address.enterprise(EnterpriseAddress(
             network: NetworkInfo.mainnet.network_id,
             payment: spendCred
-        ).toAddress()
+        ))
         XCTAssertEqual(
             try addrNet3.bech32(),
             "addr1vx2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzers66hrl8"
@@ -173,20 +158,20 @@ final class AddressTests: XCTestCase {
             .derive(index: 0)
             .publicKey()
         let spendCred = StakeCredential.keyHash(try spend.toRawKey().hash())
-        let addrNet0 = try PointerAddress(
+        let addrNet0 = Address.pointer(PointerAddress(
             network: NetworkInfo.testnet.network_id,
             payment: spendCred,
             stake: Pointer(slot: 1, tx_index: 2, cert_index: 3)
-        ).toAddress()
+        ))
         XCTAssertEqual(
             try addrNet0.bech32(),
             "addr_test1gz2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzerspqgpsqe70et"
         )
-        let addrNet3 = try PointerAddress(
+        let addrNet3 = Address.pointer(PointerAddress(
             network: NetworkInfo.mainnet.network_id,
             payment: spendCred,
             stake: Pointer(slot: 24157, tx_index: 177, cert_index: 42)
-        ).toAddress()
+        ))
         XCTAssertEqual(
             try addrNet3.bech32(),
             "addr1gx2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzer5ph3wczvf2w8lunk"
@@ -239,18 +224,18 @@ final class AddressTests: XCTestCase {
             .derive(index: 0)
             .publicKey()
         let spendCred = StakeCredential.keyHash(try spend.toRawKey().hash())
-        let addrNet0 = try EnterpriseAddress(
+        let addrNet0 = Address.enterprise(EnterpriseAddress(
             network: NetworkInfo.testnet.network_id,
             payment: spendCred
-        ).toAddress()
+        ))
         XCTAssertEqual(
             try addrNet0.bech32(),
             "addr_test1vpu5vlrf4xkxv2qpwngf6cjhtw542ayty80v8dyr49rf5eg57c2qv"
         )
-        let addrNet3 = try EnterpriseAddress(
+        let addrNet3 = Address.enterprise(EnterpriseAddress(
             network: NetworkInfo.mainnet.network_id,
             payment: spendCred
-        ).toAddress()
+        ))
         XCTAssertEqual(
             try addrNet3.bech32(),
             "addr1v9u5vlrf4xkxv2qpwngf6cjhtw542ayty80v8dyr49rf5eg0kvk0f"
@@ -266,20 +251,20 @@ final class AddressTests: XCTestCase {
             .derive(index: 0)
             .publicKey()
         let spendCred = StakeCredential.keyHash(try spend.toRawKey().hash())
-        let addrNet0 = try PointerAddress(
+        let addrNet0 = Address.pointer(PointerAddress(
             network: NetworkInfo.testnet.network_id,
             payment: spendCred,
             stake: Pointer(slot: 1, tx_index: 2, cert_index: 3)
-        ).toAddress()
+        ))
         XCTAssertEqual(
             try addrNet0.bech32(),
             "addr_test1gpu5vlrf4xkxv2qpwngf6cjhtw542ayty80v8dyr49rf5egpqgpsdhdyc0"
         )
-        let addrNet3 = try PointerAddress(
+        let addrNet3 = Address.pointer(PointerAddress(
             network: NetworkInfo.mainnet.network_id,
             payment: spendCred,
             stake: Pointer(slot: 24157, tx_index: 177, cert_index: 42)
-        ).toAddress()
+        ))
         XCTAssertEqual(
             try addrNet3.bech32(),
             "addr1g9u5vlrf4xkxv2qpwngf6cjhtw542ayty80v8dyr49rf5evph3wczvf2kd5vam"
@@ -304,11 +289,11 @@ final class AddressTests: XCTestCase {
             .derive(index: 0)
             .derive(index: 0)
             .publicKey()
-        let byronAddr = try ByronAddress.icarusFromKey(key: byronKey, protocolMagic: NetworkInfo.mainnet.protocol_magic)
+        let byronAddr = try ByronAddress(key: byronKey, protocolMagic: NetworkInfo.mainnet.protocol_magic)
         XCTAssertEqual(try byronAddr.base58(), address)
         XCTAssertTrue(try ByronAddress.isValid(s: address))
         XCTAssertEqual(try byronAddr.networkId(), 0b0001)
-        let byronAddr2 = try ByronAddress(address: try Address(bytes: try byronAddr.bytes()))
+        let byronAddr2 = try Address(bytes: try byronAddr.bytes()).byron!
         XCTAssertEqual(try byronAddr.base58(), try byronAddr2.base58())
     }
     
@@ -357,18 +342,18 @@ final class AddressTests: XCTestCase {
                 .derive(index: 0)
                 .publicKey()
             let spendCred = StakeCredential.keyHash(try spend.toRawKey().hash())
-            let addrNet0 = try EnterpriseAddress(
+            let addrNet0 = Address.enterprise(EnterpriseAddress(
                 network: NetworkInfo.testnet.network_id,
                 payment: spendCred
-            ).toAddress()
+            ))
             XCTAssertEqual(
                 try addrNet0.bech32(),
                 "addr_test1vqy6nhfyks7wdu3dudslys37v252w2nwhv0fw2nfawemmnqtjtf68"
             )
-            let addrNet3 = try EnterpriseAddress(
+            let addrNet3 = Address.enterprise(EnterpriseAddress(
                 network: NetworkInfo.mainnet.network_id,
                 payment: spendCred
-            ).toAddress()
+            ))
             XCTAssertEqual(
                 try addrNet3.bech32(),
                 "addr1vyy6nhfyks7wdu3dudslys37v252w2nwhv0fw2nfawemmnqs6l44z"
@@ -385,18 +370,18 @@ final class AddressTests: XCTestCase {
             .derive(index: 0)
             .publicKey()
         let spendCred = StakeCredential.keyHash(try spend.toRawKey().hash())
-        let addrNet0 = try EnterpriseAddress(
+        let addrNet0 = Address.enterprise(EnterpriseAddress(
             network: NetworkInfo.testnet.network_id,
             payment: spendCred
-        ).toAddress()
+        ))
         XCTAssertEqual(
             try addrNet0.bech32(),
             "addr_test1vqy6nhfyks7wdu3dudslys37v252w2nwhv0fw2nfawemmnqtjtf68"
         )
-        let addrNet3 = try EnterpriseAddress(
+        let addrNet3 = Address.enterprise(EnterpriseAddress(
             network: NetworkInfo.mainnet.network_id,
             payment: spendCred
-        ).toAddress()
+        ))
         XCTAssertEqual(
             try addrNet3.bech32(),
             "addr1vyy6nhfyks7wdu3dudslys37v252w2nwhv0fw2nfawemmnqs6l44z"
@@ -412,20 +397,20 @@ final class AddressTests: XCTestCase {
             .derive(index: 0)
             .publicKey()
         let spendCred = StakeCredential.keyHash(try spend.toRawKey().hash())
-        let addrNet0 = try PointerAddress(
+        let addrNet0 = Address.pointer(PointerAddress(
             network: NetworkInfo.testnet.network_id,
             payment: spendCred,
             stake: Pointer(slot: 1, tx_index: 2, cert_index: 3)
-        ).toAddress()
+        ))
         XCTAssertEqual(
             try addrNet0.bech32(),
             "addr_test1gpu5vlrf4xkxv2qpwngf6cjhtw542ayty80v8dyr49rf5egpqgpsdhdyc0"
         )
-        let addrNet3 = try PointerAddress(
+        let addrNet3 = Address.pointer(PointerAddress(
             network: NetworkInfo.mainnet.network_id,
             payment: spendCred,
             stake: Pointer(slot: 24157, tx_index: 177, cert_index: 42)
-        ).toAddress()
+        ))
         XCTAssertEqual(
             try addrNet3.bech32(),
             "addr1g9u5vlrf4xkxv2qpwngf6cjhtw542ayty80v8dyr49rf5evph3wczvf2kd5vam"
@@ -441,18 +426,18 @@ final class AddressTests: XCTestCase {
             .derive(index: 0)
             .publicKey()
         let stakingCred = StakeCredential.keyHash(try stakingKey.toRawKey().hash())
-        let addrNet0 = try RewardAddress(
+        let addrNet0 = Address.reward(RewardAddress(
             network: NetworkInfo.testnet.network_id,
             payment: stakingCred
-        ).toAddress()
+        ))
         XCTAssertEqual(
             try addrNet0.bech32(),
             "stake_test1uqevw2xnsc0pvn9t9r9c7qryfqfeerchgrlm3ea2nefr9hqp8n5xl"
         )
-        let addrNet3 = try RewardAddress(
+        let addrNet3 = Address.reward(RewardAddress(
             network: NetworkInfo.mainnet.network_id,
             payment: stakingCred
-        ).toAddress()
+        ))
         XCTAssertEqual(
             try addrNet3.bech32(),
             "stake1uyevw2xnsc0pvn9t9r9c7qryfqfeerchgrlm3ea2nefr9hqxdekzz"

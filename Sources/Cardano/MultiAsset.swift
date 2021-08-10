@@ -41,10 +41,10 @@ extension MultiAsset {
 extension CCardano.MultiAsset {
     public func sub(rhsMA: MultiAsset) throws -> MultiAsset {
         var multiAsset = try rhsMA.withCKVArray { rhsMA in
-            try RustResult<CCardano.MultiAsset>.wrap { result, error in
+            RustResult<CCardano.MultiAsset>.wrap { result, error in
                 cardano_multi_asset_sub(self, rhsMA, result, error)
-            }.get()
-        }
+            }
+        }.get()
         return multiAsset.ownedDictionary().mapValues {
             var val = $0
             return val.ownedDictionary()

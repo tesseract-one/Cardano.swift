@@ -22,7 +22,11 @@ extension TransactionHash {
     }
     
     public init(txBody: TransactionBody) throws {
-        fatalError()
+        self = try txBody.withCTransactionBody { txBody in
+            RustResult<Self>.wrap { res, err in
+                cardano_transaction_hash_hash_transaction(txBody, res, err)
+            }
+        }.get()
     }
     
     public func bytes() throws -> Data {

@@ -10,11 +10,11 @@ import XCTest
 @testable import Cardano
 
 final class UtilsTests: XCTestCase {
-    private let MINIMUM_UTXO_VAL: UInt64 = 1_000_000
+    private let minimumUtxoVal: UInt64 = 1_000_000
     
     func testNoTokenMinimum() {
         let assets = Value(coin: 0)
-        XCTAssertEqual(minAdaRequired(assets: assets, minimumUtxoVal: MINIMUM_UTXO_VAL), MINIMUM_UTXO_VAL)
+        XCTAssertEqual(try assets.minAdaRequired(minimumUtxoVal: minimumUtxoVal), minimumUtxoVal)
     }
     
     func testOnePolicyOneSmallestName() throws {
@@ -23,7 +23,7 @@ final class UtilsTests: XCTestCase {
             try PolicyID(bytes: Data(repeating: 0, count: 28)):
                 [try AssetName(data: Data([])): UInt64(1)]
         ]
-        XCTAssertEqual(minAdaRequired(assets: assets, minimumUtxoVal: MINIMUM_UTXO_VAL), 1407406)
+        XCTAssertEqual(try assets.minAdaRequired(minimumUtxoVal: minimumUtxoVal), 1407406)
     }
     
     func testOnePolicyOneSmallName() throws {
@@ -32,7 +32,7 @@ final class UtilsTests: XCTestCase {
             try PolicyID(bytes: Data(repeating: 0, count: 28)):
                 [try AssetName(data: Data([1])): UInt64(1)]
         ]
-        XCTAssertEqual(minAdaRequired(assets: assets, minimumUtxoVal: MINIMUM_UTXO_VAL), 1444443)
+        XCTAssertEqual(try assets.minAdaRequired(minimumUtxoVal: minimumUtxoVal), 1444443)
     }
     
     func testOnePolicyOneLargestName() throws {
@@ -41,7 +41,7 @@ final class UtilsTests: XCTestCase {
             try PolicyID(bytes: Data(repeating: 0, count: 28)):
                 [try AssetName(data: Data(repeating: 1, count: 32)): UInt64(1)]
         ]
-        XCTAssertEqual(minAdaRequired(assets: assets, minimumUtxoVal: MINIMUM_UTXO_VAL), 1555554)
+        XCTAssertEqual(try assets.minAdaRequired(minimumUtxoVal: minimumUtxoVal), 1555554)
     }
     
     func testOnePolicyThreeSmallNames() throws {
@@ -54,7 +54,7 @@ final class UtilsTests: XCTestCase {
                     try AssetName(data: Data([3])): UInt64(1)
                 ]
         ]
-        XCTAssertEqual(minAdaRequired(assets: assets, minimumUtxoVal: MINIMUM_UTXO_VAL), 1555554)
+        XCTAssertEqual(try assets.minAdaRequired(minimumUtxoVal: minimumUtxoVal), 1555554)
     }
     
     func testOnePolicyThreeLargestNames() throws {
@@ -67,7 +67,7 @@ final class UtilsTests: XCTestCase {
                     try AssetName(data: Data(repeating: 3, count: 32)): UInt64(1)
                 ]
         ]
-        XCTAssertEqual(minAdaRequired(assets: assets, minimumUtxoVal: MINIMUM_UTXO_VAL), 1962961)
+        XCTAssertEqual(try assets.minAdaRequired(minimumUtxoVal: minimumUtxoVal), 1962961)
     }
     
     func testTwoPoliciesOneSmallestName() throws {
@@ -77,7 +77,7 @@ final class UtilsTests: XCTestCase {
             try PolicyID(bytes: Data(repeating: 0, count: 28)): assetList,
             try PolicyID(bytes: Data(repeating: 1, count: 28)): assetList
         ]
-        XCTAssertEqual(minAdaRequired(assets: assets, minimumUtxoVal: MINIMUM_UTXO_VAL), 1592591)
+        XCTAssertEqual(try assets.minAdaRequired(minimumUtxoVal: minimumUtxoVal), 1592591)
     }
     
     func testTwoPoliciesTwoSmallNames() throws {
@@ -88,7 +88,7 @@ final class UtilsTests: XCTestCase {
         ]
         var assets = Value(coin: 1592591)
         assets.multiasset = tokenBundle
-        XCTAssertEqual(minAdaRequired(assets: assets, minimumUtxoVal: MINIMUM_UTXO_VAL), 1592591)
+        XCTAssertEqual(try assets.minAdaRequired(minimumUtxoVal: minimumUtxoVal), 1592591)
     }
     
     func testThreePolicies99SmallNames() throws {
@@ -102,7 +102,7 @@ final class UtilsTests: XCTestCase {
         }
         var assets = Value(coin: 7592585)
         assets.multiasset = tokenBundle
-        XCTAssertEqual(minAdaRequired(assets: assets, minimumUtxoVal: MINIMUM_UTXO_VAL), 7592585)
+        XCTAssertEqual(try assets.minAdaRequired(minimumUtxoVal: minimumUtxoVal), 7592585)
     }
     
     func testSubtractValues() throws {

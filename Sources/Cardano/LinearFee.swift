@@ -18,8 +18,4 @@ extension LinearFee {
             cardano_linear_fee_new(coefficient, constant, result, error)
         }.get()
     }
-    
-    public static func minFee(tx: Transaction, linearFee: LinearFee) throws -> Coin {
-        fatalError()
-    }
 }

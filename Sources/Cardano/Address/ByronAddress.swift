@@ -15,13 +15,19 @@ public struct ByronAddress {
         _address = address._0.copied()
     }
     
+    public init(bytes: Data) throws {
+        var address = try CCardano.ByronAddress(bytes: bytes)
+        self = address.owned()
+    }
+    
     public init(base58: String) throws {
         var address = try CCardano.ByronAddress(base58: base58)
         self = address.owned()
     }
     
-    public init(address: Address) throws {
-        fatalError()
+    public init(key: Bip32PublicKey, protocolMagic: UInt32) throws {
+        var address = try CCardano.ByronAddress(key: key, protocolMagic: protocolMagic)
+        self = address.owned()
     }
     
     public func base58() throws -> String {
@@ -29,27 +35,19 @@ public struct ByronAddress {
     }
     
     public func byronProtocolMagic() throws -> UInt32 {
-        fatalError()
+        try withCAddress { try $0.byronProtocolMagic() }
     }
     
     public func networkId() throws -> UInt8 {
-        fatalError()
+        try withCAddress { try $0.networkId() }
     }
     
     public func bytes() throws -> Data {
-        fatalError()
-    }
-    
-    public func toAddress() throws -> Address {
-        fatalError()
+        try withCAddress { try $0.bytes() }
     }
     
     static public func isValid(s: String) throws -> Bool {
-        fatalError()
-    }
-    
-    static public func icarusFromKey(key: Bip32PublicKey, protocolMagic: UInt32) throws -> Self {
-        fatalError()
+        try CCardano.ByronAddress.isValid(s: s)
     }
     
     func clonedCAddress() throws -> CCardano.ByronAddress {
@@ -78,12 +76,53 @@ extension CCardano.ByronAddress: CPtr {
 }
 
 extension CCardano.ByronAddress {
+    public init(bytes: Data) throws {
+        self = try bytes.withCData { bytes in
+            RustResult<Self>.wrap { res, err in
+                cardano_byron_address_from_bytes(bytes, res, err)
+            }
+        }.get()
+    }
+    
     public init(base58: String) throws {
         self = try base58.withCharPtr { b58 in
             RustResult<CCardano.ByronAddress>.wrap { result, error in
                 cardano_byron_address_from_base58(b58, result, error)
             }
         }.get()
+    }
+    
+    public init(key: Bip32PublicKey, protocolMagic: UInt32) throws {
+        self = try RustResult<Self>.wrap { result, error in
+            cardano_byron_address_icarus_from_key(key, protocolMagic, result, error)
+        }.get()
+    }
+    
+    public func byronProtocolMagic() throws -> UInt32 {
+        try RustResult<UInt32>.wrap { result, error in
+            cardano_byron_address_byron_protocol_magic(self, result, error)
+        }.get()
+    }
+    
+    public func networkId() throws -> UInt8 {
+        try RustResult<UInt8>.wrap { result, error in
+            cardano_byron_address_network_id(self, result, error)
+        }.get()
+    }
+    
+    static public func isValid(s: String) throws -> Bool {
+        try s.withCharPtr { s in
+            RustResult<Bool>.wrap { result, error in
+                cardano_byron_address_is_valid(s, result, error)
+            }
+        }.get()
+    }
+    
+    public func bytes() throws -> Data {
+        var data = try RustResult<CData>.wrap { res, err in
+            cardano_byron_address_to_bytes(self, res, err)
+        }.get()
+        return data.owned()
     }
     
     public func base58() throws -> String {

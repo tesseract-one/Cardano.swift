@@ -44,6 +44,31 @@ impl From<RNonce> for Nonce {
   }
 }
 
+#[no_mangle]
+pub unsafe extern "C" fn cardano_nonce_new_from_hash(
+  data: CData, result: &mut Nonce, error: &mut CError,
+) -> bool {
+  handle_exception_result(|| {
+    data
+      .unowned()
+      .and_then(|bytes| RNonce::new_from_hash(bytes.to_vec()).into_result())
+      .map(|nonce| nonce.into())
+  })
+  .response(result, error)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_nonce_to_bytes(
+  nonce: Nonce, bytes: &mut CData, error: &mut CError,
+) -> bool {
+  handle_exception_result(|| {
+    nonce
+      .try_into()
+      .map(|nonce: RNonce| nonce.to_bytes().into())
+  })
+  .response(bytes, error)
+}
+
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct ProtocolVersion {

@@ -12,6 +12,25 @@ public enum MetadataJsonSchema {
     case noConversions
     case basicConversions
     case detailedSchema
+    
+    init(schema: CCardano.MetadataJsonSchema) {
+        switch schema {
+        case NoConversions: self = .noConversions
+        case BasicConversions: self = .basicConversions
+        case DetailedSchema: self = .detailedSchema
+        default: fatalError("Unknown MetadataJsonSchema type")
+        }
+    }
+    
+    func withCMetadataJsonSchema<T>(
+        fn: @escaping (CCardano.MetadataJsonSchema) throws -> T
+    ) rethrows -> T {
+        switch self {
+        case .noConversions: return try fn(NoConversions)
+        case .basicConversions: return try fn(BasicConversions)
+        case .detailedSchema: return try fn(DetailedSchema)
+        }
+    }
 }
 
 public enum TransactionMetadatum: Equatable, Hashable {
@@ -36,6 +55,16 @@ public enum TransactionMetadatum: Equatable, Hashable {
         case TextKind: self = .text(transactionMetadatum.text_kind.copied())
         default: fatalError("Unknown certificate type")
         }
+    }
+    
+    public init(arbitraryBytes: Data) throws {
+        var transactionMetadatum = try CCardano.TransactionMetadatum(arbitraryBytes: arbitraryBytes)
+        self = transactionMetadatum.owned()
+    }
+    
+    public init(json: String, schema: MetadataJsonSchema) throws {
+        var transactionMetadatum = try CCardano.TransactionMetadatum(json: json, schema: schema)
+        self = transactionMetadatum.owned()
     }
     
     var map: MetadataMap? {
@@ -73,20 +102,12 @@ public enum TransactionMetadatum: Equatable, Hashable {
         return text
     }
     
-    static public func encodeArbitraryBytesAsMetadatum(bytes: Data) throws -> Self {
-        fatalError()
+    public func arbitraryBytes() throws -> Data {
+        try withCTransactionMetadatum { try $0.arbitraryBytes() }
     }
     
-    static public func decodeArbitraryBytesFromMetadatum(metadata: Self) throws -> Data {
-        fatalError()
-    }
-    
-    static public func encodeJsonStrToMetadatum(json: String, schema: MetadataJsonSchema) throws -> Self {
-        fatalError()
-    }
-    
-    static public func decodeMetadatumToJsonStr(metadatum: TransactionMetadatum, schema: MetadataJsonSchema) throws -> String {
-        fatalError()
+    public func json(schema: MetadataJsonSchema) throws -> String {
+        try withCTransactionMetadatum { try $0.json(schema: schema) }
     }
     
     func clonedCTransactionMetadatum() throws -> CCardano.TransactionMetadatum {
@@ -147,6 +168,40 @@ extension CCardano.TransactionMetadatum: CPtr {
 }
 
 extension CCardano.TransactionMetadatum {
+    public init(arbitraryBytes: Data) throws {
+        self = try arbitraryBytes.withCData { arbitraryBytes in
+            RustResult<Self>.wrap { result, error in
+                cardano_transaction_metadatum_encode_arbitrary_bytes_as_metadatum(arbitraryBytes, result, error)
+            }
+        }.get()
+    }
+    
+    public init(json: String, schema: MetadataJsonSchema) throws {
+        self = try json.withCharPtr { json in
+            schema.withCMetadataJsonSchema { schema in
+                RustResult<Self>.wrap { result, error in
+                    cardano_transaction_metadatum_encode_json_str_to_metadatum(json, schema, result, error)
+                }
+            }
+        }.get()
+    }
+    
+    public func arbitraryBytes() throws -> Data {
+        var data = try RustResult<CData>.wrap { res, err in
+            cardano_transaction_metadatum_decode_arbitrary_bytes_from_metadatum(self, res, err)
+        }.get()
+        return data.owned()
+    }
+    
+    public func json(schema: MetadataJsonSchema) throws -> String {
+        var jsonStr = try schema.withCMetadataJsonSchema { schema in
+            RustResult<CharPtr>.wrap { res, err in
+                cardano_transaction_metadatum_decode_metadatum_to_json_str(self, schema, res, err)
+            }
+        }.get()
+        return jsonStr.owned()
+    }
+    
     public func clone() throws -> Self {
         try RustResult<Self>.wrap { result, error in
             cardano_transaction_metadatum_clone(self, result, error)
