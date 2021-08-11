@@ -66,6 +66,7 @@ dependencies = [
  "cardano-serialization-lib",
  "cbindgen",
  "linked-hash-map",
+ "serde_json",
 ]
 
 [[package]]

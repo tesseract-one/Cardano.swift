@@ -55,6 +55,12 @@ impl From<&str> for CError {
     }
 }
 
+impl From<serde_json::Error> for CError {
+    fn from(error: serde_json::Error) -> Self {
+        Self::Error(format!("{}", error).into_cstr())
+    }
+}
+
 #[no_mangle]
 pub unsafe extern "C" fn cardano_error_free(err: &mut CError) {
     err.free();

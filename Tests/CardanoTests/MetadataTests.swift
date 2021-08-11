@@ -34,8 +34,8 @@ final class MetadataTests: XCTestCase {
         XCTAssertEqual(inputBytes, outputBytes)
     }
     
-    private func jsonFromStr(str: String) -> String {
-        fatalError()
+    private func jsonFromStr(str: String) throws -> JsonValue {
+        try JsonValue(s: str)
     }
     
     func testJsonEncodingNoConversions() throws {
@@ -51,8 +51,8 @@ final class MetadataTests: XCTestCase {
         let tagsI32 = tags.map { Int32($0.int!) }
         XCTAssertEqual(tagsI32, [0, 264, -1024, 32])
         let outputStr = try metadata.json(schema: MetadataJsonSchema.noConversions)
-        let inputJson = jsonFromStr(str: inputStr)
-        let outputJson = jsonFromStr(str: outputStr)
+        let inputJson = try jsonFromStr(str: inputStr)
+        let outputJson = try jsonFromStr(str: outputStr)
         XCTAssertEqual(inputJson, outputJson)
     }
     
@@ -63,8 +63,8 @@ final class MetadataTests: XCTestCase {
         )
         jsonEncodingCheckExampleMetadatum(metadata: metadata)
         let outputStr = try metadata.json(schema: MetadataJsonSchema.basicConversions)
-        let inputJson = jsonFromStr(str: inputStr)
-        let outputJson = jsonFromStr(str: outputStr)
+        let inputJson = try jsonFromStr(str: inputStr)
+        let outputJson = try jsonFromStr(str: outputStr)
         XCTAssertEqual(inputJson, outputJson)
     }
     
@@ -102,8 +102,8 @@ final class MetadataTests: XCTestCase {
         )
         jsonEncodingCheckExampleMetadatum(metadata: metadata)
         let outputStr = try metadata.json(schema: MetadataJsonSchema.detailedSchema)
-        let inputJson = jsonFromStr(str: inputStr)
-        let outputJson = jsonFromStr(str: outputStr)
+        let inputJson = try jsonFromStr(str: inputStr)
+        let outputJson = try jsonFromStr(str: outputStr)
         XCTAssertEqual(inputJson, outputJson)
     }
     
@@ -140,8 +140,8 @@ final class MetadataTests: XCTestCase {
         let keyBytes = keyList[1].bytes
         XCTAssertEqual(keyBytes, Data(hex: "ff00ff00"))
         let outputStr = try metadata.json(schema: MetadataJsonSchema.detailedSchema)
-        let inputJson = jsonFromStr(str: inputStr)
-        let outputJson = jsonFromStr(str: outputStr)
+        let inputJson = try jsonFromStr(str: inputStr)
+        let outputJson = try jsonFromStr(str: outputStr)
         XCTAssertEqual(inputJson, outputJson)
     }
     
