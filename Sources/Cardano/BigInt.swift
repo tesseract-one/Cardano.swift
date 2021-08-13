@@ -27,7 +27,7 @@ extension CInt128 {
     }
 }
 
-extension CInt128 {
+extension CUInt128 {
     public var bigUInt: BigUInt {
         (BigUInt(self.w1) << 64) | BigUInt(self.w2)
     }
