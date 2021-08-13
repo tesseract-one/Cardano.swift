@@ -13,11 +13,13 @@ var package = Package(
             name: "Cardano",
             targets: ["Cardano"])
     ],
-    dependencies: [],
+    dependencies: [
+        .package(url: "https://github.com/attaswift/BigInt.git", from: "5.2.1"),
+    ],
     targets: [
         .target(
             name: "Cardano",
-            dependencies: ["CCardano"]),
+            dependencies: ["CCardano", "BigInt"]),
         .testTarget(
             name: "CardanoTests",
             dependencies: ["Cardano"])
