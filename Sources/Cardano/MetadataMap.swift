@@ -7,6 +7,7 @@
 
 import Foundation
 import CCardano
+import BigInt
 
 public typealias MetadataMap = Dictionary<TransactionMetadatum, TransactionMetadatum>
 
@@ -43,11 +44,11 @@ extension MetadataMap {
         )
     }
     
-    public func getStr(key: String) -> TransactionMetadatum? {
-        self[TransactionMetadatum.text(key)]
+    public func getStr(key: String) throws -> TransactionMetadatum? {
+        self[try TransactionMetadatum.newText(text: key)]
     }
     
     public func getI32(key: Int32) -> TransactionMetadatum? {
-        self[TransactionMetadatum.int(UInt64(key))]
+        self[TransactionMetadatum.int(BigInt(key))]
     }
 }

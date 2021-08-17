@@ -21,7 +21,7 @@ final class UtilsTests: XCTestCase {
         var assets = Value(coin: 1407406)
         assets.multiasset = [
             try PolicyID(bytes: Data(repeating: 0, count: 28)):
-                [try AssetName(data: Data([])): UInt64(1)]
+                [try AssetName(name: Data([])): UInt64(1)]
         ]
         XCTAssertEqual(try assets.minAdaRequired(minimumUtxoVal: minimumUtxoVal), 1407406)
     }
@@ -30,7 +30,7 @@ final class UtilsTests: XCTestCase {
         var assets = Value(coin: 1444443)
         assets.multiasset = [
             try PolicyID(bytes: Data(repeating: 0, count: 28)):
-                [try AssetName(data: Data([1])): UInt64(1)]
+                [try AssetName(name: Data([1])): UInt64(1)]
         ]
         XCTAssertEqual(try assets.minAdaRequired(minimumUtxoVal: minimumUtxoVal), 1444443)
     }
@@ -39,7 +39,7 @@ final class UtilsTests: XCTestCase {
         var assets = Value(coin: 1555554)
         assets.multiasset = [
             try PolicyID(bytes: Data(repeating: 0, count: 28)):
-                [try AssetName(data: Data(repeating: 1, count: 32)): UInt64(1)]
+                [try AssetName(name: Data(repeating: 1, count: 32)): UInt64(1)]
         ]
         XCTAssertEqual(try assets.minAdaRequired(minimumUtxoVal: minimumUtxoVal), 1555554)
     }
@@ -49,9 +49,9 @@ final class UtilsTests: XCTestCase {
         assets.multiasset = [
             try PolicyID(bytes: Data(repeating: 0, count: 28)):
                 [
-                    try AssetName(data: Data([1])): UInt64(1),
-                    try AssetName(data: Data([2])): UInt64(1),
-                    try AssetName(data: Data([3])): UInt64(1)
+                    try AssetName(name: Data([1])): UInt64(1),
+                    try AssetName(name: Data([2])): UInt64(1),
+                    try AssetName(name: Data([3])): UInt64(1)
                 ]
         ]
         XCTAssertEqual(try assets.minAdaRequired(minimumUtxoVal: minimumUtxoVal), 1555554)
@@ -62,16 +62,16 @@ final class UtilsTests: XCTestCase {
         assets.multiasset = [
             try PolicyID(bytes: Data(repeating: 0, count: 28)):
                 [
-                    try AssetName(data: Data(repeating: 1, count: 32)): UInt64(1),
-                    try AssetName(data: Data(repeating: 2, count: 32)): UInt64(1),
-                    try AssetName(data: Data(repeating: 3, count: 32)): UInt64(1)
+                    try AssetName(name: Data(repeating: 1, count: 32)): UInt64(1),
+                    try AssetName(name: Data(repeating: 2, count: 32)): UInt64(1),
+                    try AssetName(name: Data(repeating: 3, count: 32)): UInt64(1)
                 ]
         ]
         XCTAssertEqual(try assets.minAdaRequired(minimumUtxoVal: minimumUtxoVal), 1962961)
     }
     
     func testTwoPoliciesOneSmallestName() throws {
-        let assetList = [try AssetName(data: Data([])): UInt64(1)]
+        let assetList = [try AssetName(name: Data([])): UInt64(1)]
         var assets = Value(coin: 1592591)
         assets.multiasset = [
             try PolicyID(bytes: Data(repeating: 0, count: 28)): assetList,
@@ -81,7 +81,7 @@ final class UtilsTests: XCTestCase {
     }
     
     func testTwoPoliciesTwoSmallNames() throws {
-        let assetList = [try AssetName(data: Data([])): UInt64(1)]
+        let assetList = [try AssetName(name: Data([])): UInt64(1)]
         let tokenBundle = [
             try PolicyID(bytes: Data(repeating: 0, count: 28)): assetList,
             try PolicyID(bytes: Data(repeating: 1, count: 28)): assetList
@@ -96,7 +96,7 @@ final class UtilsTests: XCTestCase {
         for p: UInt8 in 1...3 {
             var assetList = Assets()
             for an: UInt8 in 0...33 {
-                assetList.updateValue(UInt64(1), forKey: try AssetName(data: Data([an])))
+                assetList.updateValue(UInt64(1), forKey: try AssetName(name: Data([an])))
             }
             tokenBundle.updateValue(assetList, forKey: try PolicyID(bytes: Data(repeating: p, count: 28)))
         }
@@ -108,10 +108,10 @@ final class UtilsTests: XCTestCase {
     func testSubtractValues() throws {
         let policy1 = try PolicyID(bytes: Data(repeating: 0, count: 28))
         let policy2 = try PolicyID(bytes: Data(repeating: 1, count: 28))
-        let asset1 = try AssetName(data: Data([1]))
-        let asset2 = try AssetName(data: Data([2]))
-        let asset3 = try AssetName(data: Data([3]))
-        let asset4 = try AssetName(data: Data([4]))
+        let asset1 = try AssetName(name: Data([1]))
+        let asset2 = try AssetName(name: Data([2]))
+        let asset3 = try AssetName(name: Data([3]))
+        let asset4 = try AssetName(name: Data([4]))
         var assets1 = Value(coin: 1555554)
         assets1.multiasset = [
             policy1: [
@@ -146,7 +146,7 @@ final class UtilsTests: XCTestCase {
     
     func testCompareValues() throws {
         let policy1 = try PolicyID(bytes: Data(repeating: 0, count: 28))
-        let asset1 = try AssetName(data: Data([1]))
+        let asset1 = try AssetName(name: Data([1]))
         let testWithoutMultiassets = { (v1: UInt64, v2: UInt64, o: Ordering?) in
             let a = Value(coin: v1)
             let b = Value(coin: v2)
@@ -184,7 +184,7 @@ final class UtilsTests: XCTestCase {
             (2, 1, 1, 2, nil),
             (1, 1, 1, 1, nil),
         ].forEach { try testWithMultiassets($0, $1, $2, $3, $4) }
-        let asset2 = try AssetName(data: Data([2]))
+        let asset2 = try AssetName(name: Data([2]))
         var a3 = Value(coin: 1)
         a3.multiasset = [policy1: [asset1: 1]]
         var b3 = Value(coin: 1)

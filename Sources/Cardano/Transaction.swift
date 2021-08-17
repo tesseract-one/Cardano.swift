@@ -61,11 +61,15 @@ public struct Transaction {
         try metadata.withCOption(
             with: { try $0.withCTransactionMetadata(fn: $1) }
         ) { metadata in
-            try fn(CCardano.Transaction(
-                body: body.withCTransactionBody { $0 },
-                witness_set: witnessSet.withCTransactionWitnessSet { $0 },
-                metadata: metadata
-            ))
+            try body.withCTransactionBody { body in
+                try witnessSet.withCTransactionWitnessSet { witnessSet in
+                    try fn(CCardano.Transaction(
+                        body: body,
+                        witness_set: witnessSet,
+                        metadata: metadata
+                    ))
+                }
+            }
         }
     }
 }

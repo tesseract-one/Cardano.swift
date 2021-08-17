@@ -61,9 +61,11 @@ final class CardanoTests: XCTestCase {
     
     func testNativeScriptHash() throws {
         let hash = try Ed25519KeyHash(bytes: Data([143, 180, 186, 93, 223, 42, 243, 7, 81, 98, 86, 125, 97, 69, 110, 52, 130, 243, 244, 98, 246, 13, 33, 212, 128, 168, 136, 40]))
-        XCTAssertEqual(try hash.data().hex(), "8fb4ba5ddf2af3075162567d61456e3482f3f462f60d21d480a88828")
+        XCTAssertEqual(try hash.data().hex(prefix: false), "8fb4ba5ddf2af3075162567d61456e3482f3f462f60d21d480a88828")
         let script = NativeScript.scriptPubkey(ScriptPubkey(addr_keyhash: hash))
         let scriptHash = try ScriptHash(bytes: Data(script.hash(namespace: ScriptHashNamespace.nativeScript).bytesArray))
-        XCTAssertEqual(try scriptHash.data().hex(), "187b8d3ddcb24013097c003da0b8d8f7ddcf937119d8f59dccd05a0f")
+        XCTAssertEqual(
+            try scriptHash.data().hex(prefix: false), "187b8d3ddcb24013097c003da0b8d8f7ddcf937119d8f59dccd05a0f"
+        )
     }
 }

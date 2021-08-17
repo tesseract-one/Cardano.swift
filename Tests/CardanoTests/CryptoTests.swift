@@ -28,12 +28,12 @@ final class CryptoTests: XCTestCase {
     func testXprv128Test() throws {
         let rootKey = try newBip32PrivateKey()
         XCTAssertEqual(
-            try rootKey.bytes().hex(),
+            try rootKey.bytes().hex(prefix: false),
             "b8f2bece9bdfe2b0282f5bad705562ac996efb6af96b648f4445ec44f47ad95c10e3d72f26ed075422a36ed8585c745a0e1150bcceba2357d058636991f38a3791e248de509c070d812ab2fda57860ac876bc489192c1ef4ce253c197ee219a4"
         )
         let xprv128 = try rootKey.to128Xprv()
         XCTAssertEqual(
-            xprv128.hex(),
+            xprv128.hex(prefix: false),
             "b8f2bece9bdfe2b0282f5bad705562ac996efb6af96b648f4445ec44f47ad95c10e3d72f26ed075422a36ed8585c745a0e1150bcceba2357d058636991f38a37cf76399a210de8720e9fa894e45e41e29ab525e30bc402801c076250d1585bcd91e248de509c070d812ab2fda57860ac876bc489192c1ef4ce253c197ee219a4"
         )
         let rootKeyCopy = try Bip32PrivateKey(xprv128: xprv128)
@@ -44,8 +44,8 @@ final class CryptoTests: XCTestCase {
         let chaincode = "91e248de509c070d812ab2fda57860ac876bc489192c1ef4ce253c197ee219a4"
         let rootKey = try newBip32PrivateKey()
         let prvChaincode = try rootKey.chaincode()
-        XCTAssertEqual(prvChaincode.hex(), chaincode)
+        XCTAssertEqual(prvChaincode.hex(prefix: false), chaincode)
         let pubChaincode = try rootKey.publicKey().chaincode()
-        XCTAssertEqual(pubChaincode.hex(), chaincode)
+        XCTAssertEqual(pubChaincode.hex(prefix: false), chaincode)
     }
 }

@@ -404,7 +404,7 @@ final class AddressTests: XCTestCase {
         ))
         XCTAssertEqual(
             try addrNet0.bech32(),
-            "addr_test1gpu5vlrf4xkxv2qpwngf6cjhtw542ayty80v8dyr49rf5egpqgpsdhdyc0"
+            "addr_test1gqy6nhfyks7wdu3dudslys37v252w2nwhv0fw2nfawemmnqpqgps5mee0p"
         )
         let addrNet3 = Address.pointer(PointerAddress(
             network: NetworkInfo.mainnet.network_id,
@@ -413,7 +413,7 @@ final class AddressTests: XCTestCase {
         ))
         XCTAssertEqual(
             try addrNet3.bech32(),
-            "addr1g9u5vlrf4xkxv2qpwngf6cjhtw542ayty80v8dyr49rf5evph3wczvf2kd5vam"
+            "addr1gyy6nhfyks7wdu3dudslys37v252w2nwhv0fw2nfawemmnyph3wczvf2dqflgt"
         )
     }
     

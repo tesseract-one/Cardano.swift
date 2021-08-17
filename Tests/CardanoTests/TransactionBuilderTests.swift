@@ -158,7 +158,7 @@ final class TransactionBuilderTests: XCTestCase {
         ).toAddress()
         let addedChange = try txBuilder.addChangeIfNeeded(address: changeAddr)
         assert(!addedChange)
-        XCTAssertEqual(txBuilder.outputs.count, 2)
+        XCTAssertEqual(txBuilder.outputs.count, 1)
         XCTAssertEqual(
             try txBuilder.getExplicitInput().checkedAdd(rhs: txBuilder.getImplicitInput()).coin,
             try txBuilder.getExplicitOutput().checkedAdd(rhs: Value(coin: txBuilder.fee!)).coin
@@ -270,7 +270,7 @@ final class TransactionBuilderTests: XCTestCase {
         let addedChange = try txBuilder.addChangeIfNeeded(address: changeAddr)
         assert(!addedChange)
         let finalTx = try txBuilder.build()
-        XCTAssertEqual(finalTx.outputs.count, 2)
+        XCTAssertEqual(finalTx.outputs.count, 1)
     }
     
     func testBuildTxExactChange() throws {
@@ -372,7 +372,7 @@ final class TransactionBuilderTests: XCTestCase {
             payment: changeCred,
             stake: stakeCred
         ).toAddress()
-        let _ = try txBuilder.addChangeIfNeeded(address: changeAddr)
+        XCTAssertThrowsError(try txBuilder.addChangeIfNeeded(address: changeAddr))
     }
     
     func testBuildTxWithInputs() throws {
@@ -466,7 +466,7 @@ final class TransactionBuilderTests: XCTestCase {
             .derive(index: 0)
             .publicKey()
         let policyId = try PolicyID(bytes: Data(repeating: 0, count: 28))
-        let name = try AssetName(data: Data([0, 1, 2, 3]))
+        let name = try AssetName(name: Data([0, 1, 2, 3]))
         let maInput1 = 100
         let maInput2 = 200
         let maOutput1 = 60
@@ -536,7 +536,7 @@ final class TransactionBuilderTests: XCTestCase {
             stake: stakeCred
         ).toAddress()
         let policyId = try PolicyID(bytes: Data(repeating: 0, count: 28))
-        let name = try AssetName(data: Data([0, 1, 2, 3]))
+        let name = try AssetName(name: Data([0, 1, 2, 3]))
         var inputAmount = Value(coin: 1_000_000)
         let inputMultiasset = [
             policyId: [name: UInt64(100)]

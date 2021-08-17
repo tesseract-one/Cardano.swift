@@ -41,6 +41,7 @@ pub mod transaction_metadatum_labels;
 pub mod transaction;
 pub mod transaction_builder;
 pub mod int;
+pub mod json_value;
 mod ptr;
 mod panic;
 mod array;

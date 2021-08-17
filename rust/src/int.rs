@@ -1,5 +1,6 @@
 
 #[repr(C)]
+#[derive(Copy, Clone)]
 pub struct CInt128 {
     w1: i64,
     w2: u64
