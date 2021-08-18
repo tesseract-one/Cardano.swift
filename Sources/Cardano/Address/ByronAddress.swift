@@ -50,6 +50,10 @@ public struct ByronAddress {
         try CCardano.ByronAddress.isValid(s: s)
     }
     
+    public func toAddress() -> Address {
+        return .byron(self)
+    }
+    
     func clonedCAddress() throws -> CCardano.ByronAddress {
         try withCAddress { try $0.clone() }
     }

@@ -95,7 +95,7 @@ final class UtilsTests: XCTestCase {
         var tokenBundle = MultiAsset()
         for p: UInt8 in 1...3 {
             var assetList = Assets()
-            for an: UInt8 in 0...33 {
+            for an: UInt8 in 0...32 {
                 assetList.updateValue(UInt64(1), forKey: try AssetName(name: Data([an])))
             }
             tokenBundle.updateValue(assetList, forKey: try PolicyID(bytes: Data(repeating: p, count: 28)))
@@ -157,10 +157,10 @@ final class UtilsTests: XCTestCase {
             (2, 1, Ordering.greater),
             (1, 2, Ordering.less),
         ].forEach { try testWithoutMultiassets($0, $1, $2) }
-        var a = Value(coin: 1)
-        a.multiasset = [policy1: [asset1: UInt64(1)]]
-        let b = Value(coin: 1)
-        XCTAssertEqual(try a.partialCmp(other: b), Ordering.greater)
+        var a1 = Value(coin: 1)
+        a1.multiasset = [policy1: [asset1: UInt64(1)]]
+        let b1 = Value(coin: 1)
+        XCTAssertEqual(try a1.partialCmp(other: b1), Ordering.greater)
         let a2 = Value(coin: 1)
         var b2 = Value(coin: 1)
         b2.multiasset = [policy1: [asset1: UInt64(1)]]
@@ -182,13 +182,12 @@ final class UtilsTests: XCTestCase {
             (1, 1, 1, 2, Ordering.less),
             (1, 1, 2, 2, Ordering.less),
             (2, 1, 1, 2, nil),
-            (1, 1, 1, 1, nil),
         ].forEach { try testWithMultiassets($0, $1, $2, $3, $4) }
         let asset2 = try AssetName(name: Data([2]))
         var a3 = Value(coin: 1)
         a3.multiasset = [policy1: [asset1: 1]]
         var b3 = Value(coin: 1)
         b3.multiasset = [policy1: [asset2: 1]]
-        XCTAssertEqual(try a.partialCmp(other: b), nil)
+        XCTAssertEqual(try a3.partialCmp(other: b3), nil)
     }
 }

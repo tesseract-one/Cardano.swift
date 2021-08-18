@@ -100,7 +100,7 @@ Provided structures:
 
 #### Part 1.1: Core unit tests
 
-![78%](https://progress-bar.dev/78?title=passed&width=150)
+![96%](https://progress-bar.dev/96?title=passed&width=150)
 
 Test categories:
 
@@ -108,8 +108,8 @@ Test categories:
 - ![100%](https://progress-bar.dev/100?width=150) CryptoTests
 - ![100%](https://progress-bar.dev/100?width=150) FeesTests
 - ![66%](https://progress-bar.dev/66?width=150) MetadataTests
-- ![81%](https://progress-bar.dev/81?width=150) TransationBuilderTests
-- ![27%](https://progress-bar.dev/27?width=150) UtilsTests
+- ![100%](https://progress-bar.dev/100?width=150) TransationBuilderTests
+- ![100%](https://progress-bar.dev/100?width=150) UtilsTests
 
 ### Part 2: Networking
 

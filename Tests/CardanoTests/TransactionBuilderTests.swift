@@ -84,7 +84,7 @@ final class TransactionBuilderTests: XCTestCase {
             .publicKey()
         let spendCred = try StakeCredential.keyHash(spend.toRawKey().hash())
         let stakeCred = try StakeCredential.keyHash(stake.toRawKey().hash())
-        let addrNet0 = try BaseAddress(
+        let addrNet0 = BaseAddress(
             network: NetworkInfo.testnet.network_id,
             payment: spendCred,
             stake: stakeCred
@@ -97,7 +97,7 @@ final class TransactionBuilderTests: XCTestCase {
         try txBuilder.addOutput(output: TransactionOutput(address: addrNet0, amount: Value(coin: 10)))
         txBuilder.ttl = 1000
         let changeCred = StakeCredential.keyHash(try changeKey.toRawKey().hash())
-        let changeAddr = try BaseAddress(
+        let changeAddr = BaseAddress(
             network: NetworkInfo.testnet.network_id,
             payment: changeCred,
             stake: stakeCred
@@ -138,7 +138,7 @@ final class TransactionBuilderTests: XCTestCase {
             .publicKey()
         let spendCred = try StakeCredential.keyHash(spend.toRawKey().hash())
         let stakeCred = try StakeCredential.keyHash(stake.toRawKey().hash())
-        let addrNet0 = try BaseAddress(
+        let addrNet0 = BaseAddress(
             network: NetworkInfo.testnet.network_id,
             payment: spendCred,
             stake: stakeCred
@@ -151,7 +151,7 @@ final class TransactionBuilderTests: XCTestCase {
         try txBuilder.addOutput(output: TransactionOutput(address: addrNet0, amount: Value(coin: 880_000)))
         txBuilder.ttl = 1000
         let changeCred = StakeCredential.keyHash(try changeKey.toRawKey().hash())
-        let changeAddr = try BaseAddress(
+        let changeAddr = BaseAddress(
             network: NetworkInfo.testnet.network_id,
             payment: changeCred,
             stake: stakeCred
@@ -205,7 +205,7 @@ final class TransactionBuilderTests: XCTestCase {
         ]
         try txBuilder.setCerts(certs: certs)
         let changeCred = StakeCredential.keyHash(try changeKey.toRawKey().hash())
-        let changeAddr = try BaseAddress(
+        let changeAddr = BaseAddress(
             network: NetworkInfo.testnet.network_id,
             payment: changeCred,
             stake: stakeCred
@@ -254,7 +254,7 @@ final class TransactionBuilderTests: XCTestCase {
         )
         let spendCred = try StakeCredential.keyHash(spend.toRawKey().hash())
         let stakeCred = try StakeCredential.keyHash(stake.toRawKey().hash())
-        let addrNet0 = try BaseAddress(
+        let addrNet0 = BaseAddress(
             network: NetworkInfo.testnet.network_id,
             payment: spendCred,
             stake: stakeCred
@@ -262,7 +262,7 @@ final class TransactionBuilderTests: XCTestCase {
         try txBuilder.addOutput(output: TransactionOutput(address: addrNet0, amount: Value(coin: 5)))
         txBuilder.ttl = 0
         let changeCred = StakeCredential.keyHash(try changeKey.toRawKey().hash())
-        let changeAddr = try BaseAddress(
+        let changeAddr = BaseAddress(
             network: NetworkInfo.testnet.network_id,
             payment: changeCred,
             stake: stakeCred
@@ -304,7 +304,7 @@ final class TransactionBuilderTests: XCTestCase {
         )
         let spendCred = try StakeCredential.keyHash(spend.toRawKey().hash())
         let stakeCred = try StakeCredential.keyHash(stake.toRawKey().hash())
-        let addrNet0 = try BaseAddress(
+        let addrNet0 = BaseAddress(
             network: NetworkInfo.testnet.network_id,
             payment: spendCred,
             stake: stakeCred
@@ -312,7 +312,7 @@ final class TransactionBuilderTests: XCTestCase {
         try txBuilder.addOutput(output: TransactionOutput(address: addrNet0, amount: Value(coin: 5)))
         txBuilder.ttl = 0
         let changeCred = StakeCredential.keyHash(try changeKey.toRawKey().hash())
-        let changeAddr = try BaseAddress(
+        let changeAddr = BaseAddress(
             network: NetworkInfo.testnet.network_id,
             payment: changeCred,
             stake: stakeCred
@@ -355,7 +355,7 @@ final class TransactionBuilderTests: XCTestCase {
         )
         let spendCred = try StakeCredential.keyHash(spend.toRawKey().hash())
         let stakeCred = try StakeCredential.keyHash(stake.toRawKey().hash())
-        let addrNet0 = try BaseAddress(
+        let addrNet0 = BaseAddress(
             network: NetworkInfo.testnet.network_id,
             payment: spendCred,
             stake: stakeCred
@@ -367,7 +367,7 @@ final class TransactionBuilderTests: XCTestCase {
         ]
         try txBuilder.setCerts(certs: certs)
         let changeCred = StakeCredential.keyHash(try changeKey.toRawKey().hash())
-        let changeAddr = try BaseAddress(
+        let changeAddr = BaseAddress(
             network: NetworkInfo.testnet.network_id,
             payment: changeCred,
             stake: stakeCred
@@ -396,18 +396,14 @@ final class TransactionBuilderTests: XCTestCase {
         let stakeCred = try StakeCredential.keyHash(stake.toRawKey().hash())
         XCTAssertEqual(
             try txBuilder.feeForInput(
-                address: Address.enterprise(
-                    EnterpriseAddress(network: NetworkInfo.testnet.network_id, payment: spendCred)
-                ),
+                address: EnterpriseAddress(network: NetworkInfo.testnet.network_id, payment: spendCred).toAddress(),
                 input: TransactionInput(transaction_id: genesisId(), index: 0),
                 amount: Value(coin: 1_000_000)
             ),
             69500
         )
         try txBuilder.addInput(
-            address: Address.enterprise(
-                EnterpriseAddress(network: NetworkInfo.testnet.network_id, payment: spendCred)
-            ),
+            address: EnterpriseAddress(network: NetworkInfo.testnet.network_id, payment: spendCred).toAddress(),
             input: TransactionInput(transaction_id: genesisId(), index: 0),
             amount: Value(coin: 1_000_000)
         )
@@ -417,18 +413,16 @@ final class TransactionBuilderTests: XCTestCase {
             amount: Value(coin: 1_000_000)
         )
         try txBuilder.addInput(
-            address: Address.pointer(PointerAddress(
+            address: PointerAddress(
                 network: NetworkInfo.testnet.network_id,
                 payment: spendCred,
                 stake: Pointer(slot: 0, tx_index: 0, cert_index: 0)
-            )),
+            ).toAddress(),
             input: TransactionInput(transaction_id: genesisId(), index: 0),
             amount: Value(coin: 1_000_000)
         )
         try txBuilder.addInput(
-            address: Address.byron(
-                ByronAddress(key: spend, protocolMagic: NetworkInfo.testnet.protocol_magic)
-            ),
+            address: ByronAddress(key: spend, protocolMagic: NetworkInfo.testnet.protocol_magic).toAddress(),
             input: TransactionInput(transaction_id: genesisId(), index: 0),
             amount: Value(coin: 1_000_000)
         )
@@ -482,7 +476,7 @@ final class TransactionBuilderTests: XCTestCase {
         }
         let spendCred = try StakeCredential.keyHash(spend.toRawKey().hash())
         let stakeCred = try StakeCredential.keyHash(stake.toRawKey().hash())
-        let addrNet0 = try BaseAddress(
+        let addrNet0 = BaseAddress(
             network: NetworkInfo.testnet.network_id,
             payment: spendCred,
             stake: stakeCred
@@ -491,7 +485,7 @@ final class TransactionBuilderTests: XCTestCase {
         outputAmount.multiasset = multiassets[2]
         try txBuilder.addOutput(output: TransactionOutput(address: addrNet0, amount: outputAmount))
         let changeCred = StakeCredential.keyHash(try changeKey.toRawKey().hash())
-        let changeAddr = try BaseAddress(
+        let changeAddr = BaseAddress(
             network: NetworkInfo.testnet.network_id,
             payment: changeCred,
             stake: stakeCred
@@ -530,7 +524,7 @@ final class TransactionBuilderTests: XCTestCase {
             .publicKey()
         let spendCred = try StakeCredential.keyHash(spend.toRawKey().hash())
         let stakeCred = try StakeCredential.keyHash(stake.toRawKey().hash())
-        let addrNet0 = try BaseAddress(
+        let addrNet0 = BaseAddress(
             network: NetworkInfo.testnet.network_id,
             payment: spendCred,
             stake: stakeCred
@@ -550,19 +544,12 @@ final class TransactionBuilderTests: XCTestCase {
         try txBuilder.addOutput(output: TransactionOutput(address: addrNet0, amount: Value(coin: 880_000)))
         txBuilder.ttl = 1000
         let changeCred = StakeCredential.keyHash(try changeKey.toRawKey().hash())
-        let changeAddr = try BaseAddress(
+        let changeAddr = BaseAddress(
             network: NetworkInfo.testnet.network_id,
             payment: changeCred,
             stake: stakeCred
         ).toAddress()
-        let addedChange = try txBuilder.addChangeIfNeeded(address: changeAddr)
-        assert(!addedChange)
-        XCTAssertEqual(txBuilder.outputs.count, 1)
-        XCTAssertEqual(
-            try txBuilder.getExplicitInput().checkedAdd(rhs: txBuilder.getImplicitInput()).coin,
-            try txBuilder.getExplicitOutput().checkedAdd(rhs: Value(coin: txBuilder.fee!)).coin
-        )
-        XCTAssertNoThrow(try txBuilder.build())
+        XCTAssertThrowsError(try txBuilder.addChangeIfNeeded(address: changeAddr))
     }
     
     func testBuildTxBurnLessThanMinAda() throws {
@@ -575,18 +562,16 @@ final class TransactionBuilderTests: XCTestCase {
         )
         let outputAddr = try ByronAddress(base58: "Ae2tdPwUPEZD9QQf2ZrcYV34pYJwxK4vqXaF8EXkup1eYH73zUScHReM42b")
         try txBuilder.addOutput(
-            output: TransactionOutput(address: Address.byron(outputAddr), amount: Value(coin: 2_000_000))
+            output: TransactionOutput(address: outputAddr.toAddress(), amount: Value(coin: 2_000_000))
         )
         try txBuilder.addInput(
-            address: Address.byron(
-                ByronAddress(base58: "Ae2tdPwUPEZ5uzkzh1o2DHECiUi3iugvnnKHRisPgRRP3CTF4KCMvy54Xd3")
-            ),
+            address: ByronAddress(base58: "Ae2tdPwUPEZ5uzkzh1o2DHECiUi3iugvnnKHRisPgRRP3CTF4KCMvy54Xd3").toAddress(),
             input: TransactionInput(transaction_id: genesisId(), index: 0),
             amount: Value(coin: 2_400_000)
         )
         txBuilder.ttl = 1
         let changeAddr = try ByronAddress(base58: "Ae2tdPwUPEZGUEsuMAhvDcy94LKsZxDjCbgaiBBMgYpR8sKf96xJmit7Eho")
-        let addedChange = try txBuilder.addChangeIfNeeded(address: Address.byron(changeAddr))
+        let addedChange = try txBuilder.addChangeIfNeeded(address: changeAddr.toAddress())
         assert(!addedChange)
         XCTAssertEqual(txBuilder.outputs.count, 1)
         XCTAssertEqual(
@@ -606,20 +591,18 @@ final class TransactionBuilderTests: XCTestCase {
         )
         let outputAddr = try ByronAddress(base58: "Ae2tdPwUPEZD9QQf2ZrcYV34pYJwxK4vqXaF8EXkup1eYH73zUScHReM42b")
         try txBuilder.addOutput(
-            output: TransactionOutput(address: Address.byron(outputAddr), amount: Value(coin: 2_000_000))
+            output: TransactionOutput(address: outputAddr.toAddress(), amount: Value(coin: 2_000_000))
         )
         var inputValue = Value(coin: 2_400_000)
         inputValue.multiasset = [:]
         try txBuilder.addInput(
-            address: Address.byron(
-                ByronAddress(base58: "Ae2tdPwUPEZ5uzkzh1o2DHECiUi3iugvnnKHRisPgRRP3CTF4KCMvy54Xd3")
-            ),
+            address: ByronAddress(base58: "Ae2tdPwUPEZ5uzkzh1o2DHECiUi3iugvnnKHRisPgRRP3CTF4KCMvy54Xd3").toAddress(),
             input: TransactionInput(transaction_id: genesisId(), index: 0),
             amount: inputValue
         )
         txBuilder.ttl = 1
         let changeAddr = try ByronAddress(base58: "Ae2tdPwUPEZGUEsuMAhvDcy94LKsZxDjCbgaiBBMgYpR8sKf96xJmit7Eho")
-        let addedChange = try txBuilder.addChangeIfNeeded(address: Address.byron(changeAddr))
+        let addedChange = try txBuilder.addChangeIfNeeded(address: changeAddr.toAddress())
         assert(!addedChange)
         XCTAssertEqual(txBuilder.outputs.count, 1)
         XCTAssertEqual(

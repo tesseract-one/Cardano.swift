@@ -20,10 +20,13 @@ impl TryFrom<RAssetName> for AssetName {
   type Error = CError;
 
   fn try_from(asset: RAssetName) -> Result<Self> {
-    let name = asset.name();
+    let mut name = asset.name();
     let len = name.len();
+    if len < 32 {
+      name.append(&mut vec![0; 32 - len]);
+    }
     let bytes: [u8; 32] = name.try_into().map_err(|_| CError::DataLengthMismatch)?;
-    Ok(Self { bytes: bytes, len: len as u8 })
+    Ok(Self { bytes, len: len as u8 })
   }
 }
 

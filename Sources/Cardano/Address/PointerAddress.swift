@@ -25,6 +25,10 @@ public struct PointerAddress {
         self.stake = stake
     }
     
+    public func toAddress() -> Address {
+        return .pointer(self)
+    }
+    
     func withCPointerAddress<T>(
         fn: @escaping (CCardano.PointerAddress) throws -> T
     ) rethrows -> T {

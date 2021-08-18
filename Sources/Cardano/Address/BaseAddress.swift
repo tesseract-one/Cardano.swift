@@ -36,7 +36,7 @@ extension BaseAddress {
         stake.copied()
     }
     
-    public func toAddress() throws -> Address {
+    public func toAddress() -> Address {
         return .base(self)
     }
 }
