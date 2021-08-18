@@ -54,7 +54,7 @@ public enum TransactionMetadatum: Equatable, Hashable {
         case IntKind: self = .int(transactionMetadatum.int_kind.bigInt)
         case BytesKind: self = .bytes(transactionMetadatum.bytes_kind.copied())
         case TextKind: self = .text(transactionMetadatum.text_kind.copied())
-        default: fatalError("Unknown certificate type")
+        default: fatalError("Unknown Сertificate type")
         }
     }
     

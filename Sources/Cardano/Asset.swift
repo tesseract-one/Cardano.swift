@@ -14,6 +14,9 @@ extension AssetName: CType {}
 
 extension AssetName {
     public init(name: Data) throws {
+        guard name.count <= 32 else {
+            fatalError("Data length mismatch")
+        }
         self = try name.withCData { bytes in
             RustResult<Self>.wrap { res, err in
                 cardano_asset_name_new(bytes, res, err)
