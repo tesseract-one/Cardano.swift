@@ -42,3 +42,7 @@ extension CError: CPtr {
         cardano_error_free(&self)
     }
 }
+
+public enum CardanoError: Error {
+    case outOfRange(min: Int, max: Int, found: Int)
+}
