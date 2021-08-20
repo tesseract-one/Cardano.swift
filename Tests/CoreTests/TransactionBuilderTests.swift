@@ -7,7 +7,7 @@
 
 import Foundation
 import XCTest
-@testable import Cardano
+@testable import CardanoCore
 
 final class TransactionBuilderTests: XCTestCase {
     private func genesisId() throws -> TransactionHash {

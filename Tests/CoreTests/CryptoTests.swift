@@ -7,7 +7,7 @@
 
 import Foundation
 import XCTest
-@testable import Cardano
+@testable import CardanoCore
 
 final class CryptoTests: XCTestCase {
     private func newBip32PrivateKey() throws -> Bip32PrivateKey {

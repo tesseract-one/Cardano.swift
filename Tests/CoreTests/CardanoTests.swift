@@ -1,5 +1,5 @@
 import XCTest
-@testable import Cardano
+@testable import CardanoCore
 
 final class CardanoTests: XCTestCase {
     let publicKeyExample = "ed25519_pk1dgaagyh470y66p899txcl3r0jaeaxu6yd7z2dxyk55qcycdml8gszkxze2"

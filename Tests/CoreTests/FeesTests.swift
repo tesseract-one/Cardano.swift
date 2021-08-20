@@ -8,7 +8,7 @@
 import Foundation
 import CryptoKit
 import XCTest
-@testable import Cardano
+@testable import CardanoCore
 
 final class FeesTests: XCTestCase {
     func testTxSimpleUtxo() throws {

@@ -7,7 +7,7 @@
 
 import Foundation
 import XCTest
-@testable import Cardano
+@testable import CardanoCore
 
 final class TransactionBodyTests: XCTestCase {
     private let addressExample = "addr1u8pcjgmx7962w6hey5hhsd502araxp26kdtgagakhaqtq8sxy9w7g"

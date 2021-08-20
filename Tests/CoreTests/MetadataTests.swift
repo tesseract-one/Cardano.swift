@@ -7,7 +7,7 @@
 
 import Foundation
 import XCTest
-@testable import Cardano
+@testable import CardanoCore
 
 final class MetadataTests: XCTestCase {
     private func jsonEncodingCheckExampleMetadatum(metadata: TransactionMetadatum) throws {

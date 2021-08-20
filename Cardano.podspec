@@ -17,24 +17,33 @@ Pod::Spec.new do |s|
   
   s.module_name = 'Cardano'
   
-  s.subspec 'Binary' do |ss|
-    ss.source_files = 'Sources/Cardano/*.swift'
+  s.subspec 'OrderedCollections' do |ss|
+    ss.source_files = 'Sources/OrderedCollections/**/*.swift'
+  end
+  
+  s.subspec 'CoreBinary' do |ss|
+    ss.source_files = 'Sources/Core/**/*.swift'
 
     ss.dependency 'Cardano-Binaries', '~> 0.0.1'
+    ss.dependency 'BigInt', '~> 5.2'
+    ss.depencency 'Cardano/OrderedCollections'
     
     ss.pod_target_xcconfig = {
       'LIBRARY_SEARCH_PATHS' => '$(inherited) "${PODS_XCFRAMEWORKS_BUILD_DIR}/CCardano"',
       'ENABLE_BITCODE' => 'NO'
     }
     
-    ss.test_spec 'CardanoTests' do |test_spec|
-      test_spec.source_files = 'Tests/CardanoTests/**/*.swift'
+    ss.test_spec 'CoreTests' do |test_spec|
+      test_spec.source_files = 'Tests/CoreTests/**/*.swift'
     end
   end
 
-  s.subspec 'Build' do |ss|
-    ss.source_files = 'Sources/Cardano/*.swift'
+  s.subspec 'CoreBuild' do |ss|
+    ss.source_files = 'Sources/Core/**/*.swift'
     ss.preserve_paths = "rust/**/*"
+    
+    ss.dependency 'BigInt', '~> 5.2'
+    ss.depencency 'Cardano/OrderedCollections'
     
     ss.script_phase = {
       :name => "Build Rust Binary",
@@ -46,9 +55,21 @@ Pod::Spec.new do |s|
       'ENABLE_BITCODE' => 'NO'
     }
     
-    ss.test_spec 'CardanoTests' do |test_spec|
-      test_spec.source_files = 'Tests/CardanoTests/**/*.swift'
+    ss.test_spec 'CoreTests' do |test_spec|
+      test_spec.source_files = 'Tests/CoreTests/**/*.swift'
     end
+  end
+  
+  s.subspec 'Binary' do |ss|
+    ss.source_files = 'Sources/Cardano/**/*.swift'
+
+    ss.dependency 'Cardano/CoreBinary'
+  end
+  
+  s.subspec 'Build' do |ss|
+    ss.source_files = 'Sources/Cardano/**/*.swift'
+
+    ss.dependency 'Cardano/CoreBuild'
   end
 
   s.default_subspecs = 'Binary'

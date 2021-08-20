@@ -11,7 +11,13 @@ var package = Package(
     products: [
         .library(
             name: "Cardano",
-            targets: ["Cardano"])
+            targets: ["Cardano"]),
+        .library(
+            name: "CardanoCore",
+            targets: ["CardanoCore"]),
+        .library(
+            name: "OrderedCollections",
+            targets: ["OrderedCollections"])
     ],
     dependencies: [
         .package(url: "https://github.com/attaswift/BigInt.git", from: "5.2.1"),
@@ -19,10 +25,18 @@ var package = Package(
     targets: [
         .target(
             name: "Cardano",
-            dependencies: ["CCardano", "BigInt"]),
+            dependencies: ["CardanoCore"]),
+        .target(
+            name: "CardanoCore",
+            dependencies: ["CCardano", "BigInt", "OrderedCollections"],
+            path: "Sources/Core"),
+        .target(
+            name: "OrderedCollections",
+            dependencies: [],
+            exclude: ["CMakeLists.txt", "LICENSE.txt"]),
         .testTarget(
-            name: "CardanoTests",
-            dependencies: ["Cardano"])
+            name: "CoreTests",
+            dependencies: ["CardanoCore"])
     ]
 )
 
