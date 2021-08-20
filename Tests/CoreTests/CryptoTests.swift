@@ -10,6 +10,8 @@ import XCTest
 @testable import CardanoCore
 
 final class CryptoTests: XCTestCase {
+    let initialize: Void = _initialize
+    
     private func newBip32PrivateKey() throws -> Bip32PrivateKey {
         let entropy: [UInt8] = [0x0c, 0xcb, 0x74, 0xf3, 0x6b, 0x7d, 0xa1, 0x64, 0x9a, 0x81, 0x44, 0x67, 0x55, 0x22, 0xd4, 0xd8, 0x09, 0x7c, 0x64, 0x12]
         return try Bip32PrivateKey(bip39: Data(entropy), password: Data([]))

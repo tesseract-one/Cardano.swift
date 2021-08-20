@@ -10,6 +10,8 @@ import XCTest
 @testable import CardanoCore
 
 final class MetadataTests: XCTestCase {
+    let initialize: Void = _initialize
+    
     private func jsonEncodingCheckExampleMetadatum(metadata: TransactionMetadatum) throws {
         let map = metadata.map!
         XCTAssertEqual(

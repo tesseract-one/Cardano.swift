@@ -10,6 +10,8 @@ import XCTest
 @testable import CardanoCore
 
 final class UtilsTests: XCTestCase {
+    let initialize: Void = _initialize
+    
     private let minimumUtxoVal: UInt64 = 1_000_000
     
     func testNoTokenMinimum() {

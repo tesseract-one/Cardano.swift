@@ -11,6 +11,8 @@ import XCTest
 @testable import CardanoCore
 
 final class FeesTests: XCTestCase {
+    let initialize: Void = _initialize
+    
     func testTxSimpleUtxo() throws {
         let inputs = [
             TransactionInput(

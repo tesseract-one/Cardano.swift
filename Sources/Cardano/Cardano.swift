@@ -6,14 +6,13 @@
 //
 
 import Foundation
-import CCardano
 #if !COCOAPODS
 @_exported import CardanoCore
 #endif
 
 public class Cardano {
     private static let _initialize: Void = {
-        cardano_initialize()
+        InitCardanoCore()
     }()
     
     public init() {

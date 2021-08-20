@@ -1,8 +1,8 @@
 import XCTest
 
-import CardanoTests
+import CoreTests
 
 var tests = [XCTestCaseEntry]()
-tests += CardanoTests.__allTests()
+tests += CoreTests.__allTests()
 
 XCTMain(tests)

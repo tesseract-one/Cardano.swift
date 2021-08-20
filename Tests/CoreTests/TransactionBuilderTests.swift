@@ -10,6 +10,8 @@ import XCTest
 @testable import CardanoCore
 
 final class TransactionBuilderTests: XCTestCase {
+    let initialize: Void = _initialize
+    
     private func genesisId() throws -> TransactionHash {
         try TransactionHash(bytes: Data(repeating: 0, count: 32))
     }
@@ -24,7 +26,6 @@ final class TransactionBuilderTests: XCTestCase {
     }
     
     func testTransactionBuilder() throws {
-        let _ = Cardano()
         let data28 = Data(repeating: 1, count: 28)
         let data32 = Data(repeating: 1, count: 32)
         let linearFee = try LinearFee(coefficient: 1, constant: 2)

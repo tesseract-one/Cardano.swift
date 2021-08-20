@@ -10,10 +10,11 @@ import XCTest
 @testable import CardanoCore
 
 final class TransactionBodyTests: XCTestCase {
+    let initialize: Void = _initialize
+    
     private let addressExample = "addr1u8pcjgmx7962w6hey5hhsd502araxp26kdtgagakhaqtq8sxy9w7g"
     
     func testTransactionBody() throws {
-        let _ = Cardano()
         let data28 = Data(repeating: 1, count: 28)
         let data32 = Data(repeating: 1, count: 32)
         let inputs = [
