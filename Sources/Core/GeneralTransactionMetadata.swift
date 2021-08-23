@@ -8,6 +8,7 @@
 import Foundation
 import CCardano
 import BigInt
+import OrderedCollections
 
 public enum MetadataJsonSchema {
     case noConversions
@@ -44,9 +45,9 @@ public enum TransactionMetadatum: Equatable, Hashable {
     init(transactionMetadatum: CCardano.TransactionMetadatum) {
         switch transactionMetadatum.tag {
         case MetadataMapKind:
-            let metadataMap = transactionMetadatum.metadata_map_kind.copiedDictionary()
+            let metadataMap = transactionMetadatum.metadata_map_kind.copiedOrderedDictionary()
                 .map { key, value in (key.copied(), value.copied()) }
-            self = .metadataMap(Dictionary(uniqueKeysWithValues: metadataMap))
+            self = .metadataMap(OrderedDictionary(uniqueKeysWithValues: metadataMap))
         case MetadataListKind:
             self = .metadataList(transactionMetadatum.metadata_list_kind.copied().map {
                 $0.copied()

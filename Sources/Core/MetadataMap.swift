@@ -8,8 +8,9 @@
 import Foundation
 import CCardano
 import BigInt
+import OrderedCollections
 
-public typealias MetadataMap = Dictionary<TransactionMetadatum, TransactionMetadatum>
+public typealias MetadataMap = OrderedDictionary<TransactionMetadatum, TransactionMetadatum>
 
 extension MetadataMapKeyValue: CType {}
 

@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import OrderedCollections
 
 protocol CArray: CPtr where Val == [CElement] {
     associatedtype CElement
@@ -43,6 +44,11 @@ extension CArray where CElement: CKeyValue {
     func copiedDictionary() -> [CElement.Key: CElement.Value] {
         let tuples = copied().map { $0.tuple }
         return Dictionary(uniqueKeysWithValues: tuples)
+    }
+    
+    func copiedOrderedDictionary() -> OrderedDictionary<CElement.Key, CElement.Value> {
+        let tuples = copied().map { $0.tuple }
+        return OrderedDictionary(uniqueKeysWithValues: tuples)
     }
     
     mutating func ownedDictionary() -> [CElement.Key: CElement.Value] {
@@ -85,7 +91,34 @@ extension Array {
     }
 }
 
-extension Dictionary {
+protocol WithCKVArray: Sequence where Element == (key: Key, value: Value) {
+    associatedtype Key: Hashable
+    associatedtype Value
+    
+    func withCKVArr<A: CArray, T>(fn: @escaping (A) throws -> T) rethrows -> T
+    where
+        A.CElement: CKeyValue,
+        Key == A.CElement.Key,
+        Value == A.CElement.Value
+    
+    func withCKVArray<A: CArray, T>(
+        withKey: @escaping (Key, @escaping (A.CElement.Key) throws -> T) throws -> T,
+        fn: @escaping (A) throws -> T
+    ) rethrows -> T where A.CElement: CKeyValue, Value == A.CElement.Value
+    
+    func withCKVArray<A: CArray, T>(
+        withValue: @escaping (Value, @escaping (A.CElement.Value) throws -> T) throws -> T,
+        fn: @escaping (A) throws -> T
+    ) rethrows -> T where A.CElement: CKeyValue, Key == A.CElement.Key
+    
+    func withCKVArray<A: CArray, T>(
+        withKey: @escaping (Key, @escaping (A.CElement.Key) throws -> T) throws -> T,
+        withValue: @escaping (Value, @escaping (A.CElement.Value) throws -> T) throws -> T,
+        fn: @escaping (A) throws -> T
+    ) rethrows -> T where A.CElement: CKeyValue
+}
+
+extension WithCKVArray {
     func withCKVArr<A: CArray, T>(fn: @escaping (A) throws -> T) rethrows -> T
     where
         A.CElement: CKeyValue,
@@ -141,3 +174,6 @@ extension Dictionary {
         )
     }
 }
+
+extension Dictionary: WithCKVArray {}
+extension OrderedDictionary: WithCKVArray {}

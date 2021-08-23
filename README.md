@@ -100,14 +100,14 @@ Provided structures:
 
 #### Part 1.1: Core unit tests
 
-![96%](https://progress-bar.dev/96?title=passed&width=150)
+![100%](https://progress-bar.dev/100?title=passed&width=150)
 
 Test categories:
 
 - ![100%](https://progress-bar.dev/100?width=150) AddressTests
 - ![100%](https://progress-bar.dev/100?width=150) CryptoTests
 - ![100%](https://progress-bar.dev/100?width=150) FeesTests
-- ![66%](https://progress-bar.dev/66?width=150) MetadataTests
+- ![100%](https://progress-bar.dev/100?width=150) MetadataTests
 - ![100%](https://progress-bar.dev/100?width=150) TransationBuilderTests
 - ![100%](https://progress-bar.dev/100?width=150) UtilsTests
 
