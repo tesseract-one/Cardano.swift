@@ -8,6 +8,8 @@
 import Foundation
 import CCardano
 
+public typealias TransactionIndex = CCardano.TransactionIndex
+
 public typealias TransactionHash = CCardano.TransactionHash
 
 extension TransactionHash: CType {}
