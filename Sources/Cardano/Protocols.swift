@@ -64,6 +64,8 @@ public extension CardanoApi {
 public protocol CardanoProtocol: AnyObject {
     var addresses: AddressManager { get }
     var utxos: UtxoProvider { get }
+    var signer: SignatureProvider { get }
+    var network: NetworkProvider { get }
     
     func getApi<A: CardanoApi>() throws -> A
 }
