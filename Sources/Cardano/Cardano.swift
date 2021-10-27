@@ -10,6 +10,10 @@ import Foundation
 @_exported import CardanoCore
 #endif
 
+public protocol CardanoBootstrapAware {
+    func bootstrap(cardano: CardanoProtocol) throws
+}
+
 public class Cardano: CardanoProtocol {
     public var networkInfo: NetworkInfo
     public var addresses: AddressManager
