@@ -11,6 +11,7 @@ import Foundation
 #endif
 
 public class Cardano: CardanoProtocol {
+    public var networkInfo: NetworkInfo
     public var addresses: AddressManager
     public var utxos: UtxoProvider
     public var signer: SignatureProvider
@@ -19,7 +20,8 @@ public class Cardano: CardanoProtocol {
     private var apis: Dictionary<String, CardanoApi>
     private let syncQueue: DispatchQueue
     
-    public init(addresses: AddressManager,
+    public init(networkInfo: NetworkInfo,
+                addresses: AddressManager,
                 utxos: UtxoProvider,
                 signer: SignatureProvider,
                 network: NetworkProvider) throws {
@@ -29,6 +31,7 @@ public class Cardano: CardanoProtocol {
         self.utxos = utxos
         self.signer = signer
         self.network = network
+        self.networkInfo = networkInfo
         self.apis = [:]
         try self.bootstrap(obj: addresses)
         try self.bootstrap(obj: utxos)

@@ -20,7 +20,14 @@ public struct CardanoSendApi: CardanoApi {
     
     public func ada(to: Address,
                     amount: UInt64,
-                    from: [Address]?,
+                    from: Account,
+                    _ cb: ApiCallback<Transaction>) {
+        
+    }
+    
+    public func ada(to: Address,
+                    amount: UInt64,
+                    from: [Address],
                     _ cb: ApiCallback<Transaction>) {
         
     }
