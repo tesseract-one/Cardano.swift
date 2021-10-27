@@ -18,4 +18,8 @@ public struct Account {
         pubKey = try Bip32PublicKey(bytes: bytes)
         self.index = index
     }
+    
+    public var path: Bip32Path {
+        try! Bip32Path.prefix.appending(index, hard: true)
+    }
 }

@@ -22,8 +22,7 @@ public protocol AddressManager {
     func fetch(for accounts: [Account],
                _ cb: @escaping (Result<Void, Error>) -> Void)
     
-    // TODO: Create ExtendedAddress type
-    func extended(address: Address) throws -> Any
+    func extended(address: Address) throws -> ExtendedAddress
 }
 
 public extension AddressManager {
