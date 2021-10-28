@@ -8,6 +8,7 @@
 import Foundation
 #if !COCOAPODS
 @_exported import CardanoCore
+import CardanoNetworking
 #endif
 
 public protocol CardanoBootstrapAware {
@@ -15,7 +16,7 @@ public protocol CardanoBootstrapAware {
 }
 
 public class Cardano: CardanoProtocol {
-    public var networkInfo: NetworkInfo
+    public var networkInfo: NetworkApiInfo
     public var addresses: AddressManager
     public var utxos: UtxoProvider
     public var signer: SignatureProvider
@@ -24,7 +25,7 @@ public class Cardano: CardanoProtocol {
     private var apis: Dictionary<String, CardanoApi>
     private let syncQueue: DispatchQueue
     
-    public init(networkInfo: NetworkInfo,
+    public init(networkInfo: NetworkApiInfo,
                 addresses: AddressManager,
                 utxos: UtxoProvider,
                 signer: SignatureProvider,

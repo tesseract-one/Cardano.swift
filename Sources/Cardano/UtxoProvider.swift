@@ -6,6 +6,9 @@
 //
 
 import Foundation
+#if !COCOAPODS
+import CardanoCore
+#endif
 
 public protocol UtxoProvider {
     func get(for addresses: [Address],

@@ -6,9 +6,6 @@
 //
 
 import Foundation
-#if !COCOAPODS
-import CardanoCore
-#endif
 
 public struct Account {
     public let pubKey: Bip32PublicKey

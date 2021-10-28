@@ -6,9 +6,6 @@
 //
 
 import Foundation
-#if !COCOAPODS
-import CardanoCore
-#endif
 
 public struct UTXO {
     public let txHash: TransactionHash

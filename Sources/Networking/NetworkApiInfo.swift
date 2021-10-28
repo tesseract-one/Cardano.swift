@@ -1,5 +1,5 @@
 //
-//  NetworkInfo.swift
+//  NetworkApiInfo.swift
 //  
 //
 //  Created by Yehor Popovych on 27.10.2021.
@@ -20,7 +20,7 @@ public struct NetworkId {
     public static let mainnet = Self(0)
 }
 
-public struct NetworkInfo {
+public struct NetworkApiInfo {
     public let networkId: NetworkId
     public let linearFee: LinearFee
     public let minimumUtxoVal: UInt64

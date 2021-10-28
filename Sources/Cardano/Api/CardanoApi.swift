@@ -7,7 +7,7 @@
 
 import Foundation
 #if !COCOAPODS
-import CardanoCore
+import CardanoNetworking
 #endif
 
 public typealias ApiResult<T> = Result<T, Error>

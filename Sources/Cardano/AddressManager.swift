@@ -6,6 +6,9 @@
 //
 
 import Foundation
+#if !COCOAPODS
+import CardanoCore
+#endif
 
 public protocol AddressManager {
     func accounts(_ cb: @escaping (Result<[Account], Error>) -> Void)

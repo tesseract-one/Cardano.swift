@@ -7,7 +7,7 @@ let useLocalBinary = true
 
 var package = Package(
     name: "Cardano",
-    platforms: [.iOS(.v11), .macOS(.v10_12)],
+    platforms: [.iOS(.v11), .macOS(.v10_15)],
     products: [
         .library(
             name: "Cardano",
@@ -16,20 +16,31 @@ var package = Package(
             name: "CardanoCore",
             targets: ["CardanoCore"]),
         .library(
+            name: "CardanoNetworking",
+            targets: ["CardanoNetworking"]),
+        .library(
             name: "OrderedCollections",
             targets: ["OrderedCollections"])
     ],
     dependencies: [
         .package(url: "https://github.com/attaswift/BigInt.git", from: "5.2.1"),
+        .package(url: "https://github.com/blockfrost/blockfrost-swift.git", from: "0.0.5"),
     ],
     targets: [
         .target(
             name: "Cardano",
-            dependencies: ["CardanoCore"]),
+            dependencies: ["CardanoNetworking"]),
         .target(
             name: "CardanoCore",
             dependencies: ["CCardano", "BigInt", "OrderedCollections"],
             path: "Sources/Core"),
+        .target(
+            name: "CardanoNetworking",
+            dependencies: [
+                "CardanoCore",
+                .product(name: "BlockfrostSwiftSDK", package: "blockfrost-swift")
+            ],
+            path: "Sources/Networking"),
         .target(
             name: "OrderedCollections",
             dependencies: [],
