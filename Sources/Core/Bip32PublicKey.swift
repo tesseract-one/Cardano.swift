@@ -61,4 +61,22 @@ extension Bip32PublicKey {
             cardano_bip32_public_key_to_raw_key(self, res, err)
         }.get()
     }
+    
+    public var bytesArray: [UInt8] {
+        withUnsafeBytes(of: bytes) { ptr in
+            Array(ptr.bindMemory(to: UInt8.self).prefix(64))
+        }
+    }
+}
+
+extension Bip32PublicKey: Equatable {
+    public static func == (lhs: Bip32PublicKey, rhs: Bip32PublicKey) -> Bool {
+        lhs.bytesArray == rhs.bytesArray
+    }
+}
+
+extension Bip32PublicKey: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(bytesArray)
+    }
 }

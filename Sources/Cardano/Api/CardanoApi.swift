@@ -6,9 +6,6 @@
 //
 
 import Foundation
-#if !COCOAPODS
-import CardanoNetworking
-#endif
 
 public typealias ApiResult<T> = Result<T, Error>
 public typealias ApiCallback<T> = (ApiResult<T>) -> Void

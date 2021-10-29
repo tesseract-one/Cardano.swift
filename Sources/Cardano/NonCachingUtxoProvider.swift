@@ -1,16 +1,13 @@
 //
-//  SimpleUtxoProvider.swift
+//  NonCachingUtxoProvider.swift
 //  
 //
 //  Created by Ostap Danylovych on 29.10.2021.
 //
 
 import Foundation
-#if !COCOAPODS
-import CardanoNetworking
-#endif
 
-public class SimpleUtxoProvider: UtxoProvider, CardanoBootstrapAware {
+public class NonCachingUtxoProvider: UtxoProvider, CardanoBootstrapAware {
     private weak var cardano: CardanoProtocol!
     
     public init() {}
@@ -21,8 +18,9 @@ public class SimpleUtxoProvider: UtxoProvider, CardanoBootstrapAware {
     
     public func get(for addresses: [Address],
                     asset: (PolicyID, AssetName)?) -> UtxoProviderAsyncIterator {
-        SimpleUtxoProviderAsyncIterator(networkProvider: cardano.network,
-                                        addresses: addresses)
+        NonCachingUtxoProviderAsyncIterator(networkProvider: cardano.network,
+                                            addresses: addresses,
+                                            page: 0)
     }
     
     public func get(id: (tx: TransactionHash, index: TransactionIndex),
@@ -31,30 +29,28 @@ public class SimpleUtxoProvider: UtxoProvider, CardanoBootstrapAware {
     }
 }
 
-public class SimpleUtxoProviderAsyncIterator: UtxoProviderAsyncIterator {
+public struct NonCachingUtxoProviderAsyncIterator: UtxoProviderAsyncIterator {
     private static let defaultCount = 100
     
     private let networkProvider: NetworkProvider
     private let addresses: [Address]
     private var page: Int
     
-    public init(networkProvider: NetworkProvider, addresses: [Address]) {
+    public init(networkProvider: NetworkProvider, addresses: [Address], page: Int) {
         self.networkProvider = networkProvider
         self.addresses = addresses
-        page = 0
+        self.page = page
     }
     
-    public func next(_ cb: @escaping (Result<[UTXO], Error>, UtxoProviderAsyncIterator?) -> Void) throws {
-        page += 1
-        try networkProvider.getUtxos(for: addresses, page: page) { res in
+    public func next(_ cb: @escaping (Result<[UTXO], Error>, Self?) -> Void) {
+        networkProvider.getUtxos(for: addresses, page: page) { res in
             let _ = res.map { utxos in
-                cb(res, utxos.count < Self.defaultCount ? nil : self)
+                cb(res, utxos.count < Self.defaultCount ? nil : Self(
+                    networkProvider: networkProvider,
+                    addresses: addresses,
+                    page: page + 1
+                ))
             }
         }
-    }
-    
-    public func next(limit: Int,
-                     _ cb: @escaping (Result<[UTXO], Error>, UtxoProviderAsyncIterator?) -> Void) throws {
-        fatalError("Not implemented")
     }
 }

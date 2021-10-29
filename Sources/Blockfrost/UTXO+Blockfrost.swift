@@ -12,7 +12,7 @@ import Cardano
 #endif
 
 extension UTXO {
-    public init(blockfrost utxo: AddressUtxoContent) throws {
+    public init(address: Address, blockfrost utxo: AddressUtxoContent) throws {
         var value = Value(coin: 0)
         value.multiasset = try Dictionary(uniqueKeysWithValues: utxo.amount.map {
             $0.value as! [String: String]
@@ -31,6 +31,7 @@ extension UTXO {
             }
         })
         self.init(
+            address: address,
             txHash: try TransactionHash(bytes: Data(hex: utxo.txHash)!),
             index: TransactionIndex(utxo.outputIndex),
             value: value

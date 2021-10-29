@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct Account {
+public struct Account: Hashable {
     public let pubKey: Bip32PublicKey
     public let index: UInt32
     
@@ -18,5 +18,9 @@ public struct Account {
     
     public var path: Bip32Path {
         try! Bip32Path.prefix.appending(index, hard: true)
+    }
+    
+    public func derive(index: UInt32, change: Bool) -> ExtendedAddress {
+        fatalError("Not implemented")
     }
 }

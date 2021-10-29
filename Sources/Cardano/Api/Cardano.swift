@@ -8,7 +8,6 @@
 import Foundation
 #if !COCOAPODS
 @_exported import CardanoCore
-import CardanoNetworking
 #endif
 
 public protocol CardanoBootstrapAware {

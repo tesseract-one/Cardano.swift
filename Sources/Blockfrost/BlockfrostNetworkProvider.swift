@@ -12,32 +12,39 @@ import Cardano
 #endif
 
 public struct BlockfrostNetworkProvider: NetworkProvider {
-    private let blockfrost: CardanoAddressesAPI
+    private let config: BlockfrostConfig
+    private let addressesApi: CardanoAddressesAPI
     
-    public init() {
-        // TODO: url and project id
-        BlockfrostStaticConfig.basePath = "https://cardano-testnet.blockfrost.io/api/v0"
-        BlockfrostStaticConfig.projectId = "your-project-id"
-        blockfrost = CardanoAddressesAPI()
+    public init(config: BlockfrostConfig) {
+        self.config = config
+        addressesApi = CardanoAddressesAPI(config: config)
     }
     
     private func getUtxos(for addresses: [Address],
                           index: Int,
                           all: [UTXO],
                           page: Int,
-                          _ cb: @escaping (Result<[UTXO], Error>) -> Void) throws {
-        let _ = blockfrost.getAddressUtxos(
-            address: try addresses[index].bech32(),
-            page: page
-        ) { res in
-            do {
-                let utxos = try res.get().map { try UTXO(blockfrost: $0) }
-                if index == addresses.count {
-                    cb(.success(all + utxos))
-                } else {
-                    try getUtxos(for: addresses, index: index + 1, all: all + utxos, page: page, cb)
+                          _ cb: @escaping (Result<[UTXO], Error>) -> Void) {
+        do {
+            let _ = addressesApi.getAddressUtxos(
+                address: try addresses[index].bech32(),
+                page: page
+            ) { res in
+                do {
+                    let utxos = try res.get().map { try UTXO(address: addresses[index], blockfrost: $0) }
+                    if index == addresses.count {
+                        cb(.success(all + utxos))
+                    } else {
+                        getUtxos(for: addresses, index: index + 1, all: all + utxos, page: page, cb)
+                    }
+                } catch {
+                    config.apiResponseQueue.async {
+                        cb(.failure(error))
+                    }
                 }
-            } catch {
+            }
+        } catch {
+            config.apiResponseQueue.async {
                 cb(.failure(error))
             }
         }
@@ -50,7 +57,7 @@ public struct BlockfrostNetworkProvider: NetworkProvider {
     public func getUtxos(for addresses: [Address],
                          page: Int,
                          _ cb: @escaping (Result<[UTXO], Error>) -> Void) {
-        try! getUtxos(for: addresses, index: 0, all: [], page: page, cb)
+        getUtxos(for: addresses, index: 0, all: [], page: page, cb)
     }
     
     public func submit(tx: TransactionBody,
