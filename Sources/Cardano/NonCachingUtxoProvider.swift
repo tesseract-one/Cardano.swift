@@ -44,8 +44,10 @@ public struct NonCachingUtxoProviderAsyncIterator: UtxoProviderAsyncIterator {
     
     public func next(_ cb: @escaping (Result<[UTXO], Error>, Self?) -> Void) {
         networkProvider.getUtxos(for: addresses, page: page) { res in
-            let _ = res.map { utxos in
-                cb(res, utxos.count < Self.defaultCount ? nil : Self(
+            switch res {
+            case .failure(let err): cb(.failure(err), nil)
+            case .success(let utxos):
+                cb(.success(utxos), utxos.count < Self.defaultCount ? nil : Self(
                     networkProvider: networkProvider,
                     addresses: addresses,
                     page: page + 1
