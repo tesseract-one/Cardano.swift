@@ -13,7 +13,11 @@ import CardanoCore
 public protocol NetworkProvider {
     func getTransaction(hash: String,
                         _ cb: @escaping (Result<Any, Error>) -> Void)
-    func getUtxos(for addresses: [Address], _ cb: @escaping (Result<[UTXO], Error>) -> Void) throws
+    
+    func getUtxos(for addresses: [Address],
+                  page: Int,
+                  _ cb: @escaping (Result<[UTXO], Error>) -> Void) throws
+    
     func submit(tx: TransactionBody,
                 metadata: TransactionMetadata?,
                 _ cb: @escaping (Result<Transaction, Error>) -> Void)

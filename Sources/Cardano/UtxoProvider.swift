@@ -19,6 +19,8 @@ public protocol UtxoProvider {
 }
 
 public protocol UtxoProviderAsyncIterator {
-    func next(_ cb: @escaping (Result<[UTXO], Error>, Self?) -> Void)
-    func next(limit: Int, _ cb: @escaping (Result<[UTXO], Error>, Self?) -> Void)
+    func next(_ cb: @escaping (Result<[UTXO], Error>, UtxoProviderAsyncIterator?) -> Void) throws
+    
+    func next(limit: Int,
+              _ cb: @escaping (Result<[UTXO], Error>, UtxoProviderAsyncIterator?) -> Void) throws
 }
