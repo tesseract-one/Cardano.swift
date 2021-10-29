@@ -48,9 +48,7 @@ public struct BlockfrostNetworkProvider: NetworkProvider {
                 mapped(result)
             }
         }.exec { (res: Result<[[UTXO]], Error>) in
-            self.config.apiResponseQueue.async {
-                cb(res.map { utxo in utxo.flatMap { $0 } })
-            }
+            cb(res.map { utxo in utxo.flatMap { $0 } })
         }
     }
     
