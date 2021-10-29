@@ -16,7 +16,7 @@ public protocol NetworkProvider {
     
     func getUtxos(for addresses: [Address],
                   page: Int,
-                  _ cb: @escaping (Result<[UTXO], Error>) -> Void) throws
+                  _ cb: @escaping (Result<[UTXO], Error>) -> Void)
     
     func submit(tx: TransactionBody,
                 metadata: TransactionMetadata?,

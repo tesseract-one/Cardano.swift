@@ -16,8 +16,8 @@ var package = Package(
             name: "CardanoCore",
             targets: ["CardanoCore"]),
         .library(
-            name: "CardanoNetworking",
-            targets: ["CardanoNetworking"]),
+            name: "CardanoBlockfrost",
+            targets: ["CardanoBlockfrost"]),
         .library(
             name: "OrderedCollections",
             targets: ["OrderedCollections"])
@@ -29,18 +29,18 @@ var package = Package(
     targets: [
         .target(
             name: "Cardano",
-            dependencies: ["CardanoNetworking"]),
+            dependencies: ["CardanoCore"]),
         .target(
             name: "CardanoCore",
             dependencies: ["CCardano", "BigInt", "OrderedCollections"],
             path: "Sources/Core"),
         .target(
-            name: "CardanoNetworking",
+            name: "CardanoBlockfrost",
             dependencies: [
-                "CardanoCore",
+                "Cardano",
                 .product(name: "BlockfrostSwiftSDK", package: "blockfrost-swift")
             ],
-            path: "Sources/Networking"),
+            path: "Sources/Blockfrost"),
         .target(
             name: "OrderedCollections",
             dependencies: [],
