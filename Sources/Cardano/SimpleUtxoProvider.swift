@@ -10,16 +10,19 @@ import Foundation
 import CardanoNetworking
 #endif
 
-public class SimpleUtxoProvider: UtxoProvider {
-    private var networkProvider: NetworkProvider
+public class SimpleUtxoProvider: UtxoProvider, CardanoBootstrapAware {
+    private weak var cardano: CardanoProtocol!
     
-    public init(networkProvider: NetworkProvider) {
-        self.networkProvider = networkProvider
+    public init() {}
+    
+    public func bootstrap(cardano: CardanoProtocol) throws {
+        self.cardano = cardano
     }
     
     public func get(for addresses: [Address],
                     asset: (PolicyID, AssetName)?) -> UtxoProviderAsyncIterator {
-        SimpleUtxoProviderAsyncIterator(networkProvider: networkProvider, addresses: addresses)
+        SimpleUtxoProviderAsyncIterator(networkProvider: cardano.network,
+                                        addresses: addresses)
     }
     
     public func get(id: (tx: TransactionHash, index: TransactionIndex),
