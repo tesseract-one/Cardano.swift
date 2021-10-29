@@ -11,23 +11,26 @@ import CardanoCore
 #endif
 
 public protocol AddressManager {
+    // Returns list of accounts
     func accounts(_ cb: @escaping (Result<[Account], Error>) -> Void)
     
-    func new(for account: Account, change: Bool) -> Address
+    // Creates and caches new address for the Account
+    func new(for account: Account, change: Bool) throws -> Address
     
+    // Get cached addresses for the Account. Throws if unknown account (not fetched)
+    func get(cached account: Account) throws -> [Address]
+    
+    // Fetches list of addresses for account from the network.
     func get(for account: Account,
-             forceUpdate: Bool,
              _ cb: @escaping (Result<[Address], Error>) -> Void)
     
+    // Updates cached addresses for Accounts from the network
     func fetch(for accounts: [Account],
                _ cb: @escaping (Result<Void, Error>) -> Void)
     
+    // Returns list of accounts
+    func fetchedAccounts() -> [Account]
+    
+    // Returns extended addresses for provided addresses
     func extended(addresses: [Address]) throws -> [ExtendedAddress]
-}
-
-public extension AddressManager {
-    func get(for account: Account,
-             _ cb: @escaping (Result<[Address], Error>) -> Void) {
-        self.get(for: account, forceUpdate: false, cb)
-    }
 }
