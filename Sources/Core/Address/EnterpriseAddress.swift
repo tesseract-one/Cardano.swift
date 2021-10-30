@@ -8,7 +8,7 @@
 import Foundation
 import CCardano
 
-public struct EnterpriseAddress {
+public struct EnterpriseAddress: Hashable {
     private var network: NetworkId
     public private(set) var payment: StakeCredential
     

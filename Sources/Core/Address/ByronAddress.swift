@@ -8,7 +8,7 @@
 import Foundation
 import CCardano
 
-public struct ByronAddress {
+public struct ByronAddress: Hashable {
     private var _address: String
     
     init(address: CCardano.ByronAddress) {

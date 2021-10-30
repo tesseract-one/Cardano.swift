@@ -11,6 +11,9 @@ import CardanoCore
 #endif
 
 public protocol NetworkProvider {
+    func getTransactions(for address: Address,
+                         _ cb: @escaping (Result<[AddressTransaction], Error>) -> Void)
+    
     func getTransaction(hash: String,
                         _ cb: @escaping (Result<Any, Error>) -> Void)
     

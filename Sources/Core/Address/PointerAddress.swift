@@ -47,3 +47,19 @@ extension CCardano.PointerAddress: CPtr {
     
     mutating func free() {}
 }
+
+extension PointerAddress: Equatable {
+    public static func == (lhs: PointerAddress, rhs: PointerAddress) -> Bool {
+        lhs.network == rhs.network
+        && lhs.payment == rhs.payment
+        && lhs.stake == rhs.stake
+    }
+}
+
+extension PointerAddress: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(network)
+        hasher.combine(payment)
+        hasher.combine(stake)
+    }
+}

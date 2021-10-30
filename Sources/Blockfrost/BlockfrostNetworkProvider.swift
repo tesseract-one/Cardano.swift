@@ -20,6 +20,21 @@ public struct BlockfrostNetworkProvider: NetworkProvider {
         addressesApi = CardanoAddressesAPI(config: config)
     }
     
+    public func getTransactions(for address: Address,
+                                _ cb: @escaping (Result<[AddressTransaction], Error>) -> Void) {
+        do {
+            let _ = addressesApi.getAddressTransactionsAll(address: try address.bech32()) { res in
+                cb(res.map { transactions in
+                    transactions.map { AddressTransaction(blockfrost: $0) }
+                })
+            }
+        } catch {
+            self.config.apiResponseQueue.async {
+                cb(.failure(error))
+            }
+        }
+    }
+    
     public func getTransaction(hash: String, _ cb: @escaping (Result<Any, Error>) -> Void) {
         fatalError("Not implemented")
     }

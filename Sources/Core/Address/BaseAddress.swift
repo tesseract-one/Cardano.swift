@@ -40,3 +40,19 @@ extension BaseAddress {
         return .base(self)
     }
 }
+
+extension BaseAddress: Equatable {
+    public static func == (lhs: BaseAddress, rhs: BaseAddress) -> Bool {
+        lhs.network == rhs.network
+        && lhs.payment == rhs.payment
+        && lhs.stake == rhs.stake
+    }
+}
+
+extension BaseAddress: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(network)
+        hasher.combine(payment)
+        hasher.combine(stake)
+    }
+}

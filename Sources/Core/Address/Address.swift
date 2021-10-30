@@ -10,7 +10,23 @@ import CCardano
 
 public typealias Pointer = CCardano.Pointer
 
-public enum Address {
+extension Pointer: Equatable {
+    public static func == (lhs: Pointer, rhs: Pointer) -> Bool {
+        lhs.slot == rhs.slot
+        && lhs.tx_index == rhs.tx_index
+        && lhs.cert_index == rhs.cert_index
+    }
+}
+
+extension Pointer: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(slot)
+        hasher.combine(tx_index)
+        hasher.combine(cert_index)
+    }
+}
+
+public enum Address: Hashable {
     case base(BaseAddress)
     case pointer(PointerAddress)
     case enterprise(EnterpriseAddress)
