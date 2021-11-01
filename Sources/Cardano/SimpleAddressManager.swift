@@ -6,8 +6,11 @@
 //
 
 import Foundation
+#if !COCOAPODS
 import CardanoCore
-
+import OrderedCollections
+#endif
+ 
 public class SimpleAddressManager: AddressManager, CardanoBootstrapAware {
     private let fetchChunkSize = 20
     
@@ -15,8 +18,8 @@ public class SimpleAddressManager: AddressManager, CardanoBootstrapAware {
     
     private var syncQueue: DispatchQueue
     private var addresses: [Address: Bip32Path]
-    private var accountAddresses: [Account: [Address]]
-    private var accountChangeAddresses: [Account: [Address]]
+    private var accountAddresses: [Account: OrderedSet<Address>]
+    private var accountChangeAddresses: [Account: OrderedSet<Address>]
     
     public init() {
         syncQueue = DispatchQueue(label: "AddressManager.Sync.Queue", target: .global())
@@ -63,7 +66,7 @@ public class SimpleAddressManager: AddressManager, CardanoBootstrapAware {
             guard let addresses = (change ? accountChangeAddresses : accountAddresses)[account] else {
                 throw AddressManagerError.notInCache(account: account)
             }
-            return addresses
+            return Array(addresses)
         }
     }
     
@@ -117,7 +120,9 @@ public class SimpleAddressManager: AddressManager, CardanoBootstrapAware {
                         addresses.forEach { address in
                             self.addresses[address.address] = address.path
                         }
-                        self.accountAddresses[account] = addresses.map { $0.address }
+                        var accountAddresses = self.accountAddresses[account] ?? []
+                        accountAddresses.append(contentsOf: addresses.map { $0.address })
+                        self.accountAddresses[account] = accountAddresses
                     }
                 })
             }
