@@ -100,7 +100,7 @@ public class SimpleAddressManager: AddressManager, CardanoBootstrapAware {
                     return
                 }
                 if addresses.count - lastNotEmpty > self.fetchChunkSize {
-                    cb(.success((all.dropLast(addresses.count - lastNotEmpty - 1)).map { $0.0 }))
+                    cb(.success(all.dropLast(addresses.count - lastNotEmpty - 1).map { $0.0 }))
                 } else {
                     self.fetchNext(
                         for: account,
