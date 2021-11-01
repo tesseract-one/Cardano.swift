@@ -82,23 +82,33 @@ public class SimpleAddressManager: AddressManager, CardanoBootstrapAware {
     
     private func fetchNext(for account: Account,
                            index: Int,
-                           all: [ExtendedAddress],
+                           all: [(ExtendedAddress, Bool)],
                            change: Bool,
                            _ cb: @escaping (Result<[ExtendedAddress], Error>) -> Void) {
-        (1...fetchChunkSize).map { (Int) -> ExtendedAddress in
-            account.derive(index: UInt32(index), change: change)
+        (0..<fetchChunkSize).map { offset in
+            account.derive(index: UInt32(index + offset), change: change)
         }.asyncMap { address, mapped in
             self.cardano.network.getTransactionCount(for: address.address) { res in
-                mapped(res.map { $0 > 0 ? address : nil })
+                mapped(res.map { (address, $0 > 0) })
             }
         }.exec { res in
             switch res {
             case .success(let addresses):
-                let addresses = addresses.compactMap { $0 }
-                if addresses.isEmpty {
-                    cb(.success(all))
+                let all = all + addresses
+                guard let lastNotEmpty = all.lastIndex(where: { $0.1 }) else {
+                    cb(.success([]))
+                    return
+                }
+                if addresses.count - lastNotEmpty > self.fetchChunkSize {
+                    cb(.success((all.dropLast(addresses.count - lastNotEmpty - 1)).map { $0.0 }))
                 } else {
-                    self.fetchNext(for: account, index: index + 1, all: all + addresses, change: change, cb)
+                    self.fetchNext(
+                        for: account,
+                        index: index + self.fetchChunkSize,
+                        all: all,
+                        change: change,
+                        cb
+                    )
                 }
             case .failure(let error):
                 cb(.failure(error))
