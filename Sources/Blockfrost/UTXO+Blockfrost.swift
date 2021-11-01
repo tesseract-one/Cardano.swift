@@ -13,23 +13,26 @@ import Cardano
 
 extension UTXO {
     public init(address: Address, blockfrost utxo: AddressUtxoContent) throws {
-        var value = Value(coin: 0)
-        value.multiasset = try Dictionary(uniqueKeysWithValues: utxo.amount.map {
-            $0.value as! [String: String]
-        }.map { dict in
-            let unit = dict["unit"]!
-            let quantity = UInt64(dict["quantity"]!)!
+        var coin: UInt64 = 0
+        var multiasset: MultiAsset = [:]
+        try utxo.amount.forEach {
+            let assetData = $0.value as! [String: String]
+            let unit = assetData["unit"]!
+            let quantity = UInt64(assetData["quantity"]!)!
             switch unit {
             case "lovelace":
-                // TODO: policyid, assetname
-                return (PolicyID(), [AssetName(): quantity])
+                coin = quantity
             default:
                 let unit = Data(hex: unit)!
                 let policyID = try PolicyID(bytes: unit.subdata(in: (0..<28)))
                 let assetName = try AssetName(name: unit.subdata(in: (28..<unit.count)))
-                return (policyID, [assetName: quantity])
+                multiasset[policyID] = [assetName: quantity]
             }
-        })
+        }
+        var value = Value(coin: coin)
+        if !multiasset.isEmpty {
+            value.multiasset = multiasset
+        }
         self.init(
             address: address,
             txHash: try TransactionHash(bytes: Data(hex: utxo.txHash)!),
