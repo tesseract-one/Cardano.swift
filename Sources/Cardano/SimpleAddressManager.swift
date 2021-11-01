@@ -19,7 +19,7 @@ public class SimpleAddressManager: AddressManager, CardanoBootstrapAware {
     private var accountChangeAddresses: [Account: [Address]]
     
     public init() {
-        syncQueue = DispatchQueue(label: "Cardano Sync Queue", target: .global())
+        syncQueue = DispatchQueue(label: "AddressManager.Sync.Queue", target: .global())
         addresses = [:]
         accountAddresses = [:]
         accountChangeAddresses = [:]
@@ -85,8 +85,8 @@ public class SimpleAddressManager: AddressManager, CardanoBootstrapAware {
         (1...fetchChunkSize).map { (Int) -> ExtendedAddress in
             account.derive(index: UInt32(index), change: change)
         }.asyncMap { address, mapped in
-            self.cardano.network.getTransactions(for: address.address) { res in
-                mapped(res.map { $0.isEmpty ? nil : address })
+            self.cardano.network.getTransactionCount(for: address.address) { res in
+                mapped(res.map { $0 > 0 ? address : nil })
             }
         }.exec { res in
             switch res {

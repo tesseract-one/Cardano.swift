@@ -14,6 +14,9 @@ public protocol NetworkProvider {
     func getTransactions(for address: Address,
                          _ cb: @escaping (Result<[AddressTransaction], Error>) -> Void)
     
+    func getTransactionCount(for address: Address,
+                             _ cb: @escaping (Result<Int, Error>) -> Void)
+    
     func getTransaction(hash: String,
                         _ cb: @escaping (Result<Any, Error>) -> Void)
     

@@ -35,6 +35,19 @@ public struct BlockfrostNetworkProvider: NetworkProvider {
         }
     }
     
+    public func getTransactionCount(for address: Address,
+                                    _ cb: @escaping (Result<Int, Error>) -> Void) {
+        do {
+            let _ = addressesApi.getAddressDetails(address: try address.bech32()) { res in
+                cb(res.map { $0.txCount })
+            }
+        } catch {
+            self.config.apiResponseQueue.async {
+                cb(.failure(error))
+            }
+        }
+    }
+    
     public func getTransaction(hash: String, _ cb: @escaping (Result<Any, Error>) -> Void) {
         fatalError("Not implemented")
     }
