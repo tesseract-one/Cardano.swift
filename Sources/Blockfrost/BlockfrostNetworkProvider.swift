@@ -14,10 +14,12 @@ import Cardano
 public struct BlockfrostNetworkProvider: NetworkProvider {
     private let config: BlockfrostConfig
     private let addressesApi: CardanoAddressesAPI
+    private let transactionsApi: CardanoTransactionsAPI
     
     public init(config: BlockfrostConfig) {
         self.config = config
         addressesApi = CardanoAddressesAPI(config: config)
+        transactionsApi = CardanoTransactionsAPI(config: config)
     }
     
     public func getTransactions(for address: Address,
@@ -80,9 +82,14 @@ public struct BlockfrostNetworkProvider: NetworkProvider {
         }
     }
     
-    public func submit(tx: TransactionBody,
-                       metadata: TransactionMetadata?,
-                       _ cb: @escaping (Result<Transaction, Error>) -> Void) {
-        fatalError("Not implemented")
+    public func submit(tx: Transaction,
+                       _ cb: @escaping (Result<String, Error>) -> Void) {
+        do {
+            let _ = transactionsApi.submitTransaction(transaction: try tx.bytes(), completion: cb)
+        } catch {
+            self.config.apiResponseQueue.async {
+                cb(.failure(error))
+            }
+        }
     }
 }

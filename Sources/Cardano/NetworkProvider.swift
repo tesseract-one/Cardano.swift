@@ -24,7 +24,6 @@ public protocol NetworkProvider {
                   page: Int,
                   _ cb: @escaping (Result<[UTXO], Error>) -> Void)
     
-    func submit(tx: TransactionBody,
-                metadata: TransactionMetadata?,
-                _ cb: @escaping (Result<Transaction, Error>) -> Void)
+    func submit(tx: Transaction,
+                _ cb: @escaping (Result<String, Error>) -> Void)
 }

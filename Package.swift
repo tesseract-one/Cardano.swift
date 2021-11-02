@@ -47,7 +47,10 @@ var package = Package(
             exclude: ["CMakeLists.txt", "LICENSE.txt"]),
         .testTarget(
             name: "CoreTests",
-            dependencies: ["CardanoCore"])
+            dependencies: ["CardanoCore"]),
+        .testTarget(
+            name: "ApiTests",
+            dependencies: ["CardanoBlockfrost"])
     ]
 )
 

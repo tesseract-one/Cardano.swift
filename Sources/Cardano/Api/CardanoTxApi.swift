@@ -29,8 +29,8 @@ public struct CardanoTxApi: CardanoApi {
     }
     
     public func submit(tx: Transaction,
-                       _ cb: @escaping ApiCallback<Transaction>) {
-        
+                       _ cb: @escaping ApiCallback<String>) {
+        cardano.network.submit(tx: tx, cb)
     }
 }
 

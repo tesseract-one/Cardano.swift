@@ -10,7 +10,7 @@ import Foundation
 import CardanoCore
 import OrderedCollections
 #endif
- 
+
 public class SimpleAddressManager: AddressManager, CardanoBootstrapAware {
     private let fetchChunkSize = 20
     

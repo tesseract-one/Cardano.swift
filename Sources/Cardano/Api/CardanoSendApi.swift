@@ -45,7 +45,7 @@ public struct CardanoSendApi: CardanoApi {
     public func ada(to: Address,
                     amount: UInt64,
                     from: [Address],
-                    _ cb: @escaping ApiCallback<Transaction>) {
+                    _ cb: @escaping ApiCallback<String>) {
         do {
             var transactionBuilder = try TransactionBuilder(
                 linearFee: cardano.info.linearFee,
@@ -101,7 +101,14 @@ public struct CardanoSendApi: CardanoApi {
                             addresses: try cardano.addresses.extended(addresses: from),
                             metadata: nil
                         )
-                        cardano.signer.sign(tx: extendedTransaction, cb)
+                        cardano.signer.sign(tx: extendedTransaction) { res in
+                            switch res {
+                            case .success(let transaction):
+                                cardano.tx.submit(tx: transaction, cb)
+                            case .failure(let error):
+                                cb(.failure(error))
+                            }
+                        }
                     } catch {
                         cb(.failure(error))
                     }
