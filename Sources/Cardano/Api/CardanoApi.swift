@@ -20,6 +20,7 @@ public extension CardanoApi {
 }
 
 public protocol CardanoProtocol: AnyObject {
+    var info: NetworkApiInfo { get }
     var addresses: AddressManager { get }
     var utxos: UtxoProvider { get }
     var signer: SignatureProvider { get }

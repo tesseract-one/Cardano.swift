@@ -10,7 +10,6 @@ import Foundation
 import CardanoCore
 #endif
 
-
 public struct CardanoSendApi: CardanoApi {
     public weak var cardano: CardanoProtocol!
     
@@ -21,15 +20,98 @@ public struct CardanoSendApi: CardanoApi {
     public func ada(to: Address,
                     amount: UInt64,
                     from: Account,
-                    _ cb: ApiCallback<Transaction>) {
+                    _ cb: @escaping ApiCallback<Transaction>) {
         
+    }
+    
+    private func getUtxos(iterator: UtxoProviderAsyncIterator,
+                          all: [UTXO],
+                          _ cb: @escaping (Result<[UTXO], Error>) -> Void) {
+        iterator.next { (res, iterator) in
+            switch res {
+            case .success(let utxos):
+                let all = all + utxos
+                guard let iterator = iterator else {
+                    cb(.success(all))
+                    return
+                }
+                getUtxos(iterator: iterator, all: all, cb)
+            case .failure(let error):
+                cb(.failure(error))
+            }
+        }
     }
     
     public func ada(to: Address,
                     amount: UInt64,
                     from: [Address],
-                    _ cb: ApiCallback<Transaction>) {
-        
+                    _ cb: @escaping ApiCallback<Transaction>) {
+        do {
+            var transactionBuilder = try TransactionBuilder(
+                linearFee: cardano.info.linearFee,
+                minimumUtxoVal: cardano.info.minimumUtxoVal,
+                poolDeposit: cardano.info.poolDeposit,
+                keyDeposit: cardano.info.keyDeposit
+            )
+            getUtxos(iterator: cardano.utxos.get(for: from, asset: nil), all: []) { res in
+                switch res {
+                case .success(let utxos):
+                    do {
+                        try utxos.forEach { utxo in
+                            let input = TransactionInput(transaction_id: utxo.txHash, index: utxo.index)
+                            switch utxo.address {
+                            case .base(let base):
+                                try transactionBuilder.addKeyInput(
+                                    hash: base.payment.key,
+                                    input: input,
+                                    amount: utxo.value
+                                )
+                            case .pointer(let pointer):
+                                if let keyHash = pointer.payment.keyHash {
+                                    try transactionBuilder.addKeyInput(
+                                        hash: keyHash,
+                                        input: input,
+                                        amount: utxo.value
+                                    )
+                                }
+                            case .enterprise(let enterprise):
+                                if let keyHash = enterprise.payment.keyHash {
+                                    try transactionBuilder.addKeyInput(
+                                        hash: keyHash,
+                                        input: input,
+                                        amount: utxo.value
+                                    )
+                                }
+                            case .byron(let byron):
+                                try transactionBuilder.addBootstrapInput(
+                                    hash: byron,
+                                    input: input,
+                                    amount: utxo.value
+                                )
+                            default:
+                                break
+                            }
+                        }
+                        try transactionBuilder.addOutput(
+                            output: TransactionOutput(address: to, amount: Value(coin: amount))
+                        )
+                        let transactionBody = try transactionBuilder.build()
+                        let extendedTransaction = ExtendedTransaction(
+                            tx: transactionBody,
+                            addresses: try cardano.addresses.extended(addresses: from),
+                            metadata: nil
+                        )
+                        cardano.signer.sign(tx: extendedTransaction, cb)
+                    } catch {
+                        cb(.failure(error))
+                    }
+                case .failure(let error):
+                    cb(.failure(error))
+                }
+            }
+        } catch {
+            cb(.failure(error))
+        }
     }
 }
 

@@ -15,7 +15,7 @@ public protocol CardanoBootstrapAware {
 }
 
 public class Cardano: CardanoProtocol {
-    public var networkInfo: NetworkApiInfo
+    public var info: NetworkApiInfo
     public var addresses: AddressManager
     public var utxos: UtxoProvider
     public var signer: SignatureProvider
@@ -24,7 +24,7 @@ public class Cardano: CardanoProtocol {
     private var apis: Dictionary<String, CardanoApi>
     private let syncQueue: DispatchQueue
     
-    public init(networkInfo: NetworkApiInfo,
+    public init(info: NetworkApiInfo,
                 addresses: AddressManager,
                 utxos: UtxoProvider,
                 signer: SignatureProvider,
@@ -35,7 +35,7 @@ public class Cardano: CardanoProtocol {
         self.utxos = utxos
         self.signer = signer
         self.network = network
-        self.networkInfo = networkInfo
+        self.info = info
         self.apis = [:]
         try self.bootstrap(obj: addresses)
         try self.bootstrap(obj: utxos)
