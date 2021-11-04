@@ -94,4 +94,10 @@ extension Bip32PrivateKey {
         }.get()
         return chaincode.owned()
     }
+    
+    public func toRawKey() throws -> PrivateKey {
+        return try RustResult<PrivateKey>.wrap { res, err in
+            cardano_bip32_private_key_to_raw_key(self, res, err)
+        }.get()
+    }
 }
