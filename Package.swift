@@ -25,11 +25,15 @@ var package = Package(
     dependencies: [
         .package(url: "https://github.com/attaswift/BigInt.git", from: "5.2.1"),
         .package(url: "https://github.com/blockfrost/blockfrost-swift.git", from: "0.0.5"),
+        .package(url: "https://github.com/tesseract-one/Bip39.swift.git", from: "0.1.1"),
     ],
     targets: [
         .target(
             name: "Cardano",
-            dependencies: ["CardanoCore"]),
+            dependencies: [
+                "CardanoCore",
+                .product(name: "Bip39", package: "Bip39.swift")
+            ]),
         .target(
             name: "CardanoCore",
             dependencies: ["CCardano", "BigInt", "OrderedCollections"],

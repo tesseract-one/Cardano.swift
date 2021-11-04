@@ -8,11 +8,11 @@
 import Foundation
 
 public struct Account: Hashable {
-    public let pubKey: Bip32PublicKey
+    public let publicKey: Bip32PublicKey
     public let index: UInt32
     
-    public init(bytes: Data, index: UInt32) throws {
-        pubKey = try Bip32PublicKey(bytes: bytes)
+    public init(publicKey: Bip32PublicKey, index: UInt32) {
+        self.publicKey = publicKey
         self.index = index
     }
     
