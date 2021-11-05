@@ -18,8 +18,19 @@ public struct CardanoBalanceApi: CardanoApi {
     }
     
     public func ada(in account: Account,
-                    _ cb: @escaping (Result<UInt64, Error>) -> Void) -> UInt64 {
-        fatalError("Not implemented")
+                    _ cb: @escaping (Result<UInt64, Error>) -> Void) {
+        cardano.addresses.get(for: account, change: false) { res in
+            switch res {
+            case .success(let addresses):
+                addresses.asyncMap { address, mapped in
+                    cardano.network.getBalance(for: address, mapped)
+                }.exec { res in
+                    cb(res.map { $0.reduce(0, +) })
+                }
+            case .failure(let error):
+                cb(.failure(error))
+            }
+        }
     }
     
     public func ada(in address: Address,
