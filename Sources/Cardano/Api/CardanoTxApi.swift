@@ -22,10 +22,22 @@ public struct CardanoTxApi: CardanoApi {
         cardano.network.getTransaction(hash: hash, cb)
     }
     
-    public func submit(tx: TransactionBody,
-                       metadata: TransactionMetadata?,
-                       _ cb: @escaping ApiCallback<Transaction>) {
-        
+    public func signAndSubmit(tx: TransactionBody,
+                              with addresses: [Address],
+                              metadata: TransactionMetadata?,
+                              _ cb: @escaping ApiCallback<String>) throws {
+        cardano.signer.sign(tx: ExtendedTransaction(
+            tx: tx,
+            addresses: try cardano.addresses.extended(addresses: addresses),
+            metadata: metadata
+        )) { res in
+            switch res {
+            case .success(let signed):
+                submit(tx: signed, cb)
+            case .failure(let error):
+                cb(.failure(error))
+            }
+        }
     }
     
     public func submit(tx: Transaction,
