@@ -41,6 +41,16 @@ public struct Bip32Path: Equatable, Hashable {
         return Bip32Path(path: Array(path.prefix(3)))
     }
     
+    public var purpose: UInt32? {
+        guard path.count > 0 else { return nil }
+        return path[0] - Self.hard
+    }
+    
+    public var coin: UInt32? {
+        guard path.count > 1 else { return nil }
+        return path[1] - Self.hard
+    }
+    
     public var accountIndex: UInt32? {
         guard path.count > 2 else { return nil }
         return path[2] - Self.hard

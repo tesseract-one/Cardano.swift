@@ -65,11 +65,12 @@ public class Keychain {
     }
     
     public func addAccount(index: UInt32) throws -> Account {
-        let path = Bip32Path.prefix
+        var path = Bip32Path.prefix
+        path = try path.appending(index, hard: true)
         let keyPair = try _root
-            .derive(index: path.path[0])
-            .derive(index: path.path[1])
-            .derive(index: index)
+            .derive(index: path.purpose!)
+            .derive(index: path.coin!)
+            .derive(index: path.accountIndex!)
         syncQueue.sync {
             _cache[index] = keyPair
         }
