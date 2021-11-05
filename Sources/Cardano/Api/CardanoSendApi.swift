@@ -58,39 +58,14 @@ public struct CardanoSendApi: CardanoApi {
                 case .success(let utxos):
                     do {
                         try utxos.forEach { utxo in
-                            let input = TransactionInput(transaction_id: utxo.txHash, index: utxo.index)
-                            switch utxo.address {
-                            case .base(let base):
-                                try transactionBuilder.addKeyInput(
-                                    hash: base.payment.key,
-                                    input: input,
-                                    amount: utxo.value
-                                )
-                            case .pointer(let pointer):
-                                if let keyHash = pointer.payment.keyHash {
-                                    try transactionBuilder.addKeyInput(
-                                        hash: keyHash,
-                                        input: input,
-                                        amount: utxo.value
-                                    )
-                                }
-                            case .enterprise(let enterprise):
-                                if let keyHash = enterprise.payment.keyHash {
-                                    try transactionBuilder.addKeyInput(
-                                        hash: keyHash,
-                                        input: input,
-                                        amount: utxo.value
-                                    )
-                                }
-                            case .byron(let byron):
-                                try transactionBuilder.addBootstrapInput(
-                                    hash: byron,
-                                    input: input,
-                                    amount: utxo.value
-                                )
-                            default:
-                                break
-                            }
+                            try transactionBuilder.addInput(
+                                address: utxo.address,
+                                input: TransactionInput(
+                                    transaction_id: utxo.txHash,
+                                    index: utxo.index
+                                ),
+                                amount: utxo.value
+                            )
                         }
                         try transactionBuilder.addOutput(
                             output: TransactionOutput(address: to, amount: Value(coin: amount))
