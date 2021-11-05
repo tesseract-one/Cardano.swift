@@ -22,6 +22,25 @@ public struct BlockfrostNetworkProvider: NetworkProvider {
         transactionsApi = CardanoTransactionsAPI(config: config)
     }
     
+    public func getBalance(for address: Address,
+                           _ cb: @escaping (Result<UInt64, Error>) -> Void) {
+        do {
+            let _ = addressesApi.getAddress(address: try address.bech32()) { res in
+                cb(res.flatMap { address in
+                    Result {
+                        try Value(blockfrost: address.amount.map {
+                            (unit: $0.unit, quantity: $0.quantity)
+                        }).coin
+                    }
+                })
+            }
+        } catch {
+            self.config.apiResponseQueue.async {
+                cb(.failure(error))
+            }
+        }
+    }
+    
     public func getTransactions(for address: Address,
                                 _ cb: @escaping (Result<[AddressTransaction], Error>) -> Void) {
         do {
