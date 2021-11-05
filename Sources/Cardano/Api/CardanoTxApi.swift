@@ -17,9 +17,9 @@ public struct CardanoTxApi: CardanoApi {
         self.cardano = cardano
     }
     
-    public func get(id: TransactionHash,
-                    _ cb: @escaping ApiCallback<Transaction>) {
-        
+    public func get(hash: String,
+                    _ cb: @escaping ApiCallback<ChainTransaction>) {
+        cardano.network.getTransaction(hash: hash, cb)
     }
     
     public func submit(tx: TransactionBody,

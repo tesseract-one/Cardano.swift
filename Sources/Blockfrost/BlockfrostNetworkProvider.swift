@@ -50,8 +50,11 @@ public struct BlockfrostNetworkProvider: NetworkProvider {
         }
     }
     
-    public func getTransaction(hash: String, _ cb: @escaping (Result<Any, Error>) -> Void) {
-        fatalError("Not implemented")
+    public func getTransaction(hash: String,
+                               _ cb: @escaping (Result<ChainTransaction, Error>) -> Void) {
+        let _ = transactionsApi.getTransaction(hash: hash) { res in
+            cb(res.map { ChainTransaction(blockfrost: $0) })
+        }
     }
     
     public func getUtxos(for addresses: [Address],
