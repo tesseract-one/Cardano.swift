@@ -14,7 +14,7 @@ public protocol UtxoProvider {
     func get(for addresses: [Address],
              asset: (PolicyID, AssetName)?) -> UtxoProviderAsyncIterator
     
-    func get(id: (tx: TransactionHash, index: TransactionIndex),
+    func get(for transaction: TransactionHash,
              _ cb: @escaping (Result<[UTXO], Error>) -> Void)
 }
 

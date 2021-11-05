@@ -23,9 +23,9 @@ public class NonCachingUtxoProvider: UtxoProvider, CardanoBootstrapAware {
                                             page: 0)
     }
     
-    public func get(id: (tx: TransactionHash, index: TransactionIndex),
-             _ cb: @escaping (Result<[UTXO], Error>) -> Void) {
-        fatalError("Not implemented")
+    public func get(for transaction: TransactionHash,
+                    _ cb: @escaping (Result<[UTXO], Error>) -> Void) {
+        cardano.network.getUtxos(for: transaction, cb)
     }
 }
 
