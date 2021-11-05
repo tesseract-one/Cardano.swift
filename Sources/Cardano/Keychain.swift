@@ -40,7 +40,7 @@ public enum KeychainError: Error {
     case derivationFailed(address: Bip32Path)
 }
 
-public class Keychain: SignatureProvider {
+public class Keychain {
     private let _root: KeyPair
     private var _cache: [UInt32: KeyPair]
     private var syncQueue: DispatchQueue
@@ -64,6 +64,37 @@ public class Keychain: SignatureProvider {
         return .success(derived)
     }
     
+    public func addAccount(index: UInt32) throws -> Account {
+        let path = Bip32Path.prefix
+        let keyPair = try _root
+            .derive(index: path.path[0])
+            .derive(index: path.path[1])
+            .derive(index: index)
+        syncQueue.sync {
+            _cache[index] = keyPair
+        }
+        return Account(publicKey: keyPair.publicKey, index: index)
+    }
+    
+    public func accounts() -> [Account] {
+        syncQueue.sync {
+            _cache.map { (index, keyPair) in
+                Account(publicKey: keyPair.publicKey, index: index)
+            }
+        }
+    }
+    
+    public func account(index: UInt32) throws -> Account {
+        return try syncQueue.sync {
+            guard let keyPair = _cache[index] else {
+                throw KeychainError.accountNotFound(index: index)
+            }
+            return Account(publicKey: keyPair.publicKey, index: index)
+        }
+    }
+}
+
+extension Keychain: SignatureProvider {
     public func accounts(_ cb: @escaping (Result<[Account], Error>) -> Void) {
         DispatchQueue.global().async {
             cb(.success(self.accounts()))
@@ -121,37 +152,6 @@ public class Keychain: SignatureProvider {
                 witnessSet: witnessSet,
                 metadata: tx.metadata
             )))
-        }
-    }
-}
-
-extension Keychain {
-    public func addAccount(index: UInt32) throws -> Account {
-        let path = Bip32Path.prefix
-        let keyPair = try _root
-            .derive(index: path.path[0])
-            .derive(index: path.path[1])
-            .derive(index: index)
-        syncQueue.sync {
-            _cache[index] = keyPair
-        }
-        return Account(publicKey: keyPair.publicKey, index: index)
-    }
-    
-    public func accounts() -> [Account] {
-        syncQueue.sync {
-            _cache.map { (index, keyPair) in
-                Account(publicKey: keyPair.publicKey, index: index)
-            }
-        }
-    }
-    
-    public func account(index: UInt32) throws -> Account {
-        return try syncQueue.sync {
-            guard let keyPair = _cache[index] else {
-                throw KeychainError.accountNotFound(index: index)
-            }
-            return Account(publicKey: keyPair.publicKey, index: index)
         }
     }
 }

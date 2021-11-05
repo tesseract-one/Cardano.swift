@@ -25,10 +25,17 @@ public struct CardanoTxApi: CardanoApi {
     public func signAndSubmit(tx: TransactionBody,
                               with addresses: [Address],
                               metadata: TransactionMetadata?,
-                              _ cb: @escaping ApiCallback<String>) throws {
+                              _ cb: @escaping ApiCallback<String>) {
+        let extended: [ExtendedAddress]
+        do {
+            extended = try cardano.addresses.extended(addresses: addresses)
+        } catch {
+            cb(.failure(error))
+            return
+        }
         cardano.signer.sign(tx: ExtendedTransaction(
             tx: tx,
-            addresses: try cardano.addresses.extended(addresses: addresses),
+            addresses: extended,
             metadata: metadata
         )) { res in
             switch res {
