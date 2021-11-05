@@ -45,7 +45,11 @@ public class SimpleAddressManager: AddressManager, CardanoBootstrapAware {
     
     public func new(for account: Account, change: Bool) throws -> Address {
         let from = fromIndex(for: account, change: change)
-        let extended = account.derive(index: UInt32(from), change: change)
+        let extended = try account.baseAddress(
+            index: UInt32(from),
+            change: change,
+            networkID: UInt8(cardano.info.networkId.id)
+        )
         try syncQueue.sync {
             guard var addresses = (change ? accountChangeAddresses : accountAddresses)[account] else {
                 throw AddressManagerError.notInCache(account: account)
@@ -85,9 +89,20 @@ public class SimpleAddressManager: AddressManager, CardanoBootstrapAware {
                            all: [(ExtendedAddress, Bool)],
                            change: Bool,
                            _ cb: @escaping (Result<[ExtendedAddress], Error>) -> Void) {
-        (0..<fetchChunkSize).map { offset in
-            account.derive(index: UInt32(index + offset), change: change)
-        }.asyncMap { address, mapped in
+        let addresses: [ExtendedAddress]
+        do {
+            addresses = try (0..<fetchChunkSize).map { offset in
+                try account.baseAddress(
+                    index: UInt32(index + offset),
+                    change: change,
+                    networkID: UInt8(cardano.info.networkId.id)
+                )
+            }
+        } catch {
+            cb(.failure(error))
+            return
+        }
+        addresses.asyncMap { address, mapped in
             self.cardano.network.getTransactionCount(for: address.address) { res in
                 mapped(res.map { (address, $0 > 0) })
             }
