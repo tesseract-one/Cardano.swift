@@ -15,7 +15,7 @@ final class SendApiTests: XCTestCase {
     func testSendAda() throws {
         let sent = expectation(description: "Ada sent")
         let info = NetworkApiInfo(
-            networkId: NetworkId(123),
+            networkID: NetworkInfo.testnet.network_id,
             linearFee: try LinearFee(coefficient: 0, constant: 0),
             minimumUtxoVal: 0,
             poolDeposit: 0,

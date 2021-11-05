@@ -48,7 +48,7 @@ public class SimpleAddressManager: AddressManager, CardanoBootstrapAware {
         let extended = try account.baseAddress(
             index: UInt32(from),
             change: change,
-            networkID: UInt8(cardano.info.networkId.id)
+            networkID: cardano.info.networkID
         )
         try syncQueue.sync {
             guard var addresses = (change ? accountChangeAddresses : accountAddresses)[account] else {
@@ -95,7 +95,7 @@ public class SimpleAddressManager: AddressManager, CardanoBootstrapAware {
                 try account.baseAddress(
                     index: UInt32(index + offset),
                     change: change,
-                    networkID: UInt8(cardano.info.networkId.id)
+                    networkID: cardano.info.networkID
                 )
             }
         } catch {

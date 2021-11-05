@@ -10,18 +10,8 @@ import Foundation
 import CardanoCore
 #endif
 
-public struct NetworkId {
-    public let id: UInt32
-    
-    public init(_ id: UInt32) {
-        self.id = id
-    }
-    
-    public static let mainnet = Self(0)
-}
-
 public struct NetworkApiInfo {
-    public let networkId: NetworkId
+    public let networkID: NetworkID
     public let linearFee: LinearFee
     public let minimumUtxoVal: UInt64
     public let poolDeposit: UInt64
