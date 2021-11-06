@@ -1,4 +1,5 @@
 use crate::array::CArray;
+use crate::data::CData;
 use crate::ed25519_signature::Ed25519Signature;
 use crate::error::CError;
 use crate::panic::*;
@@ -51,6 +52,31 @@ pub unsafe extern "C" fn cardano_vkeywitness_make_vkey_witness(
   handle_exception_result(|| {
     sk.try_into()
       .map(|sk| make_vkey_witness(&tx_body_hash.into(), &sk))
+      .map(|vkeywitness| vkeywitness.into())
+  })
+  .response(result, error)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_vkeywitness_to_bytes(
+  vkeywitness: Vkeywitness, result: &mut CData, error: &mut CError,
+) -> bool {
+  handle_exception_result(|| {
+    vkeywitness
+      .try_into()
+      .map(|vkeywitness: RVkeywitness| vkeywitness.to_bytes().into())
+  })
+  .response(result, error)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_vkeywitness_from_bytes(
+  data: CData, result: &mut Vkeywitness, error: &mut CError,
+) -> bool {
+  handle_exception_result(|| {
+    data
+      .unowned()
+      .and_then(|bytes| RVkeywitness::from_bytes(bytes.to_vec()).into_result())
       .map(|vkeywitness| vkeywitness.into())
   })
   .response(result, error)

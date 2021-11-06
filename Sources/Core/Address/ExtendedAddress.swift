@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct ExtendedAddress {
+public struct ExtendedAddress: Hashable {
     public let address: Address
     public let path: Bip32Path
     

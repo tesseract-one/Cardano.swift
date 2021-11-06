@@ -71,7 +71,7 @@ final class KeychainTests: XCTestCase {
                 transactionHash: try! TransactionHash(txBody: transaction.body)
             )
             let actualWitness = transaction.witnessSet.vkeys![0]
-            fatalError("Not implemented")
+            XCTAssertEqual(try! actualWitness.bytes(), try! expectedWitness.bytes())
             success.fulfill()
         }
         wait(for: [success], timeout: 10)
