@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct ChainTransactionAmount {
+public struct ChainTransactionAmount: Equatable {
     public let unit: String
     public let quantity: String
     
@@ -17,7 +17,7 @@ public struct ChainTransactionAmount {
     }
 }
 
-public struct ChainTransaction {
+public struct ChainTransaction: Equatable {
     public let hash: String
     public let block: String
     public let blockHeight: Int
