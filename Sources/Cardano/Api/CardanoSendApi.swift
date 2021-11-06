@@ -21,7 +21,7 @@ public struct CardanoSendApi: CardanoApi {
                     amount: UInt64,
                     from: Account,
                     _ cb: @escaping ApiCallback<Transaction>) {
-        
+        fatalError("Not implemented")
     }
     
     private func getUtxos(iterator: UtxoProviderAsyncIterator,

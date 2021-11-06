@@ -56,7 +56,7 @@ extension COption_MultiAsset: COption {
     }
 }
 
-public struct Value {
+public struct Value: Equatable {
     public var coin: Coin
     public var multiasset: MultiAsset?
     
