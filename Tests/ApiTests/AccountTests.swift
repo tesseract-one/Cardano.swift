@@ -16,7 +16,7 @@ final class AccountTests: XCTestCase {
         let keychain = try Keychain(mnemonic: mnemonic.mnemonic(), password: Data())
         let account = try keychain.addAccount(index: 0)
         let root = try KeyPair(sk: try Bip32PrivateKey(bip39: Data(mnemonic.entropy), password: Data()))
-        let path = try Bip32Path
+        var path = try Bip32Path
             .prefix
             .appending(0, hard: true)
         let keyPair = try root
@@ -33,13 +33,13 @@ final class AccountTests: XCTestCase {
                 .derive(index: stakePath.path[4])
                 .toRawKey().hash()
         )
-        let paymentPath = try! path
+        path = try! path
             .appending(0)
             .appending(0)
         let payment = StakeCredential.keyHash(
             try publicKey
-                .derive(index: paymentPath.path[3])
-                .derive(index: paymentPath.path[4])
+                .derive(index: path.path[3])
+                .derive(index: path.path[4])
                 .toRawKey()
                 .hash()
         )
