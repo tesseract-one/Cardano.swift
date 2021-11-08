@@ -104,10 +104,7 @@ final class UtxoProviderTests: XCTestCase {
         getUtxos(iterator: cardano.utxos.get(for: [try Self.testAddress], asset: nil), all: []) { res in
             let utxos = try! res.get()
             let utxo = utxos[0]
-            XCTAssertEqual(utxo.address, try! Self.testUtxo.address)
-            XCTAssertEqual(try! utxo.txHash.bytes(), try! Self.testUtxo.txHash.bytes())
-            XCTAssertEqual(utxo.index, try! Self.testUtxo.index)
-            XCTAssertEqual(utxo.value, try! Self.testUtxo.value)
+            XCTAssertEqual(utxo, try! Self.testUtxo)
             success.fulfill()
         }
         wait(for: [success], timeout: 10)
@@ -132,10 +129,7 @@ final class UtxoProviderTests: XCTestCase {
         cardano.utxos.get(for: try Self.testUtxo.txHash) { res in
             let utxos = try! res.get()
             let utxo = utxos[0]
-            XCTAssertEqual(utxo.address, try! Self.testUtxo.address)
-            XCTAssertEqual(try! utxo.txHash.bytes(), try! Self.testUtxo.txHash.bytes())
-            XCTAssertEqual(utxo.index, try! Self.testUtxo.index)
-            XCTAssertEqual(utxo.value, try! Self.testUtxo.value)
+            XCTAssertEqual(utxo, try! Self.testUtxo)
             success.fulfill()
         }
         wait(for: [success], timeout: 10)

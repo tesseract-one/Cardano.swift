@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct UTXO {
+public struct UTXO: Equatable {
     public let address: Address
     public let txHash: TransactionHash
     public let index: TransactionIndex

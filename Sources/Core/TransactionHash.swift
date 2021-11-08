@@ -37,4 +37,22 @@ extension TransactionHash {
         }.get()
         return bytes.owned()
     }
+    
+    public var bytesArray: [UInt8] {
+        withUnsafeBytes(of: bytes) { ptr in
+            Array(ptr.bindMemory(to: UInt8.self).prefix(32))
+        }
+    }
+}
+
+extension TransactionHash: Equatable {
+    public static func == (lhs: TransactionHash, rhs: TransactionHash) -> Bool {
+        lhs.bytesArray == rhs.bytesArray
+    }
+}
+
+extension TransactionHash: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(bytesArray)
+    }
 }
