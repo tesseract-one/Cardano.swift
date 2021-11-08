@@ -18,16 +18,28 @@ public struct CardanoBalanceApi: CardanoApi {
     }
     
     public func ada(in account: Account,
+                    update: Bool = false,
                     _ cb: @escaping (Result<UInt64, Error>) -> Void) {
-        cardano.addresses.get(for: account, change: false) { res in
-            switch res {
-            case .success(let addresses):
-                addresses.asyncMap { address, mapped in
-                    cardano.network.getBalance(for: address, mapped)
-                }.exec { res in
-                    cb(res.map { $0.reduce(0, +) })
+        let getBalance = { (addresses: [Address]) -> Void in
+            addresses.asyncMap { address, mapped in
+                cardano.network.getBalance(for: address, mapped)
+            }.exec { res in
+                cb(res.map { $0.reduce(0, +) })
+            }
+        }
+        if update {
+            cardano.addresses.get(for: account, change: false) { res in
+                switch res {
+                case .success(let addresses):
+                    getBalance(addresses)
+                case .failure(let error):
+                    cb(.failure(error))
                 }
-            case .failure(let error):
+            }
+        } else {
+            do {
+                getBalance(try cardano.addresses.get(cached: account, change: false))
+            } catch {
                 cb(.failure(error))
             }
         }
