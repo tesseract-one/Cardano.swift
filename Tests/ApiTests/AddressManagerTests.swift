@@ -30,7 +30,7 @@ final class AddressManagerTests: XCTestCase {
     
     private static var testChangeAddress: ExtendedAddress {
         try! testAccount.baseAddress(
-            index: 1,
+            index: 0,
             change: true,
             networkID: NetworkInfo.testnet.network_id
         )
@@ -41,6 +41,31 @@ final class AddressManagerTests: XCTestCase {
         
         func sign(tx: ExtendedTransaction,
                   _ cb: @escaping (Result<Transaction, Error>) -> Void) {}
+    }
+    
+    private struct NetworkProviderMockTestNew: NetworkProvider {
+        func getBalance(for address: Address, _ cb: @escaping (Result<UInt64, Error>) -> Void) {}
+        
+        func getTransactions(for address: Address,
+                             _ cb: @escaping (Result<[AddressTransaction], Error>) -> Void) {}
+        
+        func getTransactionCount(for address: Address,
+                                 _ cb: @escaping (Result<Int, Error>) -> Void) {
+            cb(.success(0))
+        }
+        
+        func getTransaction(hash: String,
+                            _ cb: @escaping (Result<ChainTransaction, Error>) -> Void) {}
+        
+        func getUtxos(for addresses: [Address],
+                      page: Int,
+                      _ cb: @escaping (Result<[UTXO], Error>) -> Void) {}
+        
+        func getUtxos(for transaction: TransactionHash,
+                      _ cb: @escaping (Result<[UTXO], Error>) -> Void) {}
+        
+        func submit(tx: Transaction,
+                    _ cb: @escaping (Result<String, Error>) -> Void) {}
     }
     
     private struct NetworkProviderMock: NetworkProvider {
@@ -151,7 +176,7 @@ final class AddressManagerTests: XCTestCase {
             addresses: SimpleAddressManager(),
             utxos: NonCachingUtxoProvider(),
             signer: TestSignerAccounts(),
-            network: NetworkProviderMock()
+            network: NetworkProviderMockTestNew()
         )
         cardano.addresses.accounts { res in
             let accounts = try! res.get()
@@ -191,7 +216,10 @@ final class AddressManagerTests: XCTestCase {
                 try! res.get()
                 do {
                     let addresses = try cardano.addresses.get(cached: accounts[0])
-                    XCTAssertEqual(addresses, [Self.testAddress.address])
+                    XCTAssertEqual(addresses, [
+                        Self.testAddress.address,
+                        Self.testChangeAddress.address
+                    ])
                     success.fulfill()
                 } catch {
                     XCTFail(error.localizedDescription)
@@ -221,7 +249,10 @@ final class AddressManagerTests: XCTestCase {
             let accounts = try! res.get()
             cardano.addresses.get(for: accounts[0]) { res in
                 let addresses = try! res.get()
-                XCTAssertEqual(addresses, [Self.testAddress.address])
+                XCTAssertEqual(addresses, [
+                    Self.testAddress.address,
+                    Self.testChangeAddress.address
+                ])
                 success.fulfill()
             }
         }
@@ -259,7 +290,6 @@ final class AddressManagerTests: XCTestCase {
                 } catch {
                     XCTFail(error.localizedDescription)
                 }
-                success.fulfill()
             }
         }
         wait(for: [success], timeout: 10)
@@ -279,7 +309,7 @@ final class AddressManagerTests: XCTestCase {
             addresses: SimpleAddressManager(),
             utxos: NonCachingUtxoProvider(),
             signer: TestSignerAccounts(),
-            network: NetworkProviderMock()
+            network: NetworkProviderMockTestNew()
         )
         cardano.addresses.accounts { res in
             let accounts = try! res.get()

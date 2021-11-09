@@ -115,8 +115,8 @@ public class SimpleAddressManager: AddressManager, CardanoBootstrapAware {
                     cb(.success([]))
                     return
                 }
-                if addresses.count - lastNotEmpty > self.fetchChunkSize {
-                    cb(.success(all.dropLast(addresses.count - lastNotEmpty - 1).map { $0.0 }))
+                if all.count - lastNotEmpty > self.fetchChunkSize {
+                    cb(.success(all.dropLast(all.count - lastNotEmpty - 1).map { $0.0 }))
                 } else {
                     self.fetchNext(
                         for: account,
