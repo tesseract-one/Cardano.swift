@@ -33,16 +33,33 @@ public struct CardanoSendApi: CardanoApi {
     
     private func getUtxos(iterator: UtxoProviderAsyncIterator,
                           all: [UTXO],
+                          currentAmount: UInt64,
+                          finalAmount: UInt64,
                           _ cb: @escaping (Result<[UTXO], Error>) -> Void) {
         iterator.next { (res, iterator) in
             switch res {
-            case .success(let utxos):
-                let all = all + utxos
+            case .success(let utxosResult):
+                var utxos = [UTXO]()
+                var currentAmount = currentAmount
+                for utxo in utxosResult {
+                    utxos.append(utxo)
+                    currentAmount += utxo.value.coin
+                    guard currentAmount < finalAmount else {
+                        cb(.success(all + utxos))
+                        return
+                    }
+                }
                 guard let iterator = iterator else {
-                    cb(.success(all))
+                    cb(.success(all + utxos))
                     return
                 }
-                getUtxos(iterator: iterator, all: all, cb)
+                getUtxos(
+                    iterator: iterator,
+                    all: all + utxos,
+                    currentAmount: currentAmount,
+                    finalAmount: finalAmount,
+                    cb
+                )
             case .failure(let error):
                 cb(.failure(error))
             }
@@ -60,7 +77,12 @@ public struct CardanoSendApi: CardanoApi {
                 poolDeposit: cardano.info.poolDeposit,
                 keyDeposit: cardano.info.keyDeposit
             )
-            getUtxos(iterator: cardano.utxos.get(for: from, asset: nil), all: []) { res in
+            getUtxos(
+                iterator: cardano.utxos.get(for: from, asset: nil),
+                all: [],
+                currentAmount: 0,
+                finalAmount: amount
+            ) { res in
                 switch res {
                 case .success(let utxos):
                     do {
