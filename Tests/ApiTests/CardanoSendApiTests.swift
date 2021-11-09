@@ -20,6 +20,16 @@ final class CardanoSendApiTests: XCTestCase {
         return try! keychain.addAccount(index: 0)
     }
     
+    private static var testToAddress: Address {
+        let keychain = try! Keychain(mnemonic: testMnemonic.mnemonic(), password: Data())
+        let account = try! keychain.addAccount(index: 1)
+        return try! account.baseAddress(
+            index: 0,
+            change: false,
+            networkID: NetworkInfo.testnet.network_id
+        ).address
+    }
+    
     private static var testExtendedAddress: ExtendedAddress {
         try! testAccount.baseAddress(
             index: 0,
@@ -27,12 +37,20 @@ final class CardanoSendApiTests: XCTestCase {
             networkID: NetworkInfo.testnet.network_id
         )
     }
+    
+    private static var testChangeAddress: Address {
+        try! testAccount.baseAddress(
+            index: 1,
+            change: true,
+            networkID: NetworkInfo.testnet.network_id
+        ).address
+    }
 
     private static let testUtxo = UTXO(
-        address: try! Address(bytes: Data()),
+        address: testExtendedAddress.address,
         txHash: TransactionHash(),
         index: 1,
-        value: Value(coin: 1)
+        value: Value(coin: 1000)
     )
 
     private static let testTransactionHash = "testTransactionHash"
@@ -59,7 +77,10 @@ final class CardanoSendApiTests: XCTestCase {
         func accounts(_ cb: @escaping (Result<[Account], Error>) -> Void) {}
         
         func new(for account: Account, change: Bool) throws -> Address {
-            throw TestError.error
+            guard account == testAccount, change else {
+                throw TestError.error
+            }
+            return testChangeAddress
         }
         
         func get(cached account: Account) throws -> [Address] {
@@ -159,8 +180,9 @@ final class CardanoSendApiTests: XCTestCase {
                 let to = addresses.count < 100
                     ? try! cardano.addresses.new(for: account, change: false)
                     : addresses.randomElement()!
+                let change = try! cardano.addresses.new(for: account, change: true)
                 let amount1: UInt64 = 100
-                cardano.send.ada(to: to, amount: amount1, from: [from]) { res in
+                cardano.send.ada(to: to, amount: amount1, from: [from], change: change) { res in
                     let transactionHash = try! res.get()
                     cardano.tx.get(hash: transactionHash) { res in
                         let chainTransaction = try! res.get()
@@ -194,7 +216,7 @@ final class CardanoSendApiTests: XCTestCase {
             signer: SignatureProviderMock(),
             network: NetworkProviderMock()
         )
-        cardano.send.ada(to: try! Address(bytes: Data()), amount: 100, from: Self.testAccount) { res in
+        cardano.send.ada(to: Self.testToAddress, amount: 100, from: Self.testAccount) { res in
             let transactionHash = try! res.get()
             XCTAssertEqual(transactionHash, Self.testTransactionHash)
             success.fulfill()
@@ -218,9 +240,10 @@ final class CardanoSendApiTests: XCTestCase {
             signer: SignatureProviderMock(),
             network: NetworkProviderMock()
         )
-        cardano.send.ada(to: try! Address(bytes: Data()),
+        cardano.send.ada(to: Self.testToAddress,
                          amount: 100,
-                         from: [Self.testExtendedAddress.address]) { res in
+                         from: [Self.testExtendedAddress.address],
+                         change: Self.testChangeAddress) { res in
             let transactionHash = try! res.get()
             XCTAssertEqual(transactionHash, Self.testTransactionHash)
             success.fulfill()
