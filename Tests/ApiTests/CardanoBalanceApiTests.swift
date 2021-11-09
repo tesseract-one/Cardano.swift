@@ -12,23 +12,32 @@ import Bip39
 
 final class CardanoBalanceApiTests: XCTestCase {
     private static let testAmount: UInt64 = 100
-    private let testMnemonic = try! Mnemonic()
+    private static let testChangeAmount: UInt64 = 1
+    private static let testMnemonic = try! Mnemonic()
     
-    private var testAccount: Account {
+    private static var testAccount: Account {
         let keychain = try! Keychain(mnemonic: testMnemonic.mnemonic(), password: Data())
         return try! keychain.addAccount(index: 0)
     }
     
-    private var testAddress: Address {
-        return try! testAccount.baseAddress(
+    private static var testAddress: Address {
+        try! testAccount.baseAddress(
             index: 0,
             change: false,
             networkID: NetworkInfo.testnet.network_id
         ).address
     }
     
+    private static var testChangeAddress: Address {
+        try! testAccount.baseAddress(
+            index: 1,
+            change: true,
+            networkID: NetworkInfo.testnet.network_id
+        ).address
+    }
+    
     private enum TestError: Error {
-        case error
+        case error(from: String)
     }
     
     private struct TestSigner: SignatureProvider {
@@ -39,34 +48,26 @@ final class CardanoBalanceApiTests: XCTestCase {
     }
     
     private struct TestAddressManager: AddressManager {
-        private let account: Account
-        private let address: Address
-        
-        init(account: Account, address: Address) {
-            self.account = account
-            self.address = address
-        }
-        
         func accounts(_ cb: @escaping (Result<[Account], Error>) -> Void) {}
         
         func new(for account: Account, change: Bool) throws -> Address {
-            throw TestError.error
+            throw TestError.error(from: "new")
         }
         
-        func get(cached account: Account, change: Bool) throws -> [Address] {
-            guard account == self.account else {
-                throw TestError.error
+        func get(cached account: Account) throws -> [Address] {
+            guard account == testAccount else {
+                throw TestError.error(from: "get cached account")
             }
-            return [address]
+            return [testAddress, testChangeAddress]
         }
         
-        func get(for account: Account, change: Bool,
+        func get(for account: Account,
                  _ cb: @escaping (Result<[Address], Error>) -> Void) {
-            guard account == self.account else {
-                cb(.failure(TestError.error))
+            guard account == testAccount else {
+                cb(.failure(TestError.error(from: "get for account")))
                 return
             }
-            cb(.success([address]))
+            cb(.success([testAddress, testChangeAddress]))
         }
         
         func fetch(for accounts: [Account],
@@ -77,23 +78,21 @@ final class CardanoBalanceApiTests: XCTestCase {
         }
         
         func extended(addresses: [Address]) throws -> [ExtendedAddress] {
-            throw TestError.error
+            throw TestError.error(from: "extended")
         }
     }
     
     private struct NetworkProviderMock: NetworkProvider {
-        private let address: Address
-        
-        init(address: Address) {
-            self.address = address
-        }
-        
         func getBalance(for address: Address, _ cb: @escaping (Result<UInt64, Error>) -> Void) {
-            guard address == self.address else {
-                cb(.failure(TestError.error))
+            guard [testAddress, testChangeAddress].contains(address) else {
+                cb(.failure(TestError.error(from: "getBalance")))
                 return
             }
-            cb(.success(testAmount))
+            if address == testAddress {
+                cb(.success(testAmount))
+            } else if address == testChangeAddress {
+                cb(.success(testChangeAmount))
+            }
         }
         
         func getTransactions(for address: Address,
@@ -115,7 +114,7 @@ final class CardanoBalanceApiTests: XCTestCase {
         func submit(tx: Transaction,
                     _ cb: @escaping (Result<String, Error>) -> Void) {}
     }
-    
+
     func testAdaInAccount() throws {
         let success = expectation(description: "success")
         let info = NetworkApiInfo(
@@ -127,20 +126,20 @@ final class CardanoBalanceApiTests: XCTestCase {
         )
         let cardano = try Cardano(
             info: info,
-            addresses: TestAddressManager(account: testAccount, address: testAddress),
+            addresses: TestAddressManager(),
             utxos: NonCachingUtxoProvider(),
             signer: TestSigner(),
-            network: NetworkProviderMock(address: testAddress)
+            network: NetworkProviderMock()
         )
         let balance = try CardanoBalanceApi(cardano: cardano)
-        balance.ada(in: testAccount) { res in
+        balance.ada(in: Self.testAccount) { res in
             let amount = try! res.get()
-            XCTAssertEqual(amount, Self.testAmount)
+            XCTAssertEqual(amount, Self.testAmount + Self.testChangeAmount)
             success.fulfill()
         }
         wait(for: [success], timeout: 10)
     }
-    
+
     func testAdaInAccountUpdate() throws {
         let success = expectation(description: "success")
         let info = NetworkApiInfo(
@@ -152,20 +151,20 @@ final class CardanoBalanceApiTests: XCTestCase {
         )
         let cardano = try Cardano(
             info: info,
-            addresses: TestAddressManager(account: testAccount, address: testAddress),
+            addresses: TestAddressManager(),
             utxos: NonCachingUtxoProvider(),
             signer: TestSigner(),
-            network: NetworkProviderMock(address: testAddress)
+            network: NetworkProviderMock()
         )
         let balance = try CardanoBalanceApi(cardano: cardano)
-        balance.ada(in: testAccount, update: true) { res in
+        balance.ada(in: Self.testAccount, update: true) { res in
             let amount = try! res.get()
-            XCTAssertEqual(amount, Self.testAmount)
+            XCTAssertEqual(amount, Self.testAmount + Self.testChangeAmount)
             success.fulfill()
         }
         wait(for: [success], timeout: 10)
     }
-    
+
     func testAdaInAddress() throws {
         let success = expectation(description: "success")
         let info = NetworkApiInfo(
@@ -180,10 +179,10 @@ final class CardanoBalanceApiTests: XCTestCase {
             addresses: SimpleAddressManager(),
             utxos: NonCachingUtxoProvider(),
             signer: TestSigner(),
-            network: NetworkProviderMock(address: testAddress)
+            network: NetworkProviderMock()
         )
         let balance = try CardanoBalanceApi(cardano: cardano)
-        balance.ada(in: testAddress) { res in
+        balance.ada(in: Self.testAddress) { res in
             let amount = try! res.get()
             XCTAssertEqual(amount, Self.testAmount)
             success.fulfill()

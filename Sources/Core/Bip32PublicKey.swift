@@ -63,7 +63,7 @@ extension Bip32PublicKey {
     }
     
     public var bytesArray: [UInt8] {
-        withUnsafeBytes(of: bytes) { ptr in
+        withUnsafeBytes(of: _0) { ptr in
             Array(ptr.bindMemory(to: UInt8.self).prefix(64))
         }
     }

@@ -28,7 +28,7 @@ public struct CardanoBalanceApi: CardanoApi {
             }
         }
         if update {
-            cardano.addresses.get(for: account, change: false) { res in
+            cardano.addresses.get(for: account) { res in
                 switch res {
                 case .success(let addresses):
                     getBalance(addresses)
@@ -38,7 +38,7 @@ public struct CardanoBalanceApi: CardanoApi {
             }
         } else {
             do {
-                getBalance(try cardano.addresses.get(cached: account, change: false))
+                getBalance(try cardano.addresses.get(cached: account))
             } catch {
                 cb(.failure(error))
             }

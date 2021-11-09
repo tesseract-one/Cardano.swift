@@ -46,7 +46,7 @@ final class AddressManagerTests: XCTestCase {
         let account = Account(publicKey: publicKey, index: 0)
         cardano.addresses.fetch(for: [account]) { res in
             try! res.get()
-            let addresses = try! cardano.addresses.get(cached: account, change: false)
+            let addresses = try! cardano.addresses.get(cached: account)
             XCTAssertEqual(testAddresses, try! addresses.map { try $0.bech32() })
             fetchSuccessful.fulfill()
         }

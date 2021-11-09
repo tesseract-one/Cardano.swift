@@ -42,7 +42,7 @@ final class SendApiTests: XCTestCase {
             let account = accounts[0]
             cardano.addresses.fetch(for: [account]) { res in
                 try! res.get()
-                let addresses = try! cardano.addresses.get(cached: account, change: false)
+                let addresses = try! cardano.addresses.get(cached: account)
                 let from = addresses.first!
                 let to = addresses.count < 100
                     ? try! cardano.addresses.new(for: account, change: false)

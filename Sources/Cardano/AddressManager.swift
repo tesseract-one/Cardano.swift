@@ -23,11 +23,10 @@ public protocol AddressManager {
     func new(for account: Account, change: Bool) throws -> Address
     
     // Get cached addresses for the Account. Throws if unknown account (not fetched)
-    func get(cached account: Account, change: Bool) throws -> [Address]
+    func get(cached account: Account) throws -> [Address]
     
     // Fetches list of addresses for account from the network.
     func get(for account: Account,
-             change: Bool,
              _ cb: @escaping (Result<[Address], Error>) -> Void)
     
     // Updates cached addresses for Accounts from the network

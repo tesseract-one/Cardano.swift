@@ -57,11 +57,11 @@ final class CardanoTxApiTests: XCTestCase {
             throw TestError.error
         }
         
-        func get(cached account: Account, change: Bool) throws -> [Address] {
+        func get(cached account: Account) throws -> [Address] {
             throw TestError.error
         }
         
-        func get(for account: Account, change: Bool,
+        func get(for account: Account,
                  _ cb: @escaping (Result<[Address], Error>) -> Void) {}
         
         func fetch(for accounts: [Account],

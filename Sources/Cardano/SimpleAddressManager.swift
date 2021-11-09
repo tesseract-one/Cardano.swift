@@ -65,21 +65,22 @@ public class SimpleAddressManager: AddressManager, CardanoBootstrapAware {
         return extended.address
     }
     
-    public func get(cached account: Account, change: Bool) throws -> [Address] {
+    public func get(cached account: Account) throws -> [Address] {
         try syncQueue.sync {
-            guard let addresses = (change ? accountChangeAddresses : accountAddresses)[account] else {
+            let addresses = accountAddresses[account]
+            let changeAddresses = accountChangeAddresses[account]
+            guard addresses != nil || changeAddresses != nil else {
                 throw AddressManagerError.notInCache(account: account)
             }
-            return Array(addresses)
+            return Array(addresses ?? []) + Array(changeAddresses ?? [])
         }
     }
     
     public func get(for account: Account,
-                    change: Bool,
                     _ cb: @escaping (Result<[Address], Error>) -> Void) {
         fetch(for: [account]) { res in
             cb(res.flatMap {
-                Result { try self.get(cached: account, change: change) }
+                Result { try self.get(cached: account) }
             })
         }
     }
