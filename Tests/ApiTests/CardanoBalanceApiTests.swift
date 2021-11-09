@@ -131,8 +131,7 @@ final class CardanoBalanceApiTests: XCTestCase {
             signer: TestSigner(),
             network: NetworkProviderMock()
         )
-        let balance = try CardanoBalanceApi(cardano: cardano)
-        balance.ada(in: Self.testAccount) { res in
+        cardano.balance.ada(in: Self.testAccount) { res in
             let amount = try! res.get()
             XCTAssertEqual(amount, Self.testAmount + Self.testChangeAmount)
             success.fulfill()
@@ -156,8 +155,7 @@ final class CardanoBalanceApiTests: XCTestCase {
             signer: TestSigner(),
             network: NetworkProviderMock()
         )
-        let balance = try CardanoBalanceApi(cardano: cardano)
-        balance.ada(in: Self.testAccount, update: true) { res in
+        cardano.balance.ada(in: Self.testAccount, update: true) { res in
             let amount = try! res.get()
             XCTAssertEqual(amount, Self.testAmount + Self.testChangeAmount)
             success.fulfill()
@@ -181,8 +179,7 @@ final class CardanoBalanceApiTests: XCTestCase {
             signer: TestSigner(),
             network: NetworkProviderMock()
         )
-        let balance = try CardanoBalanceApi(cardano: cardano)
-        balance.ada(in: Self.testAddress) { res in
+        cardano.balance.ada(in: Self.testAddress) { res in
             let amount = try! res.get()
             XCTAssertEqual(amount, Self.testAmount)
             success.fulfill()

@@ -10,9 +10,122 @@ import XCTest
 @testable import Cardano
 import BlockfrostSwiftSDK
 import CardanoBlockfrost
+import Bip39
 
 final class CardanoSendApiTests: XCTestCase {
-    func testSendAda() throws {
+    private static let testMnemonic = try! Mnemonic()
+    
+    private static var testAccount: Account {
+        let keychain = try! Keychain(mnemonic: testMnemonic.mnemonic(), password: Data())
+        return try! keychain.addAccount(index: 0)
+    }
+    
+    private static var testExtendedAddress: ExtendedAddress {
+        try! testAccount.baseAddress(
+            index: 0,
+            change: false,
+            networkID: NetworkInfo.testnet.network_id
+        )
+    }
+
+    private static let testUtxo = UTXO(
+        address: try! Address(bytes: Data()),
+        txHash: TransactionHash(),
+        index: 1,
+        value: Value(coin: 1)
+    )
+
+    private static let testTransactionHash = "testTransactionHash"
+    
+    private static let testTransaction = Transaction(
+        body: TransactionBody(inputs: [], outputs: [], fee: 0, ttl: nil),
+        witnessSet: TransactionWitnessSet(),
+        metadata: nil
+    )
+    
+    private enum TestError: Error {
+        case error
+    }
+    
+    private struct SignatureProviderMock: SignatureProvider {
+        func accounts(_ cb: @escaping (Result<[Account], Error>) -> Void) {}
+        
+        func sign(tx: ExtendedTransaction, _ cb: @escaping (Result<Transaction, Error>) -> Void) {
+            cb(.success(testTransaction))
+        }
+    }
+    
+    private struct AddressManagerMock: AddressManager {
+        func accounts(_ cb: @escaping (Result<[Account], Error>) -> Void) {}
+        
+        func new(for account: Account, change: Bool) throws -> Address {
+            throw TestError.error
+        }
+        
+        func get(cached account: Account) throws -> [Address] {
+            guard account == testAccount else {
+                throw TestError.error
+            }
+            return [testExtendedAddress.address]
+        }
+        
+        func get(for account: Account, _ cb: @escaping (Result<[Address], Error>) -> Void) {}
+        
+        func fetch(for accounts: [Account], _ cb: @escaping (Result<Void, Error>) -> Void) {}
+        
+        func fetchedAccounts() -> [Account] {
+            []
+        }
+        
+        func extended(addresses: [Address]) throws -> [ExtendedAddress] {
+            [testExtendedAddress]
+        }
+    }
+    
+    private struct UtxoProviderMock: UtxoProvider {
+        struct TestUtxoIterator: UtxoProviderAsyncIterator {
+            func next(_ cb: @escaping (Result<[UTXO], Error>, Self?) -> Void) {
+                cb(.success([testUtxo]), nil)
+            }
+        }
+        
+        func get(for addresses: [Address], asset: (PolicyID, AssetName)?) -> UtxoProviderAsyncIterator {
+            TestUtxoIterator()
+        }
+        
+        func get(for transaction: TransactionHash, _ cb: @escaping (Result<[UTXO], Error>) -> Void) {}
+    }
+    
+    private struct NetworkProviderMock: NetworkProvider {
+        func getBalance(for address: Address, _ cb: @escaping (Result<UInt64, Error>) -> Void) {}
+        
+        func getTransactions(for address: Address,
+                             _ cb: @escaping (Result<[AddressTransaction], Error>) -> Void) {}
+        
+        func getTransactionCount(for address: Address,
+                                 _ cb: @escaping (Result<Int, Error>) -> Void) {}
+        
+        func getTransaction(hash: String,
+                            _ cb: @escaping (Result<ChainTransaction, Error>) -> Void) {}
+        
+        func getUtxos(for addresses: [Address],
+                      page: Int,
+                      _ cb: @escaping (Result<[UTXO], Error>) -> Void) {}
+        
+        func getUtxos(for transaction: TransactionHash,
+                      _ cb: @escaping (Result<[UTXO], Error>) -> Void) {}
+        
+        func submit(tx: Transaction,
+                    _ cb: @escaping (Result<String, Error>) -> Void) {
+            guard try! tx.bytes() == testTransaction.bytes() else {
+                cb(.failure(TestError.error))
+                return
+            }
+            cb(.success(testTransactionHash))
+        }
+    }
+    
+    func testSendAdaOnTestnet() throws {
         let testMnemonic = ProcessInfo.processInfo
             .environment["SendApiTests.testSendAda.testMnemonic"]!
             .components(separatedBy: " ")
@@ -36,7 +149,6 @@ final class CardanoSendApiTests: XCTestCase {
                 basePath: "https://cardano-testnet.blockfrost.io/api/v0"
             ))
         )
-        let send = try CardanoSendApi(cardano: cardano)
         cardano.addresses.accounts { res in
             let accounts = try! res.get()
             let account = accounts[0]
@@ -48,7 +160,7 @@ final class CardanoSendApiTests: XCTestCase {
                     ? try! cardano.addresses.new(for: account, change: false)
                     : addresses.randomElement()!
                 let amount1: UInt64 = 100
-                send.ada(to: to, amount: amount1, from: [from]) { res in
+                cardano.send.ada(to: to, amount: amount1, from: [from]) { res in
                     let transactionHash = try! res.get()
                     cardano.tx.get(hash: transactionHash) { res in
                         let chainTransaction = try! res.get()
@@ -64,5 +176,55 @@ final class CardanoSendApiTests: XCTestCase {
             }
         }
         wait(for: [sent], timeout: 10)
+    }
+    
+    func testSendAdaFromAccount() throws {
+        let success = expectation(description: "success")
+        let info = NetworkApiInfo(
+            networkID: NetworkInfo.testnet.network_id,
+            linearFee: try LinearFee(coefficient: 0, constant: 0),
+            minimumUtxoVal: 0,
+            poolDeposit: 0,
+            keyDeposit: 0
+        )
+        let cardano = try Cardano(
+            info: info,
+            addresses: AddressManagerMock(),
+            utxos: UtxoProviderMock(),
+            signer: SignatureProviderMock(),
+            network: NetworkProviderMock()
+        )
+        cardano.send.ada(to: try! Address(bytes: Data()), amount: 100, from: Self.testAccount) { res in
+            let transactionHash = try! res.get()
+            XCTAssertEqual(transactionHash, Self.testTransactionHash)
+            success.fulfill()
+        }
+        wait(for: [success], timeout: 10)
+    }
+    
+    func testSendAdaFromAddresses() throws {
+        let success = expectation(description: "success")
+        let info = NetworkApiInfo(
+            networkID: NetworkInfo.testnet.network_id,
+            linearFee: try LinearFee(coefficient: 0, constant: 0),
+            minimumUtxoVal: 0,
+            poolDeposit: 0,
+            keyDeposit: 0
+        )
+        let cardano = try Cardano(
+            info: info,
+            addresses: AddressManagerMock(),
+            utxos: UtxoProviderMock(),
+            signer: SignatureProviderMock(),
+            network: NetworkProviderMock()
+        )
+        cardano.send.ada(to: try! Address(bytes: Data()),
+                         amount: 100,
+                         from: [Self.testExtendedAddress.address]) { res in
+            let transactionHash = try! res.get()
+            XCTAssertEqual(transactionHash, Self.testTransactionHash)
+            success.fulfill()
+        }
+        wait(for: [success], timeout: 10)
     }
 }

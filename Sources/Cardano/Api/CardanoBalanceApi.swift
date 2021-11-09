@@ -50,3 +50,7 @@ public struct CardanoBalanceApi: CardanoApi {
         cardano.network.getBalance(for: address, cb)
     }
 }
+
+extension CardanoProtocol {
+    public var balance: CardanoBalanceApi { try! getApi() }
+}
