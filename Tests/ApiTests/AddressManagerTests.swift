@@ -13,6 +13,21 @@ import CardanoBlockfrost
 import Bip39
 
 final class AddressManagerTests: XCTestCase {
+    private static let testMnemonic = try! Mnemonic()
+    
+    private static var testAccount: Account {
+        let keychain = try! Keychain(mnemonic: testMnemonic.mnemonic(), password: Data())
+        return try! keychain.addAccount(index: 0)
+    }
+    
+    private static var testAddress: ExtendedAddress {
+        try! testAccount.baseAddress(
+            index: 0,
+            change: false,
+            networkID: NetworkInfo.testnet.network_id
+        )
+    }
+    
     private struct TestSigner: SignatureProvider {
         func accounts(_ cb: @escaping (Result<[Account], Error>) -> Void) {}
         
@@ -27,7 +42,13 @@ final class AddressManagerTests: XCTestCase {
                              _ cb: @escaping (Result<[AddressTransaction], Error>) -> Void) {}
         
         func getTransactionCount(for address: Address,
-                                 _ cb: @escaping (Result<Int, Error>) -> Void) {}
+                                 _ cb: @escaping (Result<Int, Error>) -> Void) {
+            guard address == testAddress.address else {
+                cb(.success(0))
+                return
+            }
+            cb(.success(1))
+        }
         
         func getTransaction(hash: String,
                             _ cb: @escaping (Result<ChainTransaction, Error>) -> Void) {}
@@ -43,7 +64,7 @@ final class AddressManagerTests: XCTestCase {
                     _ cb: @escaping (Result<String, Error>) -> Void) {}
     }
 
-    func testFetch() throws {
+    func testFetchOnTestnet() throws {
         let testAddresses = ProcessInfo.processInfo
             .environment["AddressManagerTests.testFetch.testAddresses"]!
             .components(separatedBy: "\n")
@@ -74,22 +95,6 @@ final class AddressManagerTests: XCTestCase {
         }
         wait(for: [fetchSuccessful], timeout: 10)
     }
-    
-    private static let testMnemonic = try! Mnemonic()
-    
-    private static var testAccount: Account {
-        let keychain = try! Keychain(mnemonic: testMnemonic.mnemonic(), password: Data())
-        return try! keychain.addAccount(index: 0)
-    }
-    
-    private static var testAddress: Address {
-        try! testAccount.baseAddress(
-            index: 0,
-            change: false,
-            networkID: NetworkInfo.testnet.network_id
-        ).address
-    }
-    
     
     private struct TestSignerAccounts: SignatureProvider {
         func accounts(_ cb: @escaping (Result<[Account], Error>) -> Void) {
@@ -140,14 +145,143 @@ final class AddressManagerTests: XCTestCase {
             signer: TestSignerAccounts(),
             network: NetworkProviderMock()
         )
-        cardano.addresses.fetch(for: [Self.testAccount]) { res in
-            try! res.get()
-            do {
-                let address = try cardano.addresses.new(for: Self.testAccount, change: false)
-                XCTAssertEqual(address, Self.testAddress)
+        cardano.addresses.accounts { res in
+            let accounts = try! res.get()
+            cardano.addresses.fetch(for: accounts) { res in
+                try! res.get()
+                do {
+                    let address = try cardano.addresses.new(for: accounts[0], change: false)
+                    XCTAssertEqual(address, Self.testAddress.address)
+                    success.fulfill()
+                } catch {
+                    XCTFail(error.localizedDescription)
+                }
+            }
+        }
+        wait(for: [success], timeout: 10)
+    }
+    
+    func testGetCached() throws {
+        let success = expectation(description: "success")
+        let info = NetworkApiInfo(
+            networkID: NetworkInfo.testnet.network_id,
+            linearFee: try LinearFee(coefficient: 0, constant: 0),
+            minimumUtxoVal: 0,
+            poolDeposit: 0,
+            keyDeposit: 0
+        )
+        let cardano = try Cardano(
+            info: info,
+            addresses: SimpleAddressManager(),
+            utxos: NonCachingUtxoProvider(),
+            signer: TestSignerAccounts(),
+            network: NetworkProviderMock()
+        )
+        cardano.addresses.accounts { res in
+            let accounts = try! res.get()
+            cardano.addresses.fetch(for: accounts) { res in
+                try! res.get()
+                do {
+                    let addresses = try cardano.addresses.get(cached: accounts[0])
+                    XCTAssertEqual(addresses, [Self.testAddress.address])
+                    success.fulfill()
+                } catch {
+                    XCTFail(error.localizedDescription)
+                }
+            }
+        }
+        wait(for: [success], timeout: 10)
+    }
+    
+    func testGet() throws {
+        let success = expectation(description: "success")
+        let info = NetworkApiInfo(
+            networkID: NetworkInfo.testnet.network_id,
+            linearFee: try LinearFee(coefficient: 0, constant: 0),
+            minimumUtxoVal: 0,
+            poolDeposit: 0,
+            keyDeposit: 0
+        )
+        let cardano = try Cardano(
+            info: info,
+            addresses: SimpleAddressManager(),
+            utxos: NonCachingUtxoProvider(),
+            signer: TestSignerAccounts(),
+            network: NetworkProviderMock()
+        )
+        cardano.addresses.accounts { res in
+            let accounts = try! res.get()
+            cardano.addresses.get(for: accounts[0]) { res in
+                let addresses = try! res.get()
+                XCTAssertEqual(addresses, [Self.testAddress.address])
                 success.fulfill()
-            } catch {
-                XCTFail("cannot create new address")
+            }
+        }
+        wait(for: [success], timeout: 10)
+    }
+    
+    func testFetch() throws {
+        let success = expectation(description: "success")
+        let info = NetworkApiInfo(
+            networkID: NetworkInfo.testnet.network_id,
+            linearFee: try LinearFee(coefficient: 0, constant: 0),
+            minimumUtxoVal: 0,
+            poolDeposit: 0,
+            keyDeposit: 0
+        )
+        let cardano = try Cardano(
+            info: info,
+            addresses: SimpleAddressManager(),
+            utxos: NonCachingUtxoProvider(),
+            signer: TestSignerAccounts(),
+            network: NetworkProviderMock()
+        )
+        cardano.addresses.accounts { res in
+            let accounts = try! res.get()
+            cardano.addresses.fetch(for: accounts) { res in
+                try! res.get()
+                XCTAssertEqual(cardano.addresses.fetchedAccounts(), accounts)
+                do {
+                    let addresses = try cardano.addresses.get(cached: accounts[0])
+                    XCTAssertEqual(addresses, [Self.testAddress.address])
+                    success.fulfill()
+                } catch {
+                    XCTFail(error.localizedDescription)
+                }
+                success.fulfill()
+            }
+        }
+        wait(for: [success], timeout: 10)
+    }
+    
+    func testExtended() throws {
+        let success = expectation(description: "success")
+        let info = NetworkApiInfo(
+            networkID: NetworkInfo.testnet.network_id,
+            linearFee: try LinearFee(coefficient: 0, constant: 0),
+            minimumUtxoVal: 0,
+            poolDeposit: 0,
+            keyDeposit: 0
+        )
+        let cardano = try Cardano(
+            info: info,
+            addresses: SimpleAddressManager(),
+            utxos: NonCachingUtxoProvider(),
+            signer: TestSignerAccounts(),
+            network: NetworkProviderMock()
+        )
+        cardano.addresses.accounts { res in
+            let accounts = try! res.get()
+            cardano.addresses.fetch(for: accounts) { res in
+                try! res.get()
+                do {
+                    let address = try cardano.addresses.new(for: accounts[0], change: false)
+                    let extended = try cardano.addresses.extended(addresses: [address])
+                    XCTAssertEqual(extended, [Self.testAddress])
+                    success.fulfill()
+                } catch {
+                    XCTFail(error.localizedDescription)
+                }
             }
         }
         wait(for: [success], timeout: 10)
