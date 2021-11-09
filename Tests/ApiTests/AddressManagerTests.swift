@@ -28,6 +28,14 @@ final class AddressManagerTests: XCTestCase {
         )
     }
     
+    private static var testChangeAddress: ExtendedAddress {
+        try! testAccount.baseAddress(
+            index: 1,
+            change: true,
+            networkID: NetworkInfo.testnet.network_id
+        )
+    }
+    
     private struct TestSigner: SignatureProvider {
         func accounts(_ cb: @escaping (Result<[Account], Error>) -> Void) {}
         
@@ -43,7 +51,7 @@ final class AddressManagerTests: XCTestCase {
         
         func getTransactionCount(for address: Address,
                                  _ cb: @escaping (Result<Int, Error>) -> Void) {
-            guard address == testAddress.address else {
+            guard address == testAddress.address || address == testChangeAddress.address else {
                 cb(.success(0))
                 return
             }
@@ -243,7 +251,10 @@ final class AddressManagerTests: XCTestCase {
                 XCTAssertEqual(cardano.addresses.fetchedAccounts(), accounts)
                 do {
                     let addresses = try cardano.addresses.get(cached: accounts[0])
-                    XCTAssertEqual(addresses, [Self.testAddress.address])
+                    XCTAssertEqual(addresses, [
+                        Self.testAddress.address,
+                        Self.testChangeAddress.address
+                    ])
                     success.fulfill()
                 } catch {
                     XCTFail(error.localizedDescription)

@@ -134,24 +134,32 @@ public class SimpleAddressManager: AddressManager, CardanoBootstrapAware {
     
     public func fetch(for accounts: [Account],
                       _ cb: @escaping (Result<Void, Error>) -> Void) {
-        accounts.asyncMap { account, mapped in
-            self.fetchNext(
-                for: account,
-                index: self.fromIndex(for: account, change: false),
-                all: [],
-                change: false
-            ) { res in
-                mapped(res.map { addresses in
-                    self.syncQueue.sync {
-                        addresses.forEach { address in
-                            self.addresses[address.address] = address.path
+        [true, false].asyncMap { change, mapped in
+            accounts.asyncMap { account, mapped in
+                self.fetchNext(
+                    for: account,
+                    index: self.fromIndex(for: account, change: false),
+                    all: [],
+                    change: change
+                ) { res in
+                    mapped(res.map { addresses in
+                        self.syncQueue.sync {
+                            addresses.forEach { address in
+                                self.addresses[address.address] = address.path
+                            }
+                            if change {
+                                var accountChangeAddresses = self.accountChangeAddresses[account] ?? []
+                                accountChangeAddresses.append(contentsOf: addresses.map { $0.address })
+                                self.accountChangeAddresses[account] = accountChangeAddresses
+                            } else {
+                                var accountAddresses = self.accountAddresses[account] ?? []
+                                accountAddresses.append(contentsOf: addresses.map { $0.address })
+                                self.accountAddresses[account] = accountAddresses
+                            }
                         }
-                        var accountAddresses = self.accountAddresses[account] ?? []
-                        accountAddresses.append(contentsOf: addresses.map { $0.address })
-                        self.accountAddresses[account] = accountAddresses
-                    }
-                })
-            }
+                    })
+                }
+            }.exec(mapped)
         }.exec { cb($0.map { _ in }) }
     }
     
