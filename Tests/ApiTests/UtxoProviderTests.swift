@@ -8,30 +8,37 @@
 import Foundation
 import XCTest
 @testable import Cardano
+import Bip39
 
 final class UtxoProviderTests: XCTestCase {
+    private static let testMnemonic = try! Mnemonic()
+    
+    private static var testAddress: Address {
+        let keychain = try! Keychain(mnemonic: testMnemonic.mnemonic(), password: Data())
+        let account = try! keychain.addAccount(index: 0)
+        return try! account.baseAddress(
+            index: 0,
+            change: false,
+            networkID: NetworkInfo.testnet.network_id
+        ).address
+    }
+    
+    private static let testUtxo = UTXO(
+        address: testAddress,
+        txHash: try! TransactionHash(bytes: Data(count: 32)),
+        index: 1,
+        value: Value(coin: 1)
+    )
+    
+    private enum TestError: Error {
+        case error(from: String)
+    }
+    
     private struct TestSigner: SignatureProvider {
         func accounts(_ cb: @escaping (Result<[Account], Error>) -> Void) {}
         
         func sign(tx: ExtendedTransaction,
                   _ cb: @escaping (Result<Transaction, Error>) -> Void) {}
-    }
-    
-    private static var testAddress: Address {
-        get throws {
-            try Address(bech32: "addr_test1qz2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzer3jcu5d8ps7zex2k2xt3uqxgjqnnj83ws8lhrn648jjxtwq2ytjqp")
-        }
-    }
-    
-    private static var testUtxo: UTXO {
-        get throws {
-            UTXO(
-                address: try testAddress,
-                txHash: try TransactionHash(bytes: Data(count: 32)),
-                index: 1,
-                value: Value(coin: 1)
-            )
-        }
     }
     
     private struct NetworkProviderMock: NetworkProvider {
@@ -49,18 +56,20 @@ final class UtxoProviderTests: XCTestCase {
         func getUtxos(for addresses: [Address],
                       page: Int,
                       _ cb: @escaping (Result<[UTXO], Error>) -> Void) {
-            guard try! addresses[0] == testAddress, page == 0 else {
+            guard addresses[0] == testAddress, page == 0 else {
+                cb(.failure(TestError.error(from: "getUtxos for addresses")))
                 return
             }
-            cb(.success([try! testUtxo]))
+            cb(.success([testUtxo]))
         }
         
         func getUtxos(for transaction: TransactionHash,
                       _ cb: @escaping (Result<[UTXO], Error>) -> Void) {
             guard try! transaction.bytes() == testUtxo.txHash.bytes() else {
+                cb(.failure(TestError.error(from: "getUtxos for transaction")))
                 return
             }
-            cb(.success([try! testUtxo]))
+            cb(.success([testUtxo]))
         }
         
         func submit(tx: Transaction,
@@ -101,10 +110,10 @@ final class UtxoProviderTests: XCTestCase {
             signer: TestSigner(),
             network: NetworkProviderMock()
         )
-        getUtxos(iterator: cardano.utxos.get(for: [try Self.testAddress], asset: nil), all: []) { res in
+        getUtxos(iterator: cardano.utxos.get(for: [Self.testAddress], asset: nil), all: []) { res in
             let utxos = try! res.get()
             let utxo = utxos[0]
-            XCTAssertEqual(utxo, try! Self.testUtxo)
+            XCTAssertEqual(utxo, Self.testUtxo)
             success.fulfill()
         }
         wait(for: [success], timeout: 10)
@@ -126,10 +135,10 @@ final class UtxoProviderTests: XCTestCase {
             signer: TestSigner(),
             network: NetworkProviderMock()
         )
-        cardano.utxos.get(for: try Self.testUtxo.txHash) { res in
+        cardano.utxos.get(for: Self.testUtxo.txHash) { res in
             let utxos = try! res.get()
             let utxo = utxos[0]
-            XCTAssertEqual(utxo, try! Self.testUtxo)
+            XCTAssertEqual(utxo, Self.testUtxo)
             success.fulfill()
         }
         wait(for: [success], timeout: 10)
