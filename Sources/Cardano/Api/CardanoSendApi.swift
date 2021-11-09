@@ -20,8 +20,15 @@ public struct CardanoSendApi: CardanoApi {
     public func ada(to: Address,
                     amount: UInt64,
                     from: Account,
-                    _ cb: @escaping ApiCallback<Transaction>) {
-        fatalError("Not implemented")
+                    _ cb: @escaping ApiCallback<String>) {
+        let addresses: [Address]
+        do {
+            addresses = try cardano.addresses.get(cached: from)
+        } catch {
+            cb(.failure(error))
+            return
+        }
+        ada(to: to, amount: amount, from: addresses, cb)
     }
     
     private func getUtxos(iterator: UtxoProviderAsyncIterator,
