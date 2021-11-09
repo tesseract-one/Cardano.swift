@@ -11,11 +11,23 @@ import XCTest
 import Bip39
 
 final class CardanoTxApiTests: XCTestCase {
-    private static let testAddress = try! Address(bech32: "addr_test1qz2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzer3jcu5d8ps7zex2k2xt3uqxgjqnnj83ws8lhrn648jjxtwq2ytjqp")
+    private static let testMnemonic = try! Mnemonic()
+    
+    private static var testAddress: Address {
+        let keychain = try! Keychain(mnemonic: testMnemonic.mnemonic(), password: Data())
+        let account = try! keychain.addAccount(index: 0)
+        return try! account.baseAddress(
+            index: 0,
+            change: false,
+            networkID: NetworkInfo.testnet.network_id
+        ).address
+    }
+    
     private static let testExtendedAddress = ExtendedAddress(
         address: testAddress,
         path: Bip32Path.prefix
     )
+    
     private static let testTransactionHash = try! TransactionHash(bytes: Data(count: 32))
     private static let testTransactionHashString = "transactionHashString"
     private static let testChainTransaction = ChainTransaction(
@@ -185,7 +197,7 @@ final class CardanoTxApiTests: XCTestCase {
         )
         let cardano = try Cardano(
             info: info,
-            addresses: SimpleAddressManager(),
+            addresses: TestAddressManager(),
             utxos: NonCachingUtxoProvider(),
             signer: TestSigner(),
             network: NetworkProviderMock()
