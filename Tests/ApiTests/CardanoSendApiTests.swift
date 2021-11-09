@@ -1,5 +1,5 @@
 //
-//  SendApiTests.swift
+//  CardanoSendApiTests.swift
 //  
 //
 //  Created by Ostap Danylovych on 02.11.2021.
@@ -11,7 +11,7 @@ import XCTest
 import BlockfrostSwiftSDK
 import CardanoBlockfrost
 
-final class SendApiTests: XCTestCase {
+final class CardanoSendApiTests: XCTestCase {
     func testSendAda() throws {
         let testMnemonic = ProcessInfo.processInfo
             .environment["SendApiTests.testSendAda.testMnemonic"]!
