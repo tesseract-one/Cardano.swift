@@ -20,17 +20,18 @@ public struct CardanoSendApi: CardanoApi {
     public func ada(to: Address,
                     amount: UInt64,
                     from: Account,
+                    change: Address? = nil,
                     _ cb: @escaping ApiCallback<String>) {
         let addresses: [Address]
-        let change: Address
+        let changeAddress: Address
         do {
             addresses = try cardano.addresses.get(cached: from)
-            change = try cardano.addresses.new(for: from, change: true)
+            changeAddress = try change ?? cardano.addresses.new(for: from, change: true)
         } catch {
             cb(.failure(error))
             return
         }
-        ada(to: to, amount: amount, from: addresses, change: change, cb)
+        ada(to: to, amount: amount, from: addresses, change: changeAddress, cb)
     }
     
     private func getUtxos(iterator: UtxoProviderAsyncIterator,
