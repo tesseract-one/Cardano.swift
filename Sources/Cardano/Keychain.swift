@@ -68,9 +68,9 @@ public class Keychain {
         var path = Bip32Path.prefix
         path = try path.appending(index, hard: true)
         let keyPair = try _root
-            .derive(index: path.purpose!)
-            .derive(index: path.coin!)
-            .derive(index: path.accountIndex!)
+            .derive(index: path.path[0])
+            .derive(index: path.path[1])
+            .derive(index: path.path[2])
         syncQueue.sync {
             _cache[index] = keyPair
         }

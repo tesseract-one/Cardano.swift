@@ -11,6 +11,19 @@ import XCTest
 import Bip39
 
 final class AccountTests: XCTestCase {
+    func testAddressIsSame() throws {
+        let entropy: [UInt8] = [0xdf, 0x9e, 0xd2, 0x5e, 0xd1, 0x46, 0xbf, 0x43, 0x33, 0x6a, 0x5d, 0x7c, 0xf7, 0x39, 0x59, 0x94]
+        let mnemonic = try Mnemonic(entropy: entropy)
+        let keychain = try Keychain(mnemonic: mnemonic.mnemonic(), password: Data())
+        let account = try keychain.addAccount(index: 0)
+        let address2 = try account.baseAddress(
+            index: 0,
+            change: false,
+            networkID: NetworkInfo.testnet.network_id
+        ).address
+        XCTAssertEqual(try address2.bech32(), "addr_test1qz2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzer3jcu5d8ps7zex2k2xt3uqxgjqnnj83ws8lhrn648jjxtwq2ytjqp")
+    }
+
     func testBaseAddress() throws {
         let mnemonic = try Mnemonic()
         let keychain = try Keychain(mnemonic: mnemonic.mnemonic(), password: Data())
@@ -20,9 +33,9 @@ final class AccountTests: XCTestCase {
             .prefix
             .appending(0, hard: true)
         let keyPair = try root
-            .derive(index: path.purpose!)
-            .derive(index: path.coin!)
-            .derive(index: path.accountIndex!)
+            .derive(index: path.path[0])
+            .derive(index: path.path[1])
+            .derive(index: path.path[2])
         let publicKey = keyPair.publicKey
         let stakePath = try! path
             .appending(2)
