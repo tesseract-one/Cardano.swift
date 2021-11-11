@@ -71,6 +71,24 @@ Pod::Spec.new do |s|
 
     ss.dependency 'Cardano/CoreBuild'
   end
-
+  
+  s.subspec 'Cardano' do |ss|
+    ss.source_files = 'Sources/Cardano/**/*.swift'
+    
+    ss.dependency 'Cardano/CoreBuild'
+    ss.dependency 'Bip39.swift', '~> 0.1'
+  end
+    
+  s.subspec 'CardanoBlockfrost' do |ss|
+    ss.source_files = 'Sources/Blockfrost/**/*.swift'
+    
+    ss.dependency 'Cardano/Cardano'
+    ss.dependency 'BlockfrostSwiftSDK', '~> 0.0.5'
+    
+    ss.test_spec 'ApiTests' do |test_spec|
+      test_spec.source_files = 'Tests/ApiTests/**/*.swift'
+    end
+  end
+  
   s.default_subspecs = 'Binary'
 end
