@@ -21,7 +21,7 @@ public struct NetworkApiInfo {
     public static let mainnet = Self(
         networkID: 1,
         protocolMagic: 764824073,
-        linearFee: LinearFee(constant: 44, coefficient: 155381),
+        linearFee: LinearFee(constant: 155381, coefficient: 44),
         minimumUtxoVal: 1000000,
         poolDeposit: 500000000,
         keyDeposit: 2000000
@@ -30,7 +30,7 @@ public struct NetworkApiInfo {
     public static let testnet = Self(
         networkID: 0,
         protocolMagic: 1097911063,
-        linearFee: LinearFee(constant: 44, coefficient: 155381),
+        linearFee: LinearFee(constant: 155381, coefficient: 44),
         minimumUtxoVal: 1000000,
         poolDeposit: 500000000,
         keyDeposit: 2000000
