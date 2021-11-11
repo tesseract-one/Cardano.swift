@@ -102,7 +102,7 @@ final class CardanoBalanceApiTests: XCTestCase {
                                  _ cb: @escaping (Result<Int, Error>) -> Void) {}
         
         func getTransaction(hash: String,
-                            _ cb: @escaping (Result<ChainTransaction, Error>) -> Void) {}
+                            _ cb: @escaping (Result<ChainTransaction?, Error>) -> Void) {}
         
         func getUtxos(for addresses: [Address],
                       page: Int,

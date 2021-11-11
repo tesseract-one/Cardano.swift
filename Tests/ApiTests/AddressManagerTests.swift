@@ -55,7 +55,7 @@ final class AddressManagerTests: XCTestCase {
         }
         
         func getTransaction(hash: String,
-                            _ cb: @escaping (Result<ChainTransaction, Error>) -> Void) {}
+                            _ cb: @escaping (Result<ChainTransaction?, Error>) -> Void) {}
         
         func getUtxos(for addresses: [Address],
                       page: Int,
@@ -84,7 +84,7 @@ final class AddressManagerTests: XCTestCase {
         }
         
         func getTransaction(hash: String,
-                            _ cb: @escaping (Result<ChainTransaction, Error>) -> Void) {}
+                            _ cb: @escaping (Result<ChainTransaction?, Error>) -> Void) {}
         
         func getUtxos(for addresses: [Address],
                       page: Int,

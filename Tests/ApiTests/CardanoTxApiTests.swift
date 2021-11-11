@@ -115,8 +115,9 @@ final class CardanoTxApiTests: XCTestCase {
                                  _ cb: @escaping (Result<Int, Error>) -> Void) {}
         
         func getTransaction(hash: String,
-                            _ cb: @escaping (Result<ChainTransaction, Error>) -> Void) {
+                            _ cb: @escaping (Result<ChainTransaction?, Error>) -> Void) {
             guard hash == testTransactionHashString else {
+                cb(.success(nil))
                 return
             }
             cb(.success(testChainTransaction))

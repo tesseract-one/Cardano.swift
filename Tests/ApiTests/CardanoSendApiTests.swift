@@ -127,7 +127,7 @@ final class CardanoSendApiTests: XCTestCase {
                                  _ cb: @escaping (Result<Int, Error>) -> Void) {}
         
         func getTransaction(hash: String,
-                            _ cb: @escaping (Result<ChainTransaction, Error>) -> Void) {}
+                            _ cb: @escaping (Result<ChainTransaction?, Error>) -> Void) {}
         
         func getUtxos(for addresses: [Address],
                       page: Int,
@@ -173,7 +173,7 @@ final class CardanoSendApiTests: XCTestCase {
             cardano.send.ada(to: to, amount: amount1, from: account) { res in
                 let transactionHash = try! res.get()
                 cardano.tx.get(hash: transactionHash) { res in
-                    let chainTransaction = try! res.get()
+                    let chainTransaction = try! res.get()!
                     let amount2 = try! Value(
                         blockfrost: chainTransaction.outputAmount.map {
                             (unit: $0.unit, quantity: $0.quantity)

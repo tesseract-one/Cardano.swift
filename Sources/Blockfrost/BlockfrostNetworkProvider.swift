@@ -88,9 +88,27 @@ public struct BlockfrostNetworkProvider: NetworkProvider {
     }
     
     public func getTransaction(hash: String,
-                               _ cb: @escaping (Result<ChainTransaction, Error>) -> Void) {
+                               _ cb: @escaping (Result<ChainTransaction?, Error>) -> Void) {
         let _ = transactionsApi.getTransaction(hash: hash) { res in
-            cb(res.map { ChainTransaction(blockfrost: $0) })
+            switch res {
+            case .success(let transactionContent):
+                cb(.success(ChainTransaction(blockfrost: transactionContent)))
+            case .failure(let error):
+                guard let error = error as? ErrorResponse else {
+                    cb(.failure(error))
+                    return
+                }
+                switch error {
+                case .errorStatus(let int, _, _, _):
+                    guard int == 404 else {
+                        cb(.failure(error))
+                        return
+                    }
+                    cb(.success(nil))
+                default:
+                    cb(.failure(error))
+                }
+            }
         }
     }
     
