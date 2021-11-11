@@ -147,9 +147,13 @@ final class CardanoSendApiTests: XCTestCase {
     }
     
     func testSendAdaOnTestnet() throws {
-        let testMnemonic = ProcessInfo.processInfo
-            .environment["SendApiTests.testSendAda.testMnemonic"]!
+        let testMnemonic = ProcessInfo
+            .processInfo
+            .environment["SendApiTests.testSendAdaOnTestnet.testMnemonic"]!
             .components(separatedBy: " ")
+        let blockfrostProjectId = ProcessInfo
+            .processInfo
+            .environment["SendApiTests.testSendAdaOnTestnet.blockfrostProjectId"]!
         let sent = expectation(description: "Ada sent")
         let info = NetworkApiInfo(
             networkID: NetworkInfo.testnet.network_id,
@@ -158,42 +162,39 @@ final class CardanoSendApiTests: XCTestCase {
             poolDeposit: 0,
             keyDeposit: 0
         )
+        let keychain = try Keychain(
+            mnemonic: testMnemonic,
+            password: Data()
+        )
         let cardano = try Cardano(
             info: info,
             addresses: SimpleAddressManager(),
             utxos: NonCachingUtxoProvider(),
-            signer: Keychain(
-                mnemonic: testMnemonic,
-                password: Data()
-            ),
+            signer: keychain,
             network: BlockfrostNetworkProvider(config: BlockfrostConfig(
-                basePath: "https://cardano-testnet.blockfrost.io/api/v0"
+                basePath: "https://cardano-testnet.blockfrost.io/api/v0",
+                projectId: blockfrostProjectId
             ))
         )
-        cardano.addresses.accounts { res in
-            let accounts = try! res.get()
-            let account = accounts[0]
-            cardano.addresses.fetch(for: [account]) { res in
-                try! res.get()
-                let addresses = try! cardano.addresses.get(cached: account)
-                let from = addresses.first!
-                let to = addresses.count < 100
-                    ? try! cardano.addresses.new(for: account, change: false)
-                    : addresses.randomElement()!
-                let change = try! cardano.addresses.new(for: account, change: true)
-                let amount1: UInt64 = 100
-                cardano.send.ada(to: to, amount: amount1, from: [from], change: change) { res in
-                    let transactionHash = try! res.get()
-                    cardano.tx.get(hash: transactionHash) { res in
-                        let chainTransaction = try! res.get()
-                        let amount2 = try! Value(
-                            blockfrost: chainTransaction.outputAmount.map {
-                                (unit: $0.unit, quantity: $0.quantity)
-                            }
-                        ).coin
-                        XCTAssertEqual(amount1, amount2)
-                        sent.fulfill()
-                    }
+        let account = try keychain.addAccount(index: 0)
+        cardano.addresses.fetch(for: [account]) { res in
+            try! res.get()
+            let addresses = try! cardano.addresses.get(cached: account)
+            let to = addresses.count < 100
+                ? try! cardano.addresses.new(for: account, change: false)
+                : addresses.randomElement()!
+            let amount1: UInt64 = 10000000
+            cardano.send.ada(to: to, amount: amount1, from: account) { res in
+                let transactionHash = try! res.get()
+                cardano.tx.get(hash: transactionHash) { res in
+                    let chainTransaction = try! res.get()
+                    let amount2 = try! Value(
+                        blockfrost: chainTransaction.outputAmount.map {
+                            (unit: $0.unit, quantity: $0.quantity)
+                        }
+                    ).coin
+                    XCTAssertEqual(amount1, amount2)
+                    sent.fulfill()
                 }
             }
         }
