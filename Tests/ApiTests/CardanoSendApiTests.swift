@@ -155,19 +155,12 @@ final class CardanoSendApiTests: XCTestCase {
             .processInfo
             .environment["SendApiTests.testSendAdaOnTestnet.blockfrostProjectId"]!
         let sent = expectation(description: "Ada sent")
-        let info = NetworkApiInfo(
-            networkID: NetworkInfo.testnet.network_id,
-            linearFee: try LinearFee(coefficient: 0, constant: 0),
-            minimumUtxoVal: 0,
-            poolDeposit: 0,
-            keyDeposit: 0
-        )
         let keychain = try Keychain(
             mnemonic: testMnemonic,
             password: Data()
         )
         let cardano = try Cardano(
-            info: info,
+            info: .testnet,
             addresses: SimpleAddressManager(),
             utxos: NonCachingUtxoProvider(),
             signer: keychain,
@@ -203,15 +196,8 @@ final class CardanoSendApiTests: XCTestCase {
     
     func testSendAdaFromAccount() throws {
         let success = expectation(description: "success")
-        let info = NetworkApiInfo(
-            networkID: NetworkInfo.testnet.network_id,
-            linearFee: try LinearFee(coefficient: 0, constant: 0),
-            minimumUtxoVal: 0,
-            poolDeposit: 0,
-            keyDeposit: 0
-        )
         let cardano = try Cardano(
-            info: info,
+            info: .testnet,
             addresses: AddressManagerMock(),
             utxos: UtxoProviderMock(),
             signer: SignatureProviderMock(),
@@ -227,15 +213,8 @@ final class CardanoSendApiTests: XCTestCase {
     
     func testSendAdaFromAddresses() throws {
         let success = expectation(description: "success")
-        let info = NetworkApiInfo(
-            networkID: NetworkInfo.testnet.network_id,
-            linearFee: try LinearFee(coefficient: 0, constant: 0),
-            minimumUtxoVal: 0,
-            poolDeposit: 0,
-            keyDeposit: 0
-        )
         let cardano = try Cardano(
-            info: info,
+            info: .testnet,
             addresses: AddressManagerMock(),
             utxos: UtxoProviderMock(),
             signer: SignatureProviderMock(),

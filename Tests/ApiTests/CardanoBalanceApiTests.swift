@@ -117,15 +117,8 @@ final class CardanoBalanceApiTests: XCTestCase {
 
     func testAdaInAccount() throws {
         let success = expectation(description: "success")
-        let info = NetworkApiInfo(
-            networkID: NetworkInfo.testnet.network_id,
-            linearFee: try LinearFee(coefficient: 0, constant: 0),
-            minimumUtxoVal: 0,
-            poolDeposit: 0,
-            keyDeposit: 0
-        )
         let cardano = try Cardano(
-            info: info,
+            info: .testnet,
             addresses: TestAddressManager(),
             utxos: NonCachingUtxoProvider(),
             signer: TestSigner(),
@@ -141,15 +134,8 @@ final class CardanoBalanceApiTests: XCTestCase {
 
     func testAdaInAccountUpdate() throws {
         let success = expectation(description: "success")
-        let info = NetworkApiInfo(
-            networkID: NetworkInfo.testnet.network_id,
-            linearFee: try LinearFee(coefficient: 0, constant: 0),
-            minimumUtxoVal: 0,
-            poolDeposit: 0,
-            keyDeposit: 0
-        )
         let cardano = try Cardano(
-            info: info,
+            info: .testnet,
             addresses: TestAddressManager(),
             utxos: NonCachingUtxoProvider(),
             signer: TestSigner(),
@@ -165,15 +151,8 @@ final class CardanoBalanceApiTests: XCTestCase {
 
     func testAdaInAddress() throws {
         let success = expectation(description: "success")
-        let info = NetworkApiInfo(
-            networkID: NetworkInfo.testnet.network_id,
-            linearFee: try LinearFee(coefficient: 0, constant: 0),
-            minimumUtxoVal: 0,
-            poolDeposit: 0,
-            keyDeposit: 0
-        )
         let cardano = try Cardano(
-            info: info,
+            info: .testnet,
             addresses: SimpleAddressManager(),
             utxos: NonCachingUtxoProvider(),
             signer: TestSigner(),

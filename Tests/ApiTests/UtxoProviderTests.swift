@@ -96,15 +96,8 @@ final class UtxoProviderTests: XCTestCase {
     
     func testGetForAddresses() throws {
         let success = expectation(description: "success")
-        let info = NetworkApiInfo(
-            networkID: NetworkInfo.testnet.network_id,
-            linearFee: try LinearFee(coefficient: 0, constant: 0),
-            minimumUtxoVal: 0,
-            poolDeposit: 0,
-            keyDeposit: 0
-        )
         let cardano = try Cardano(
-            info: info,
+            info: .testnet,
             addresses: SimpleAddressManager(),
             utxos: NonCachingUtxoProvider(),
             signer: TestSigner(),
@@ -121,15 +114,8 @@ final class UtxoProviderTests: XCTestCase {
     
     func testGetForTransaction() throws {
         let success = expectation(description: "success")
-        let info = NetworkApiInfo(
-            networkID: NetworkInfo.testnet.network_id,
-            linearFee: try LinearFee(coefficient: 0, constant: 0),
-            minimumUtxoVal: 0,
-            poolDeposit: 0,
-            keyDeposit: 0
-        )
         let cardano = try Cardano(
-            info: info,
+            info: .testnet,
             addresses: SimpleAddressManager(),
             utxos: NonCachingUtxoProvider(),
             signer: TestSigner(),

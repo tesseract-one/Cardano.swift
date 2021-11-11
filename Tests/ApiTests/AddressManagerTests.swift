@@ -111,15 +111,8 @@ final class AddressManagerTests: XCTestCase {
             .processInfo
             .environment["AddressManagerTests.testFetchOnTestnet.blockfrostProjectId"]!
         let fetchSuccessful = expectation(description: "Fetch successful")
-        let info = NetworkApiInfo(
-            networkID: NetworkInfo.testnet.network_id,
-            linearFee: try LinearFee(coefficient: 0, constant: 0),
-            minimumUtxoVal: 0,
-            poolDeposit: 0,
-            keyDeposit: 0
-        )
         let cardano = try Cardano(
-            info: info,
+            info: .testnet,
             addresses: SimpleAddressManager(),
             utxos: NonCachingUtxoProvider(),
             signer: TestSigner(),
@@ -149,15 +142,8 @@ final class AddressManagerTests: XCTestCase {
     
     func testAccounts() throws {
         let success = expectation(description: "success")
-        let info = NetworkApiInfo(
-            networkID: NetworkInfo.testnet.network_id,
-            linearFee: try LinearFee(coefficient: 0, constant: 0),
-            minimumUtxoVal: 0,
-            poolDeposit: 0,
-            keyDeposit: 0
-        )
         let cardano = try Cardano(
-            info: info,
+            info: .testnet,
             addresses: SimpleAddressManager(),
             utxos: NonCachingUtxoProvider(),
             signer: TestSignerAccounts(),
@@ -173,15 +159,8 @@ final class AddressManagerTests: XCTestCase {
     
     func testNew() throws {
         let success = expectation(description: "success")
-        let info = NetworkApiInfo(
-            networkID: NetworkInfo.testnet.network_id,
-            linearFee: try LinearFee(coefficient: 0, constant: 0),
-            minimumUtxoVal: 0,
-            poolDeposit: 0,
-            keyDeposit: 0
-        )
         let cardano = try Cardano(
-            info: info,
+            info: .testnet,
             addresses: SimpleAddressManager(),
             utxos: NonCachingUtxoProvider(),
             signer: TestSignerAccounts(),
@@ -205,15 +184,8 @@ final class AddressManagerTests: XCTestCase {
     
     func testGetCached() throws {
         let success = expectation(description: "success")
-        let info = NetworkApiInfo(
-            networkID: NetworkInfo.testnet.network_id,
-            linearFee: try LinearFee(coefficient: 0, constant: 0),
-            minimumUtxoVal: 0,
-            poolDeposit: 0,
-            keyDeposit: 0
-        )
         let cardano = try Cardano(
-            info: info,
+            info: .testnet,
             addresses: SimpleAddressManager(),
             utxos: NonCachingUtxoProvider(),
             signer: TestSignerAccounts(),
@@ -240,15 +212,8 @@ final class AddressManagerTests: XCTestCase {
     
     func testGet() throws {
         let success = expectation(description: "success")
-        let info = NetworkApiInfo(
-            networkID: NetworkInfo.testnet.network_id,
-            linearFee: try LinearFee(coefficient: 0, constant: 0),
-            minimumUtxoVal: 0,
-            poolDeposit: 0,
-            keyDeposit: 0
-        )
         let cardano = try Cardano(
-            info: info,
+            info: .testnet,
             addresses: SimpleAddressManager(),
             utxos: NonCachingUtxoProvider(),
             signer: TestSignerAccounts(),
@@ -270,15 +235,8 @@ final class AddressManagerTests: XCTestCase {
     
     func testFetch() throws {
         let success = expectation(description: "success")
-        let info = NetworkApiInfo(
-            networkID: NetworkInfo.testnet.network_id,
-            linearFee: try LinearFee(coefficient: 0, constant: 0),
-            minimumUtxoVal: 0,
-            poolDeposit: 0,
-            keyDeposit: 0
-        )
         let cardano = try Cardano(
-            info: info,
+            info: .testnet,
             addresses: SimpleAddressManager(),
             utxos: NonCachingUtxoProvider(),
             signer: TestSignerAccounts(),
@@ -306,15 +264,8 @@ final class AddressManagerTests: XCTestCase {
     
     func testExtended() throws {
         let success = expectation(description: "success")
-        let info = NetworkApiInfo(
-            networkID: NetworkInfo.testnet.network_id,
-            linearFee: try LinearFee(coefficient: 0, constant: 0),
-            minimumUtxoVal: 0,
-            poolDeposit: 0,
-            keyDeposit: 0
-        )
         let cardano = try Cardano(
-            info: info,
+            info: .testnet,
             addresses: SimpleAddressManager(),
             utxos: NonCachingUtxoProvider(),
             signer: TestSignerAccounts(),
