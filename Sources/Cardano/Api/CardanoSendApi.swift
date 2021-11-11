@@ -35,61 +35,25 @@ public struct CardanoSendApi: CardanoApi {
     }
     
     private func getUtxos(iterator: UtxoProviderAsyncIterator,
+                          to: Address,
+                          amount: UInt64,
+                          change: Address,
                           all: [UTXO],
-                          currentAmount: UInt64,
-                          finalAmount: UInt64,
-                          _ cb: @escaping (Result<[UTXO], Error>) -> Void) {
+                          _ cb: @escaping (Result<TransactionBuilder, Error>) -> Void) {
         iterator.next { (res, iterator) in
             switch res {
             case .success(let utxosResult):
+                var notEnoughUtxos: Error?
                 var utxos = [UTXO]()
-                var currentAmount = currentAmount
-                for utxo in utxosResult {
-                    utxos.append(utxo)
-                    currentAmount += utxo.value.coin
-                    guard currentAmount < finalAmount else {
-                        cb(.success(all + utxos))
-                        return
-                    }
-                }
-                guard let iterator = iterator else {
-                    cb(.success(all + utxos))
-                    return
-                }
-                getUtxos(
-                    iterator: iterator,
-                    all: all + utxos,
-                    currentAmount: currentAmount,
-                    finalAmount: finalAmount,
-                    cb
-                )
-            case .failure(let error):
-                cb(.failure(error))
-            }
-        }
-    }
-    
-    public func ada(to: Address,
-                    amount: UInt64,
-                    from: [Address],
-                    change: Address,
-                    _ cb: @escaping ApiCallback<String>) {
-        do {
-            var transactionBuilder = try TransactionBuilder(
-                linearFee: cardano.info.linearFee,
-                minimumUtxoVal: cardano.info.minimumUtxoVal,
-                poolDeposit: cardano.info.poolDeposit,
-                keyDeposit: cardano.info.keyDeposit
-            )
-            getUtxos(
-                iterator: cardano.utxos.get(for: from, asset: nil),
-                all: [],
-                currentAmount: 0,
-                finalAmount: amount
-            ) { res in
-                switch res {
-                case .success(let utxos):
-                    do {
+                do {
+                    for utxo in utxosResult {
+                        utxos.append(utxo)
+                        var transactionBuilder = try TransactionBuilder(
+                            linearFee: cardano.info.linearFee,
+                            minimumUtxoVal: cardano.info.minimumUtxoVal,
+                            poolDeposit: cardano.info.poolDeposit,
+                            keyDeposit: cardano.info.keyDeposit
+                        )
                         try utxos.forEach { utxo in
                             try transactionBuilder.addInput(
                                 address: utxo.address,
@@ -103,30 +67,63 @@ public struct CardanoSendApi: CardanoApi {
                         try transactionBuilder.addOutput(
                             output: TransactionOutput(address: to, amount: Value(coin: amount))
                         )
-                        let _ = try transactionBuilder.addChangeIfNeeded(address: change)
-                        let transactionBody = try transactionBuilder.build()
-                        let extendedTransaction = ExtendedTransaction(
-                            tx: transactionBody,
-                            addresses: try cardano.addresses.extended(addresses: from),
-                            metadata: nil
-                        )
-                        cardano.signer.sign(tx: extendedTransaction) { res in
-                            switch res {
-                            case .success(let transaction):
-                                cardano.tx.submit(tx: transaction, cb)
-                            case .failure(let error):
-                                cb(.failure(error))
-                            }
+                        do {
+                            let _ = try transactionBuilder.addChangeIfNeeded(address: change)
+                            cb(.success(transactionBuilder))
+                            return
+                        } catch {
+                            notEnoughUtxos = error
                         }
-                    } catch {
-                        cb(.failure(error))
                     }
-                case .failure(let error):
+                } catch {
                     cb(.failure(error))
                 }
+                guard let iterator = iterator else {
+                    cb(.failure(notEnoughUtxos!))
+                    return
+                }
+                getUtxos(iterator: iterator, to: to, amount: amount, change: change, all: all + utxos, cb)
+            case .failure(let error):
+                cb(.failure(error))
             }
-        } catch {
-            cb(.failure(error))
+        }
+    }
+    
+    public func ada(to: Address,
+                    amount: UInt64,
+                    from: [Address],
+                    change: Address,
+                    _ cb: @escaping ApiCallback<String>) {
+        getUtxos(
+            iterator: cardano.utxos.get(for: from, asset: nil),
+            to: to,
+            amount: amount,
+            change: change,
+            all: []
+        ) { res in
+            switch res {
+            case .success(let transactionBuilder):
+                do {
+                    let transactionBody = try transactionBuilder.build()
+                    let extendedTransaction = ExtendedTransaction(
+                        tx: transactionBody,
+                        addresses: try cardano.addresses.extended(addresses: from),
+                        metadata: nil
+                    )
+                    cardano.signer.sign(tx: extendedTransaction) { res in
+                        switch res {
+                        case .success(let transaction):
+                            cardano.tx.submit(tx: transaction, cb)
+                        case .failure(let error):
+                            cb(.failure(error))
+                        }
+                    }
+                } catch {
+                    cb(.failure(error))
+                }
+            case .failure(let error):
+                cb(.failure(error))
+            }
         }
     }
 }
