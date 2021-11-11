@@ -141,7 +141,16 @@ public struct BlockfrostNetworkProvider: NetworkProvider {
     public func submit(tx: Transaction,
                        _ cb: @escaping (Result<String, Error>) -> Void) {
         do {
-            let _ = transactionsApi.submitTransaction(transaction: try tx.bytes(), completion: cb)
+            let _ = transactionsApi.submitTransaction(transaction: try tx.bytes()) { res in
+                switch res {
+                case .success(let hash):
+                    cb(.success(hash.trimmingCharacters(in: ["\""])))
+                case .failure(let error):
+                    self.config.apiResponseQueue.async {
+                        cb(.failure(error))
+                    }
+                }
+            }
         } catch {
             self.config.apiResponseQueue.async {
                 cb(.failure(error))
