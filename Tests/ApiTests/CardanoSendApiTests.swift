@@ -185,19 +185,26 @@ final class CardanoSendApiTests: XCTestCase {
             let to = addresses.count < 100
                 ? try! cardano.addresses.new(for: account, change: false)
                 : addresses.randomElement()!
-            let amount1: UInt64 = 10000000
+            let amountSent: UInt64 = 10000000
             let change = try! cardano.addresses.new(for: account, change: true)
-            cardano.send.ada(to: to, amount: amount1, from: [addresses.last!], change: change) { res in
-                let transactionHash = try! res.get()
-                self.getTransaction(cardano: cardano,
-                                    transactionHash: transactionHash) { chainTransaction in
-                    let amount2 = try! Value(
-                        blockfrost: chainTransaction.outputAmount.map {
-                            (unit: $0.unit, quantity: $0.quantity)
+            cardano.balance.ada(in: addresses.last!) { res in
+                let balanceFrom = try! res.get()
+                cardano.send.ada(to: to, amount: amountSent, from: [addresses.last!], change: change) { res in
+                    let transactionHash = try! res.get()
+                    self.getTransaction(cardano: cardano,
+                                        transactionHash: transactionHash) { chainTransaction in
+                        let outputAmount = try! Value(
+                            blockfrost: chainTransaction.outputAmount.map {
+                                (unit: $0.unit, quantity: $0.quantity)
+                            }
+                        ).coin
+                        XCTAssertEqual(outputAmount + UInt64(chainTransaction.fees)!, balanceFrom)
+                        cardano.balance.ada(in: to) { res in
+                            let balanceTo = try! res.get()
+                            XCTAssertEqual(balanceTo, amountSent)
+                            sent.fulfill()
                         }
-                    ).coin
-                    XCTAssertEqual(amount1, amount2)
-                    sent.fulfill()
+                    }
                 }
             }
         }
