@@ -26,13 +26,29 @@ public struct BlockfrostNetworkProvider: NetworkProvider {
                            _ cb: @escaping (Result<UInt64, Error>) -> Void) {
         do {
             let _ = addressesApi.getAddress(address: try address.bech32()) { res in
-                cb(res.flatMap { address in
-                    Result {
+                switch res {
+                case .success(let address):
+                    cb(Result {
                         try Value(blockfrost: address.amount.map {
                             (unit: $0.unit, quantity: $0.quantity)
                         }).coin
+                    })
+                case .failure(let error):
+                    guard let error = error as? ErrorResponse else {
+                        cb(.failure(error))
+                        return
                     }
-                })
+                    switch error {
+                    case .errorStatus(let int, _, _, _):
+                        guard int == 404 else {
+                            cb(.failure(error))
+                            return
+                        }
+                        cb(.success(0))
+                    default:
+                        cb(.failure(error))
+                    }
+                }
             }
         } catch {
             self.config.apiResponseQueue.async {

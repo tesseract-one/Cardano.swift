@@ -186,10 +186,9 @@ final class CardanoSendApiTests: XCTestCase {
                 ? try! cardano.addresses.new(for: account, change: false)
                 : addresses.randomElement()!
             let amountSent: UInt64 = 10000000
-            let change = try! cardano.addresses.new(for: account, change: true)
-            cardano.balance.ada(in: addresses.last!) { res in
+            cardano.balance.ada(in: account) { res in
                 let balanceFrom = try! res.get()
-                cardano.send.ada(to: to, amount: amountSent, from: [addresses.last!], change: change) { res in
+                cardano.send.ada(to: to, amount: amountSent, from: account) { res in
                     let transactionHash = try! res.get()
                     self.getTransaction(cardano: cardano,
                                         transactionHash: transactionHash) { chainTransaction in
