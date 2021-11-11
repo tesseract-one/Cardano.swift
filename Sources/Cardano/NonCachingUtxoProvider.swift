@@ -20,7 +20,7 @@ public class NonCachingUtxoProvider: UtxoProvider, CardanoBootstrapAware {
                     asset: (PolicyID, AssetName)?) -> UtxoProviderAsyncIterator {
         NonCachingUtxoProviderAsyncIterator(networkProvider: cardano.network,
                                             addresses: addresses,
-                                            page: 0)
+                                            page: 1)
     }
     
     public func get(for transaction: TransactionHash,
