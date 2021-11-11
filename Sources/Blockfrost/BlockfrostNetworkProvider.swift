@@ -64,7 +64,6 @@ public struct BlockfrostNetworkProvider: NetworkProvider {
                 case .success(let details):
                     cb(.success(details.txCount))
                 case .failure(let error):
-                    print(error)
                     guard let error = error as? ErrorResponse else {
                         cb(.failure(error))
                         return
@@ -113,10 +112,25 @@ public struct BlockfrostNetworkProvider: NetworkProvider {
                 address: b32,
                 page: page
             ) { res in
-                let result = res.flatMap { res in
-                    Result { try res.map { try UTXO(address: address, blockfrost: $0) } }
+                switch res {
+                case .success(let utxos):
+                    mapped(Result { try utxos.map { try UTXO(address: address, blockfrost: $0) } })
+                case .failure(let error):
+                    guard let error = error as? ErrorResponse else {
+                        mapped(.failure(error))
+                        return
+                    }
+                    switch error {
+                    case .errorStatus(let int, _, _, _):
+                        guard int == 404 else {
+                            cb(.failure(error))
+                            return
+                        }
+                        mapped(.success([]))
+                    default:
+                        mapped(.failure(error))
+                    }
                 }
-                mapped(result)
             }
         }.exec { (res: Result<[[UTXO]], Error>) in
             cb(res.map { utxo in utxo.flatMap { $0 } })
