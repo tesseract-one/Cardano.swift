@@ -96,12 +96,20 @@ final class AddressManagerTests: XCTestCase {
         func submit(tx: Transaction,
                     _ cb: @escaping (Result<String, Error>) -> Void) {}
     }
-
+    
     func testFetchOnTestnet() throws {
-        let testAddresses = ProcessInfo.processInfo
-            .environment["AddressManagerTests.testFetch.testAddresses"]!
+        let testAddresses = ProcessInfo
+            .processInfo
+            .environment["AddressManagerTests.testFetchOnTestnet.testAddresses"]!
             .components(separatedBy: "\n")
-        let publicKey = try Bip32PublicKey(bech32: "")
+        let testPublicKey = try Bip32PublicKey(
+            bech32: ProcessInfo
+                .processInfo
+                .environment["AddressManagerTests.testFetchOnTestnet.testPublicKey"]!
+        )
+        let blockfrostProjectId = ProcessInfo
+            .processInfo
+            .environment["AddressManagerTests.testFetchOnTestnet.blockfrostProjectId"]!
         let fetchSuccessful = expectation(description: "Fetch successful")
         let info = NetworkApiInfo(
             networkID: NetworkInfo.testnet.network_id,
@@ -116,10 +124,11 @@ final class AddressManagerTests: XCTestCase {
             utxos: NonCachingUtxoProvider(),
             signer: TestSigner(),
             network: BlockfrostNetworkProvider(config: BlockfrostConfig(
-                basePath: "https://cardano-testnet.blockfrost.io/api/v0"
+                basePath: "https://cardano-testnet.blockfrost.io/api/v0",
+                projectId: blockfrostProjectId
             ))
         )
-        let account = Account(publicKey: publicKey, index: 0)
+        let account = Account(publicKey: testPublicKey, index: 0)
         cardano.addresses.fetch(for: [account]) { res in
             try! res.get()
             let addresses = try! cardano.addresses.get(cached: account)

@@ -60,7 +60,26 @@ public struct BlockfrostNetworkProvider: NetworkProvider {
                                     _ cb: @escaping (Result<Int, Error>) -> Void) {
         do {
             let _ = addressesApi.getAddressDetails(address: try address.bech32()) { res in
-                cb(res.map { $0.txCount })
+                switch res {
+                case .success(let details):
+                    cb(.success(details.txCount))
+                case .failure(let error):
+                    print(error)
+                    guard let error = error as? ErrorResponse else {
+                        cb(.failure(error))
+                        return
+                    }
+                    switch error {
+                    case .errorStatus(let int, _, _, _):
+                        guard int == 404 else {
+                            cb(.failure(error))
+                            return
+                        }
+                        cb(.success(0))
+                    default:
+                        cb(.failure(error))
+                    }
+                }
             }
         } catch {
             self.config.apiResponseQueue.async {
