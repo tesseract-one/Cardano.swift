@@ -61,6 +61,8 @@ final class CardanoSendApiTests: XCTestCase {
         metadata: nil
     )
     
+    private let dispatchQueue = DispatchQueue(label: "CardanoSendApiTests.Async.Queue", target: .global())
+    
     private enum TestError: Error {
         case error
     }
@@ -146,6 +148,20 @@ final class CardanoSendApiTests: XCTestCase {
         }
     }
     
+    private func getTransaction(cardano: Cardano,
+                                transactionHash: String,
+                                _ cb: @escaping (ChainTransaction) -> Void) {
+        cardano.tx.get(hash: transactionHash) { res in
+            guard let chainTransaction = try! res.get() else {
+                self.dispatchQueue.asyncAfter(deadline: .now() + 10) {
+                    self.getTransaction(cardano: cardano, transactionHash: transactionHash, cb)
+                }
+                return
+            }
+            cb(chainTransaction)
+        }
+    }
+    
     func testSendAdaOnTestnet() throws {
         let sent = expectation(description: "Ada sent")
         let keychain = try Keychain(
@@ -170,10 +186,11 @@ final class CardanoSendApiTests: XCTestCase {
                 ? try! cardano.addresses.new(for: account, change: false)
                 : addresses.randomElement()!
             let amount1: UInt64 = 10000000
-            cardano.send.ada(to: to, amount: amount1, from: account) { res in
+            let change = try! cardano.addresses.new(for: account, change: true)
+            cardano.send.ada(to: to, amount: amount1, from: [addresses.last!], change: change) { res in
                 let transactionHash = try! res.get()
-                cardano.tx.get(hash: transactionHash) { res in
-                    let chainTransaction = try! res.get()!
+                self.getTransaction(cardano: cardano,
+                                    transactionHash: transactionHash) { chainTransaction in
                     let amount2 = try! Value(
                         blockfrost: chainTransaction.outputAmount.map {
                             (unit: $0.unit, quantity: $0.quantity)
@@ -184,7 +201,7 @@ final class CardanoSendApiTests: XCTestCase {
                 }
             }
         }
-        wait(for: [sent], timeout: 10)
+        wait(for: [sent], timeout: 100)
     }
     
     func testSendAdaFromAccount() throws {
