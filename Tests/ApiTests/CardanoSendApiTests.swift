@@ -147,16 +147,9 @@ final class CardanoSendApiTests: XCTestCase {
     }
     
     func testSendAdaOnTestnet() throws {
-        let testMnemonic = ProcessInfo
-            .processInfo
-            .environment["SendApiTests.testSendAdaOnTestnet.testMnemonic"]!
-            .components(separatedBy: " ")
-        let blockfrostProjectId = ProcessInfo
-            .processInfo
-            .environment["SendApiTests.testSendAdaOnTestnet.blockfrostProjectId"]!
         let sent = expectation(description: "Ada sent")
         let keychain = try Keychain(
-            mnemonic: testMnemonic,
+            mnemonic: TestEnvironment.instance.mnemonic,
             password: Data()
         )
         let cardano = try Cardano(
@@ -166,7 +159,7 @@ final class CardanoSendApiTests: XCTestCase {
             signer: keychain,
             network: BlockfrostNetworkProvider(config: BlockfrostConfig(
                 basePath: "https://cardano-testnet.blockfrost.io/api/v0",
-                projectId: blockfrostProjectId
+                projectId: TestEnvironment.instance.blockfrostProjectId
             ))
         )
         let account = try keychain.addAccount(index: 0)
