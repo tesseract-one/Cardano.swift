@@ -31,7 +31,7 @@ public struct NetworkApiInfo {
         networkID: 0,
         protocolMagic: 1097911063,
         linearFee: LinearFee(constant: 155381, coefficient: 44),
-        minimumUtxoVal: 1000000,
+        minimumUtxoVal: 34482,
         poolDeposit: 500000000,
         keyDeposit: 2000000
     )
