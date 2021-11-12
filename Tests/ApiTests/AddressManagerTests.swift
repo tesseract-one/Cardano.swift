@@ -44,6 +44,8 @@ final class AddressManagerTests: XCTestCase {
     }
     
     private struct NetworkProviderMockTestNew: NetworkProvider {
+        func getSlotNumber(_ cb: @escaping (Result<Int?, Error>) -> Void) {}
+        
         func getBalance(for address: Address, _ cb: @escaping (Result<UInt64, Error>) -> Void) {}
         
         func getTransactions(for address: Address,
@@ -69,6 +71,8 @@ final class AddressManagerTests: XCTestCase {
     }
     
     private struct NetworkProviderMock: NetworkProvider {
+        func getSlotNumber(_ cb: @escaping (Result<Int?, Error>) -> Void) {}
+        
         func getBalance(for address: Address, _ cb: @escaping (Result<UInt64, Error>) -> Void) {}
         
         func getTransactions(for address: Address,

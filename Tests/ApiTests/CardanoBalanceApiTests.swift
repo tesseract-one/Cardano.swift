@@ -83,6 +83,8 @@ final class CardanoBalanceApiTests: XCTestCase {
     }
     
     private struct NetworkProviderMock: NetworkProvider {
+        func getSlotNumber(_ cb: @escaping (Result<Int?, Error>) -> Void) {}
+        
         func getBalance(for address: Address, _ cb: @escaping (Result<UInt64, Error>) -> Void) {
             guard [testAddress, testChangeAddress].contains(address) else {
                 cb(.failure(TestError.error(from: "getBalance")))

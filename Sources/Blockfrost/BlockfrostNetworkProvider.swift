@@ -15,11 +15,21 @@ public struct BlockfrostNetworkProvider: NetworkProvider {
     private let config: BlockfrostConfig
     private let addressesApi: CardanoAddressesAPI
     private let transactionsApi: CardanoTransactionsAPI
+    private let blocksApi: CardanoBlocksAPI
     
     public init(config: BlockfrostConfig) {
         self.config = config
         addressesApi = CardanoAddressesAPI(config: config)
         transactionsApi = CardanoTransactionsAPI(config: config)
+        blocksApi = CardanoBlocksAPI(config: config)
+    }
+    
+    public func getSlotNumber(_ cb: @escaping (Result<Int?, Error>) -> Void) {
+        let _ = blocksApi.getLatestBlock() { res in
+            cb(res.map { block in
+                block.slot
+            })
+        }
     }
     
     public func getBalance(for address: Address,

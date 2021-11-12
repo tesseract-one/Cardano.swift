@@ -38,6 +38,8 @@ public struct CardanoSendApi: CardanoApi {
                           to: Address,
                           amount: UInt64,
                           change: Address,
+                          slot: Int?,
+                          maxSlots: UInt32,
                           all: [UTXO],
                           _ cb: @escaping (Result<TransactionBuilder, Error>) -> Void) {
         iterator.next { (res, iterator) in
@@ -67,6 +69,9 @@ public struct CardanoSendApi: CardanoApi {
                         try transactionBuilder.addOutput(
                             output: TransactionOutput(address: to, amount: Value(coin: amount))
                         )
+                        if let slot = slot {
+                            transactionBuilder.ttl = UInt32(slot) + maxSlots
+                        }
                         do {
                             let _ = try transactionBuilder.addChangeIfNeeded(address: change)
                             cb(.success(transactionBuilder))
@@ -82,7 +87,16 @@ public struct CardanoSendApi: CardanoApi {
                     cb(.failure(notEnoughUtxos!))
                     return
                 }
-                getUtxos(iterator: iterator, to: to, amount: amount, change: change, all: all + utxos, cb)
+                getUtxos(
+                    iterator: iterator,
+                    to: to,
+                    amount: amount,
+                    change: change,
+                    slot: slot,
+                    maxSlots: maxSlots,
+                    all: all + utxos,
+                    cb
+                )
             case .failure(let error):
                 cb(.failure(error))
             }
@@ -93,33 +107,43 @@ public struct CardanoSendApi: CardanoApi {
                     amount: UInt64,
                     from: [Address],
                     change: Address,
+                    maxSlots: UInt32 = 200,
                     _ cb: @escaping ApiCallback<String>) {
-        getUtxos(
-            iterator: cardano.utxos.get(for: from, asset: nil),
-            to: to,
-            amount: amount,
-            change: change,
-            all: []
-        ) { res in
+        cardano.network.getSlotNumber { res in
             switch res {
-            case .success(let transactionBuilder):
-                do {
-                    let transactionBody = try transactionBuilder.build()
-                    let extendedTransaction = ExtendedTransaction(
-                        tx: transactionBody,
-                        addresses: try cardano.addresses.extended(addresses: from),
-                        metadata: nil
-                    )
-                    cardano.signer.sign(tx: extendedTransaction) { res in
-                        switch res {
-                        case .success(let transaction):
-                            cardano.tx.submit(tx: transaction, cb)
-                        case .failure(let error):
+            case .success(let slot):
+                getUtxos(
+                    iterator: cardano.utxos.get(for: from, asset: nil),
+                    to: to,
+                    amount: amount,
+                    change: change,
+                    slot: slot,
+                    maxSlots: maxSlots,
+                    all: []
+                ) { res in
+                    switch res {
+                    case .success(let transactionBuilder):
+                        do {
+                            let transactionBody = try transactionBuilder.build()
+                            let extendedTransaction = ExtendedTransaction(
+                                tx: transactionBody,
+                                addresses: try cardano.addresses.extended(addresses: from),
+                                metadata: nil
+                            )
+                            cardano.signer.sign(tx: extendedTransaction) { res in
+                                switch res {
+                                case .success(let transaction):
+                                    cardano.tx.submit(tx: transaction, cb)
+                                case .failure(let error):
+                                    cb(.failure(error))
+                                }
+                            }
+                        } catch {
                             cb(.failure(error))
                         }
+                    case .failure(let error):
+                        cb(.failure(error))
                     }
-                } catch {
-                    cb(.failure(error))
                 }
             case .failure(let error):
                 cb(.failure(error))
