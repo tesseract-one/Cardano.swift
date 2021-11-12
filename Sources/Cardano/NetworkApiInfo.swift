@@ -18,7 +18,7 @@ public struct NetworkApiInfo {
     public let poolDeposit: UInt64
     public let keyDeposit: UInt64
     
-    public static let mainnet = Self(
+    public static let shelley = Self(
         networkID: 1,
         protocolMagic: 764824073,
         linearFee: LinearFee(constant: 155381, coefficient: 44),
@@ -27,7 +27,7 @@ public struct NetworkApiInfo {
         keyDeposit: 2000000
     )
     
-    public static let testnet = Self(
+    public static let alonzo = Self(
         networkID: 0,
         protocolMagic: 1097911063,
         linearFee: LinearFee(constant: 155381, coefficient: 44),
@@ -35,4 +35,7 @@ public struct NetworkApiInfo {
         poolDeposit: 500000000,
         keyDeposit: 2000000
     )
+    
+    public static let mainnet = shelley
+    public static let testnet = alonzo
 }
