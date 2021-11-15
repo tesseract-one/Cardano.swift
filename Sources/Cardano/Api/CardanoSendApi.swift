@@ -131,7 +131,7 @@ public struct CardanoSendApi: CardanoApi {
                             let extendedTransaction = ExtendedTransaction(
                                 tx: transactionBody,
                                 addresses: try cardano.addresses.extended(addresses: from),
-                                metadata: nil
+                                auxiliaryData: nil
                             )
                             cardano.signer.sign(tx: extendedTransaction) { res in
                                 switch res {

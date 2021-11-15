@@ -12,7 +12,7 @@ use crate::ptr::*;
 use crate::stake_credential::{Ed25519KeyHash, ScriptHash};
 use crate::transaction_body::{Mint, TransactionBody};
 use crate::transaction_input::TransactionInput;
-use crate::transaction_metadata::TransactionMetadata;
+use crate::transaction_metadata::AuxiliaryData;
 use crate::transaction_output::{TransactionOutput, TransactionOutputs};
 use crate::value::Value;
 use crate::withdrawals::Withdrawals;
@@ -20,8 +20,7 @@ use cardano_serialization_lib::{
   address::{Address as RAddress, ByronAddress as RByronAddress},
   crypto::{Ed25519KeyHash as REd25519KeyHash, ScriptHash as RScriptHash},
   fees::LinearFee as RLinearFee,
-  // TODO rename
-  metadata::AuxiliaryData as RTransactionMetadata,
+  metadata::AuxiliaryData as RAuxiliaryData,
   tx_builder::TransactionBuilder as RTransactionBuilder,
   utils::{from_bignum, to_bignum, BigNum as RBigNum, Coin as RCoin, Value as RValue},
   Certificates as RCertificates,
@@ -187,6 +186,8 @@ pub struct TransactionBuilder {
   minimum_utxo_val: BigNum,
   pool_deposit: BigNum,
   key_deposit: BigNum,
+  max_value_size: u32,
+  max_tx_size: u32,
   fee_algo: LinearFee,
   inputs: CArray<TxBuilderInput>,
   outputs: TransactionOutputs,
@@ -194,7 +195,7 @@ pub struct TransactionBuilder {
   ttl: COption<Slot>,
   certs: COption<Certificates>,
   withdrawals: COption<Withdrawals>,
-  metadata: COption<TransactionMetadata>,
+  auxiliary_data: COption<AuxiliaryData>,
   validity_start_interval: COption<Slot>,
   input_types: MockWitnessSet,
   mint: COption<Mint>,
@@ -206,7 +207,7 @@ impl Free for TransactionBuilder {
     self.outputs.free();
     self.certs.free();
     self.withdrawals.free();
-    self.metadata.free();
+    self.auxiliary_data.free();
     self.input_types.free();
   }
 }
@@ -216,6 +217,8 @@ pub struct TTransactionBuilder {
   minimum_utxo_val: RBigNum,
   pool_deposit: RBigNum,
   key_deposit: RBigNum,
+  max_value_size: u32,
+  max_tx_size: u32,
   fee_algo: RLinearFee,
   inputs: Vec<TTxBuilderInput>,
   outputs: RTransactionOutputs,
@@ -223,7 +226,7 @@ pub struct TTransactionBuilder {
   ttl: Option<Slot>,
   certs: Option<RCertificates>,
   withdrawals: Option<RWithdrawals>,
-  metadata: Option<RTransactionMetadata>,
+  auxiliary_data: Option<RAuxiliaryData>,
   validity_start_interval: Option<Slot>,
   input_types: TMockWitnessSet,
   mint: Option<RMint>,
@@ -249,8 +252,8 @@ impl TryFrom<TransactionBuilder> for TTransactionBuilder {
         withdrawals.map(|wls| wls.try_into()).transpose()
       })
       .zip({
-        let metadata: Option<TransactionMetadata> = tb.metadata.into();
-        metadata.map(|metadata| metadata.try_into()).transpose()
+        let auxiliary_data: Option<AuxiliaryData> = tb.auxiliary_data.into();
+        auxiliary_data.map(|auxiliary_data| auxiliary_data.try_into()).transpose()
       })
       .zip(tb.input_types.try_into())
       .zip({
@@ -258,12 +261,14 @@ impl TryFrom<TransactionBuilder> for TTransactionBuilder {
         mint.map(|mint| mint.try_into()).transpose()
       })
       .map(
-        |((((((inputs, outputs), certs), withdrawals), metadata), input_types), mint)| {
+        |((((((inputs, outputs), certs), withdrawals), auxiliary_data), input_types), mint)| {
           let fee: Option<Coin> = tb.fee.into();
           Self {
             minimum_utxo_val: to_bignum(tb.minimum_utxo_val),
             pool_deposit: to_bignum(tb.pool_deposit),
             key_deposit: to_bignum(tb.key_deposit),
+            max_value_size: tb.max_value_size,
+            max_tx_size: tb.max_tx_size,
             fee_algo: tb.fee_algo.into(),
             inputs,
             outputs,
@@ -271,7 +276,7 @@ impl TryFrom<TransactionBuilder> for TTransactionBuilder {
             ttl: tb.ttl.into(),
             certs: certs.into(),
             withdrawals: withdrawals.into(),
-            metadata: metadata.into(),
+            auxiliary_data: auxiliary_data.into(),
             validity_start_interval: tb.validity_start_interval.into(),
             input_types,
             mint: mint.into(),
@@ -288,6 +293,8 @@ impl TryFrom<TTransactionBuilder> for TransactionBuilder {
     let minimum_utxo_val = from_bignum(&tb.minimum_utxo_val);
     let pool_deposit = from_bignum(&tb.pool_deposit);
     let key_deposit = from_bignum(&tb.key_deposit);
+    let max_value_size = tb.max_value_size;
+    let max_tx_size = tb.max_tx_size;
     let fee_algo = tb.fee_algo.into();
     let fee = tb.fee.map(|fee| from_bignum(&fee)).into();
     let ttl = tb.ttl.into();
@@ -299,14 +306,16 @@ impl TryFrom<TTransactionBuilder> for TransactionBuilder {
       .zip(tb.outputs.try_into())
       .zip(tb.certs.map(|certs| certs.try_into()).transpose())
       .zip(tb.withdrawals.map(|wls| wls.try_into()).transpose())
-      .zip(tb.metadata.map(|metadata| metadata.try_into()).transpose())
+      .zip(tb.auxiliary_data.map(|auxiliary_data| auxiliary_data.try_into()).transpose())
       .zip(tb.input_types.try_into())
       .zip(tb.mint.map(|mint| mint.try_into()).transpose())
       .map(
-        |((((((inputs, outputs), certs), withdrawals), metadata), input_types), mint)| Self {
+        |((((((inputs, outputs), certs), withdrawals), auxiliary_data), input_types), mint)| Self {
           minimum_utxo_val,
           pool_deposit,
           key_deposit,
+          max_value_size,
+          max_tx_size,
           fee_algo,
           inputs: inputs.into(),
           outputs,
@@ -314,7 +323,7 @@ impl TryFrom<TTransactionBuilder> for TransactionBuilder {
           ttl,
           certs: certs.into(),
           withdrawals: withdrawals.into(),
-          metadata: metadata.into(),
+          auxiliary_data: auxiliary_data.into(),
           validity_start_interval,
           input_types,
           mint: mint.into(),
@@ -327,12 +336,11 @@ impl TryFrom<TransactionBuilder> for RTransactionBuilder {
   type Error = CError;
 
   fn try_from(transaction_builder: TransactionBuilder) -> Result<Self> {
-    todo!();
-    // transaction_builder
-    //   .try_into()
-    //   .map(|transaction_builder: TTransactionBuilder| unsafe {
-    //     std::mem::transmute(transaction_builder)
-    //   })
+    transaction_builder
+      .try_into()
+      .map(|transaction_builder: TTransactionBuilder| unsafe {
+        std::mem::transmute(transaction_builder)
+      })
   }
 }
 
@@ -340,10 +348,9 @@ impl TryFrom<RTransactionBuilder> for TransactionBuilder {
   type Error = CError;
 
   fn try_from(transaction_builder: RTransactionBuilder) -> Result<Self> {
-    todo!();
-    // let transaction_builder: TTransactionBuilder =
-    //   unsafe { std::mem::transmute(transaction_builder) };
-    // transaction_builder.try_into()
+    let transaction_builder: TTransactionBuilder =
+      unsafe { std::mem::transmute(transaction_builder) };
+    transaction_builder.try_into()
   }
 }
 
@@ -467,7 +474,7 @@ pub unsafe extern "C" fn cardano_transaction_builder_fee_for_output(
     tb.try_into()
       .zip(output.try_into())
       .and_then(
-        |(mut tb, output): (RTransactionBuilder, RTransactionOutput)| {
+        |(tb, output): (RTransactionBuilder, RTransactionOutput)| {
           tb.fee_for_output(&output).into_result()
         },
       )
@@ -509,26 +516,6 @@ pub unsafe extern "C" fn cardano_transaction_builder_set_withdrawals(
       .and_then(|tb| tb.try_into())
   })
   .response(result, error)
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn cardano_transaction_builder_set_metadata(
-  tb: TransactionBuilder, metadata: TransactionMetadata, result: &mut TransactionBuilder,
-  error: &mut CError,
-) -> bool {
-  todo!();
-  // handle_exception_result(|| {
-  //   tb.try_into()
-  //     .zip(metadata.try_into())
-  //     .map(
-  //       |(mut tb, metadata): (RTransactionBuilder, RTransactionMetadata)| {
-  //         tb.set_metadata(&metadata);
-  //         tb
-  //       },
-  //     )
-  //     .and_then(|tb| tb.try_into())
-  // })
-  // .response(result, error)
 }
 
 #[no_mangle]

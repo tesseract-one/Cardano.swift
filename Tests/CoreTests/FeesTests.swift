@@ -44,7 +44,7 @@ final class FeesTests: XCTestCase {
         let signedTx = Transaction(
             body: body,
             witnessSet: w,
-            metadata: nil
+            auxiliaryData: nil
         )
         let linearFee = try LinearFee(coefficient: 500, constant: 2)
         XCTAssertEqual(
@@ -86,7 +86,7 @@ final class FeesTests: XCTestCase {
         let signedTx = Transaction(
             body: body,
             witnessSet: w,
-            metadata: nil
+            auxiliaryData: nil
         )
         let linearFee = try LinearFee(coefficient: 500, constant: 2)
         XCTAssertEqual(
@@ -145,7 +145,7 @@ final class FeesTests: XCTestCase {
         let signedTx = Transaction(
             body: body,
             witnessSet: w,
-            metadata: nil
+            auxiliaryData: nil
         )
         let linearFee = try LinearFee(coefficient: 500, constant: 2)
         XCTAssertEqual(
@@ -228,7 +228,7 @@ final class FeesTests: XCTestCase {
         let signedTx = Transaction(
             body: body,
             witnessSet: w,
-            metadata: nil
+            auxiliaryData: nil
         )
         let linearFee = try LinearFee(coefficient: 500, constant: 2)
         XCTAssertEqual(
@@ -279,7 +279,7 @@ final class FeesTests: XCTestCase {
         let signedTx = Transaction(
             body: body,
             witnessSet: w,
-            metadata: nil
+            auxiliaryData: nil
         )
         let linearFee = try LinearFee(coefficient: 500, constant: 2)
         XCTAssertEqual(

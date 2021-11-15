@@ -5,7 +5,7 @@ use crate::option::COption;
 use crate::panic::*;
 use crate::ptr::*;
 use crate::transaction_body::TransactionBody;
-use crate::transaction_metadata::TransactionMetadata;
+use crate::transaction_metadata::AuxiliaryData;
 use crate::transaction_witness_set::TransactionWitnessSet;
 use cardano_serialization_lib::{fees::min_fee, utils::from_bignum, Transaction as RTransaction};
 use std::convert::{TryFrom, TryInto};
@@ -15,14 +15,14 @@ use std::convert::{TryFrom, TryInto};
 pub struct Transaction {
   body: TransactionBody,
   witness_set: TransactionWitnessSet,
-  metadata: COption<TransactionMetadata>,
+  auxiliary_data: COption<AuxiliaryData>,
 }
 
 impl Free for Transaction {
   unsafe fn free(&mut self) {
     self.body.free();
     self.witness_set.free();
-    self.metadata.free();
+    self.auxiliary_data.free();
   }
 }
 
@@ -35,10 +35,12 @@ impl TryFrom<Transaction> for RTransaction {
       .try_into()
       .zip(transaction.witness_set.try_into())
       .zip({
-        let metadata: Option<TransactionMetadata> = transaction.metadata.into();
-        metadata.map(|metadata| metadata.try_into()).transpose()
+        let auxiliary_data: Option<AuxiliaryData> = transaction.auxiliary_data.into();
+        auxiliary_data
+          .map(|auxiliary_data| auxiliary_data.try_into())
+          .transpose()
       })
-      .map(|((body, witness_set), metadata)| Self::new(&body, &witness_set, metadata))
+      .map(|((body, witness_set), auxiliary_data)| Self::new(&body, &witness_set, auxiliary_data))
   }
 }
 
@@ -46,17 +48,21 @@ impl TryFrom<RTransaction> for Transaction {
   type Error = CError;
 
   fn try_from(transaction: RTransaction) -> Result<Self> {
-    todo!();
-    // transaction
-    //   .body()
-    //   .try_into()
-    //   .zip(transaction.witness_set().try_into())
-    //   .zip(transaction.metadata().map(|m| m.try_into()).transpose())
-    //   .map(|((body, witness_set), metadata)| Self {
-    //     body,
-    //     witness_set,
-    //     metadata: metadata.into(),
-    //   })
+    transaction
+      .body()
+      .try_into()
+      .zip(transaction.witness_set().try_into())
+      .zip(
+        transaction
+          .auxiliary_data()
+          .map(|auxiliary_data| auxiliary_data.try_into())
+          .transpose(),
+      )
+      .map(|((body, witness_set), auxiliary_data)| Self {
+        body,
+        witness_set,
+        auxiliary_data: auxiliary_data.into(),
+      })
   }
 }
 

@@ -8,10 +8,9 @@ use crate::panic::*;
 use crate::ptr::*;
 use crate::stake_credential::Ed25519KeyHash;
 use cardano_serialization_lib::{
-  // TODO rename
-  metadata::AuxiliaryData as RTransactionMetadata, NativeScript as RNativeScript,
-  NativeScriptKind, NativeScripts as RNativeScripts, ScriptAll as RScriptAll,
-  ScriptAny as RScriptAny, ScriptHashNamespace as RScriptHashNamespace, ScriptNOfK as RScriptNOfK,
+  metadata::AuxiliaryData as RAuxiliaryData, NativeScript as RNativeScript, NativeScriptKind,
+  NativeScripts as RNativeScripts, ScriptAll as RScriptAll, ScriptAny as RScriptAny,
+  ScriptHashNamespace as RScriptHashNamespace, ScriptNOfK as RScriptNOfK,
   ScriptPubkey as RScriptPubkey, TimelockExpiry as RTimelockExpiry,
   TimelockStart as RTimelockStart,
 };
@@ -391,95 +390,94 @@ impl From<RTimelockExpiry> for TimelockExpiry {
 
 #[repr(C)]
 #[derive(Copy, Clone)]
-pub struct TransactionMetadata {
-  general: GeneralTransactionMetadata,
+pub struct AuxiliaryData {
+  metadata: COption<GeneralTransactionMetadata>,
   native_scripts: COption<NativeScripts>,
 }
 
-impl Free for TransactionMetadata {
+impl Free for AuxiliaryData {
   unsafe fn free(&mut self) {
-    self.general.free();
+    self.metadata.free();
     self.native_scripts.free();
   }
 }
 
-impl TryFrom<TransactionMetadata> for RTransactionMetadata {
+impl TryFrom<AuxiliaryData> for RAuxiliaryData {
   type Error = CError;
 
-  fn try_from(transaction_metadata: TransactionMetadata) -> Result<Self> {
-    todo!();
-    // transaction_metadata
-    //   .general
-    //   .try_into()
-    //   .zip({
-    //     let native_scripts: Option<NativeScripts> = transaction_metadata.native_scripts.into();
-    //     native_scripts.map(|ns| ns.try_into()).transpose()
-    //   })
-    //   .map(|(general, native_scripts)| {
-    //     let mut transaction_metadata = Self::new(&general);
-    //     native_scripts.map(|ns| transaction_metadata.set_native_scripts(&ns));
-    //     transaction_metadata
-    //   })
+  fn try_from(auxiliary_data: AuxiliaryData) -> Result<Self> {
+    let metadata: Option<GeneralTransactionMetadata> = auxiliary_data.metadata.into();
+    metadata
+      .map(|metadata| metadata.try_into())
+      .transpose()
+      .zip({
+        let native_scripts: Option<NativeScripts> = auxiliary_data.native_scripts.into();
+        native_scripts.map(|ns| ns.try_into()).transpose()
+      })
+      .map(|(metadata, native_scripts)| {
+        let mut auxiliary_data = Self::new();
+        metadata.map(|metadata| auxiliary_data.set_metadata(&metadata));
+        native_scripts.map(|ns| auxiliary_data.set_native_scripts(&ns));
+        auxiliary_data
+      })
   }
 }
 
-impl TryFrom<RTransactionMetadata> for TransactionMetadata {
+impl TryFrom<RAuxiliaryData> for AuxiliaryData {
   type Error = CError;
 
-  fn try_from(transaction_metadata: RTransactionMetadata) -> Result<Self> {
-    todo!();
-    // transaction_metadata
-    //   .general()
-    //   .try_into()
-    //   .zip(
-    //     transaction_metadata
-    //       .native_scripts()
-    //       .map(|native_scripts| native_scripts.try_into())
-    //       .transpose(),
-    //   )
-    //   .map(|(general, native_scripts)| Self {
-    //     general,
-    //     native_scripts: native_scripts.into(),
-    //   })
+  fn try_from(auxiliary_data: RAuxiliaryData) -> Result<Self> {
+    auxiliary_data
+      .metadata()
+      .map(|metadata| metadata.try_into())
+      .transpose()
+      .zip(
+        auxiliary_data
+          .native_scripts()
+          .map(|native_scripts| native_scripts.try_into())
+          .transpose(),
+      )
+      .map(|(metadata, native_scripts)| Self {
+        metadata: metadata.into(),
+        native_scripts: native_scripts.into(),
+      })
   }
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn cardano_transaction_metadata_to_bytes(
-  transaction_metadata: TransactionMetadata, result: &mut CData, error: &mut CError,
+pub unsafe extern "C" fn cardano_auxiliary_data_to_bytes(
+  auxiliary_data: AuxiliaryData, result: &mut CData, error: &mut CError,
 ) -> bool {
   handle_exception_result(|| {
-    transaction_metadata
+    auxiliary_data
       .try_into()
-      .map(|transaction_metadata: RTransactionMetadata| transaction_metadata.to_bytes())
+      .map(|auxiliary_data: RAuxiliaryData| auxiliary_data.to_bytes())
       .map(|bytes| bytes.into())
   })
   .response(result, error)
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn cardano_transaction_metadata_from_bytes(
-  data: CData, result: &mut TransactionMetadata, error: &mut CError,
+pub unsafe extern "C" fn cardano_auxiliary_data_from_bytes(
+  data: CData, result: &mut AuxiliaryData, error: &mut CError,
 ) -> bool {
   handle_exception_result(|| {
     data
       .unowned()
-      .and_then(|bytes| RTransactionMetadata::from_bytes(bytes.to_vec()).into_result())
-      .and_then(|transaction_metadata| transaction_metadata.try_into())
+      .and_then(|bytes| RAuxiliaryData::from_bytes(bytes.to_vec()).into_result())
+      .and_then(|auxiliary_data| auxiliary_data.try_into())
   })
   .response(result, error)
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn cardano_transaction_metadata_clone(
-  transaction_metadata: TransactionMetadata, result: &mut TransactionMetadata, error: &mut CError,
+pub unsafe extern "C" fn cardano_auxiliary_data_clone(
+  auxiliary_data: AuxiliaryData, result: &mut AuxiliaryData, error: &mut CError,
 ) -> bool {
-  handle_exception(|| transaction_metadata.clone()).response(result, error)
+  handle_exception(|| auxiliary_data.clone()).response(result, error)
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn cardano_transaction_metadata_free(
-  transaction_metadata: &mut TransactionMetadata,
-) {
-  transaction_metadata.free()
+pub unsafe extern "C" fn cardano_auxiliary_data_free(auxiliary_data: &mut AuxiliaryData) {
+  auxiliary_data.free()
 }

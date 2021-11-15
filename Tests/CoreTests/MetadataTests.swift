@@ -143,18 +143,4 @@ final class MetadataTests: XCTestCase {
         let outputJson = try JsonValue(s: outputStr)
         XCTAssertEqual(inputJson, outputJson)
     }
-    
-    func testAllegraMetadata() throws {
-        let gmd = [UInt64(100): try TransactionMetadatum.newText(text: "string md")]
-        let md1 = TransactionMetadata(general: gmd)
-        let md1Deser = try TransactionMetadata(bytes: md1.bytes())
-        XCTAssertEqual(try md1.bytes(), try md1Deser.bytes())
-        var md2 = TransactionMetadata(general: gmd)
-        let scripts = [
-            NativeScript.timelockStart(TimelockStart(slot: 20))
-        ]
-        md2.nativeScripts = scripts
-        let md2Deser = try TransactionMetadata(bytes: md2.bytes())
-        XCTAssertEqual(try md2.bytes(), try md2Deser.bytes())
-    }
 }

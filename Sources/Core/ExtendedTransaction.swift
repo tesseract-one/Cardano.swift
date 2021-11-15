@@ -10,11 +10,11 @@ import Foundation
 public struct ExtendedTransaction {
     public let tx: TransactionBody
     public let addresses: [ExtendedAddress]
-    public let metadata: TransactionMetadata?
+    public let auxiliaryData: AuxiliaryData?
     
-    public init(tx: TransactionBody, addresses: [ExtendedAddress], metadata: TransactionMetadata?) {
+    public init(tx: TransactionBody, addresses: [ExtendedAddress], auxiliaryData: AuxiliaryData?) {
         self.tx = tx
         self.addresses = addresses
-        self.metadata = metadata
+        self.auxiliaryData = auxiliaryData
     }
 }

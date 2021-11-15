@@ -8,34 +8,34 @@
 import Foundation
 import CCardano
 
-extension COption_TransactionMetadata: COption {
-    typealias Tag = COption_TransactionMetadata_Tag
-    typealias Value = CCardano.TransactionMetadata
+extension COption_AuxiliaryData: COption {
+    typealias Tag = COption_AuxiliaryData_Tag
+    typealias Value = CCardano.AuxiliaryData
 
     func someTag() -> Tag {
-        Some_TransactionMetadata
+        Some_AuxiliaryData
     }
 
     func noneTag() -> Tag {
-        None_TransactionMetadata
+        None_AuxiliaryData
     }
 }
 
 public struct Transaction {
     public private(set) var body: TransactionBody
     public private(set) var witnessSet: TransactionWitnessSet
-    public private(set) var metadata: TransactionMetadata?
+    public private(set) var auxiliaryData: AuxiliaryData?
     
     init(transaction: CCardano.Transaction) {
         body = transaction.body.copied()
         witnessSet = transaction.witness_set.copied()
-        metadata = transaction.metadata.get()?.copied()
+        auxiliaryData = transaction.auxiliary_data.get()?.copied()
     }
     
-    public init(body: TransactionBody, witnessSet: TransactionWitnessSet, metadata: TransactionMetadata?) {
+    public init(body: TransactionBody, witnessSet: TransactionWitnessSet, auxiliaryData: AuxiliaryData?) {
         self.body = body
         self.witnessSet = witnessSet
-        self.metadata = metadata
+        self.auxiliaryData = auxiliaryData
     }
     
     public init(bytes: Data) throws {
@@ -58,15 +58,15 @@ public struct Transaction {
     func withCTransaction<T>(
         fn: @escaping (CCardano.Transaction) throws -> T
     ) rethrows -> T {
-        try metadata.withCOption(
-            with: { try $0.withCTransactionMetadata(fn: $1) }
-        ) { metadata in
+        try auxiliaryData.withCOption(
+            with: { try $0.withCAuxiliaryData(fn: $1) }
+        ) { auxiliaryData in
             try body.withCTransactionBody { body in
                 try witnessSet.withCTransactionWitnessSet { witnessSet in
                     try fn(CCardano.Transaction(
                         body: body,
                         witness_set: witnessSet,
-                        metadata: metadata
+                        auxiliary_data: auxiliaryData
                     ))
                 }
             }

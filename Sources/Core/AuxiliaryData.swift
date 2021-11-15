@@ -290,6 +290,19 @@ extension NativeScripts {
     }
 }
 
+extension COption_GeneralTransactionMetadata: COption {
+    typealias Tag = COption_GeneralTransactionMetadata_Tag
+    typealias Value = CCardano.GeneralTransactionMetadata
+
+    func someTag() -> Tag {
+        Some_GeneralTransactionMetadata
+    }
+
+    func noneTag() -> Tag {
+        None_GeneralTransactionMetadata
+    }
+}
+
 extension COption_NativeScripts: COption {
     typealias Tag = COption_NativeScripts_Tag
     typealias Value = CCardano.NativeScripts
@@ -303,41 +316,40 @@ extension COption_NativeScripts: COption {
     }
 }
 
-public struct TransactionMetadata {
-    public private(set) var general: GeneralTransactionMetadata
+public struct AuxiliaryData {
+    public private(set) var metadata: GeneralTransactionMetadata?
     public var nativeScripts: NativeScripts?
     
-    init(transactionMetadata: CCardano.TransactionMetadata) {
-        general = transactionMetadata.general.copiedDictionary().mapValues { $0.copied() }
-        nativeScripts = transactionMetadata.native_scripts.get()?.copied().map { $0.copied() }
+    init(auxiliaryData: CCardano.AuxiliaryData) {
+        metadata = auxiliaryData.metadata.get()?.copiedDictionary().mapValues { $0.copied() }
+        nativeScripts = auxiliaryData.native_scripts.get()?.copied().map { $0.copied() }
     }
     
-    public init(general: GeneralTransactionMetadata) {
-        self.general = general
+    public init() {
     }
     
     public init(bytes: Data) throws {
-        var transaction = try CCardano.TransactionMetadata(bytes: bytes)
+        var transaction = try CCardano.AuxiliaryData(bytes: bytes)
         self = transaction.owned()
     }
     
     public func bytes() throws -> Data {
-        try withCTransactionMetadata { try $0.bytes() }
+        try withCAuxiliaryData { try $0.bytes() }
     }
     
-    func clonedCTransactionMetadata() throws -> CCardano.TransactionMetadata {
-        try withCTransactionMetadata { try $0.clone() }
+    func clonedCAuxiliaryData() throws -> CCardano.AuxiliaryData {
+        try withCAuxiliaryData { try $0.clone() }
     }
 
-    func withCTransactionMetadata<T>(
-        fn: @escaping (CCardano.TransactionMetadata) throws -> T
+    func withCAuxiliaryData<T>(
+        fn: @escaping (CCardano.AuxiliaryData) throws -> T
     ) rethrows -> T {
-        try general.withCKVArray { general in
+        try metadata.withCOption(with: { try $0.withCKVArray(fn: $1) }) { metadata in
             try nativeScripts.withCOption(
                 with: { try $0.withCArray(fn: $1) }
             ) { nativeScripts in
-                try fn(CCardano.TransactionMetadata(
-                    general: general,
+                try fn(CCardano.AuxiliaryData(
+                    metadata: metadata,
                     native_scripts: nativeScripts
                 ))
             }
@@ -345,37 +357,37 @@ public struct TransactionMetadata {
     }
 }
 
-extension CCardano.TransactionMetadata: CPtr {
-    typealias Val = TransactionMetadata
+extension CCardano.AuxiliaryData: CPtr {
+    typealias Val = AuxiliaryData
 
-    func copied() -> TransactionMetadata {
-        TransactionMetadata(transactionMetadata: self)
+    func copied() -> AuxiliaryData {
+        AuxiliaryData(auxiliaryData: self)
     }
 
     mutating func free() {
-        cardano_transaction_metadata_free(&self)
+        cardano_auxiliary_data_free(&self)
     }
 }
 
-extension CCardano.TransactionMetadata {
+extension CCardano.AuxiliaryData {
     public init(bytes: Data) throws {
         self = try bytes.withCData { bytes in
             RustResult<Self>.wrap { result, error in
-                cardano_transaction_metadata_from_bytes(bytes, result, error)
+                cardano_auxiliary_data_from_bytes(bytes, result, error)
             }
         }.get()
     }
     
     public func bytes() throws -> Data {
         var bytes = try RustResult<CData>.wrap { result, error in
-            cardano_transaction_metadata_to_bytes(self, result, error)
+            cardano_auxiliary_data_to_bytes(self, result, error)
         }.get()
         return bytes.owned()
     }
 
     public func clone() throws -> Self {
         try RustResult<Self>.wrap { result, error in
-            cardano_transaction_metadata_clone(self, result, error)
+            cardano_auxiliary_data_clone(self, result, error)
         }.get()
     }
 }

@@ -58,7 +58,7 @@ final class CardanoSendApiTests: XCTestCase {
     private static let testTransaction = Transaction(
         body: TransactionBody(inputs: [], outputs: [], fee: 0, ttl: nil),
         witnessSet: TransactionWitnessSet(),
-        metadata: nil
+        auxiliaryData: nil
     )
     
     private let dispatchQueue = DispatchQueue(label: "CardanoSendApiTests.Async.Queue", target: .global())

@@ -151,7 +151,7 @@ extension Keychain: SignatureProvider {
             cb(.success(Transaction(
                 body: tx.tx,
                 witnessSet: witnessSet,
-                metadata: tx.metadata
+                auxiliaryData: tx.auxiliaryData
             )))
         }
     }

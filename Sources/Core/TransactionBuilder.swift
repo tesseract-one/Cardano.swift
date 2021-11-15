@@ -161,6 +161,8 @@ public struct TransactionBuilder {
     public private(set) var minimumUtxoVal: BigNum
     public private(set) var poolDeposit: BigNum
     public private(set) var keyDeposit: BigNum
+    public private(set) var maxValueSize: UInt32
+    public private(set) var maxTxSize: UInt32
     public private(set) var feeAlgo: LinearFee
     public private(set) var inputs: Array<TxBuilderInput>
     public private(set) var outputs: TransactionOutputs
@@ -168,7 +170,7 @@ public struct TransactionBuilder {
     public var ttl: Slot?
     public private(set) var certs: Certificates?
     public private(set) var withdrawals: Withdrawals?
-    public private(set) var metadata: TransactionMetadata?
+    public var auxiliaryData: AuxiliaryData?
     public var validityStartInterval: Slot?
     public private(set) var inputTypes: MockWitnessSet
     public private(set) var mint: Mint?
@@ -177,6 +179,8 @@ public struct TransactionBuilder {
         minimumUtxoVal = transactionBuilder.minimum_utxo_val
         poolDeposit = transactionBuilder.pool_deposit
         keyDeposit = transactionBuilder.key_deposit
+        maxValueSize = transactionBuilder.max_value_size
+        maxTxSize = transactionBuilder.max_tx_size
         feeAlgo = transactionBuilder.fee_algo
         inputs = transactionBuilder.inputs.copied().map { $0.copied() }
         outputs = transactionBuilder.outputs.copied().map { $0.copied() }
@@ -188,7 +192,7 @@ public struct TransactionBuilder {
                 (key.copied(), value)
             })
         }
-        metadata = transactionBuilder.metadata.get()?.copied()
+        auxiliaryData = transactionBuilder.auxiliary_data.get()?.copied()
         validityStartInterval = transactionBuilder.validity_start_interval.get()
         inputTypes = transactionBuilder.input_types.copied()
         mint = transactionBuilder.mint.get()?.copiedDictionary().mapValues { $0.copiedDictionary() }
@@ -259,10 +263,6 @@ public struct TransactionBuilder {
         }
     }
     
-    public mutating func setMetadata(metadata: TransactionMetadata) throws {
-        self = try withCTransactionBuilder { try $0.setMetadata(metadata: metadata) }
-    }
-    
     public func getExplicitInput() throws -> Value {
         try withCTransactionBuilder { try $0.getExplicitInput() }
     }
@@ -310,9 +310,9 @@ public struct TransactionBuilder {
                     try withdrawals.withCOption(
                         with: { try $0.withCKVArray(fn: $1) }
                     ) { withdrawals in
-                        try metadata.withCOption(
-                            with: { try $0.withCTransactionMetadata(fn: $1) }
-                        ) { metadata in
+                        try auxiliaryData.withCOption(
+                            with: { try $0.withCAuxiliaryData(fn: $1) }
+                        ) { auxiliaryData in
                             try inputTypes.withCMockWitnessSet { inputTypes in
                                 try mint.withCOption(
                                     with: { try $0.withCKVArray(fn: $1) }
@@ -321,6 +321,8 @@ public struct TransactionBuilder {
                                         minimum_utxo_val: minimumUtxoVal,
                                         pool_deposit: poolDeposit,
                                         key_deposit: keyDeposit,
+                                        max_value_size: maxValueSize,
+                                        max_tx_size: maxTxSize,
                                         fee_algo: feeAlgo,
                                         inputs: inputs,
                                         outputs: outputs,
@@ -328,7 +330,7 @@ public struct TransactionBuilder {
                                         ttl: ttl.cOption(),
                                         certs: certs,
                                         withdrawals: withdrawals,
-                                        metadata: metadata,
+                                        auxiliary_data: auxiliaryData,
                                         validity_start_interval: validityStartInterval.cOption(),
                                         input_types: inputTypes,
                                         mint: mint
@@ -450,15 +452,6 @@ extension CCardano.TransactionBuilder {
         var transactionBuilder = try withdrawals.withCKVArray { withdrawals in
             RustResult<Self>.wrap { result, error in
                 cardano_transaction_builder_set_withdrawals(self, withdrawals, result, error)
-            }
-        }.get()
-        return transactionBuilder.owned()
-    }
-    
-    public func setMetadata(metadata: TransactionMetadata) throws -> TransactionBuilder {
-        var transactionBuilder = try metadata.withCTransactionMetadata { metadata in
-            RustResult<Self>.wrap { result, error in
-                cardano_transaction_builder_set_metadata(self, metadata, result, error)
             }
         }.get()
         return transactionBuilder.owned()

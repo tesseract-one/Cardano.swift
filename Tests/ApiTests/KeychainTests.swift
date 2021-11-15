@@ -52,7 +52,7 @@ final class KeychainTests: XCTestCase {
                 ttl: nil
             ),
             addresses: [address],
-            metadata: nil
+            auxiliaryData: nil
         )
         let root = try KeyPair(sk: try Bip32PrivateKey(bip39: Data(mnemonic.entropy), password: Data()))
         let path = try Bip32Path

@@ -55,7 +55,7 @@ final class CardanoTxApiTests: XCTestCase {
     private static let testTransaction = Transaction(
         body: TransactionBody(inputs: [], outputs: [], fee: 0, ttl: nil),
         witnessSet: TransactionWitnessSet(),
-        metadata: nil
+        auxiliaryData: nil
     )
     
     private enum TestError: Error {
@@ -187,7 +187,7 @@ final class CardanoTxApiTests: XCTestCase {
         cardano.tx.signAndSubmit(
             tx: Self.testTransaction.body,
             with: [Self.testAddress],
-            metadata: nil
+            auxiliaryData: nil
         ) { res in
             let transactionHash = try! res.get()
             XCTAssertEqual(transactionHash, Self.testTransactionHashString)
