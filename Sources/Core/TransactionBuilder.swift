@@ -194,12 +194,19 @@ public struct TransactionBuilder {
         mint = transactionBuilder.mint.get()?.copiedDictionary().mapValues { $0.copiedDictionary() }
     }
     
-    public init(linearFee: LinearFee, minimumUtxoVal: Coin, poolDeposit: BigNum, keyDeposit: BigNum) throws {
+    public init(linearFee: LinearFee,
+                minimumUtxoVal: Coin,
+                poolDeposit: BigNum,
+                keyDeposit: BigNum,
+                maxValueSize: UInt32,
+                maxTxSize: UInt32) throws {
         var transactionBuilder = try CCardano.TransactionBuilder(
             linearFee: linearFee,
             minimumUtxoVal: minimumUtxoVal,
             poolDeposit: poolDeposit,
-            keyDeposit: keyDeposit
+            keyDeposit: keyDeposit,
+            maxValueSize: maxValueSize,
+            maxTxSize: maxTxSize
         )
         self = transactionBuilder.owned()
     }
@@ -351,9 +358,15 @@ extension CCardano.TransactionBuilder: CPtr {
 extension CCardano.TransactionBuilderBool: CType {}
 
 extension CCardano.TransactionBuilder {
-    public init(linearFee: LinearFee, minimumUtxoVal: Coin, poolDeposit: BigNum, keyDeposit: BigNum) throws {
+    public init(linearFee: LinearFee,
+                minimumUtxoVal: Coin,
+                poolDeposit: BigNum,
+                keyDeposit: BigNum,
+                maxValueSize: UInt32,
+                maxTxSize: UInt32) throws {
         self = try RustResult<Self>.wrap { result, error in
-            cardano_transaction_builder_new(linearFee, minimumUtxoVal, poolDeposit, keyDeposit, result, error)
+            cardano_transaction_builder_new(linearFee, minimumUtxoVal, poolDeposit, keyDeposit,
+                                            maxValueSize, maxTxSize, result, error)
         }.get()
     }
     

@@ -50,11 +50,14 @@ public struct CardanoSendApi: CardanoApi {
                 do {
                     for utxo in utxosResult {
                         utxos.append(utxo)
+                        // TODO: set values
                         var transactionBuilder = try TransactionBuilder(
                             linearFee: cardano.info.linearFee,
                             minimumUtxoVal: cardano.info.minimumUtxoVal,
                             poolDeposit: cardano.info.poolDeposit,
-                            keyDeposit: cardano.info.keyDeposit
+                            keyDeposit: cardano.info.keyDeposit,
+                            maxValueSize: 0,
+                            maxTxSize: 0
                         )
                         try utxos.forEach { utxo in
                             try transactionBuilder.addInput(

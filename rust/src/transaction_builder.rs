@@ -24,8 +24,11 @@ use cardano_serialization_lib::{
   metadata::AuxiliaryData as RTransactionMetadata,
   tx_builder::TransactionBuilder as RTransactionBuilder,
   utils::{from_bignum, to_bignum, BigNum as RBigNum, Coin as RCoin, Value as RValue},
-  Certificates as RCertificates, Mint as RMint, TransactionInput as RTransactionInput,
-  TransactionOutput as RTransactionOutput, TransactionOutputs as RTransactionOutputs,
+  Certificates as RCertificates,
+  Mint as RMint,
+  TransactionInput as RTransactionInput,
+  TransactionOutput as RTransactionOutput,
+  TransactionOutputs as RTransactionOutputs,
   Withdrawals as RWithdrawals,
 };
 use std::collections::BTreeSet;
@@ -531,19 +534,20 @@ pub unsafe extern "C" fn cardano_transaction_builder_set_metadata(
 #[no_mangle]
 pub unsafe extern "C" fn cardano_transaction_builder_new(
   linear_fee: LinearFee, minimum_utxo_val: Coin, pool_deposit: BigNum, key_deposit: BigNum,
-  result: &mut TransactionBuilder, error: &mut CError,
+  max_value_size: u32, max_tx_size: u32, result: &mut TransactionBuilder, error: &mut CError,
 ) -> bool {
-  todo!();
-  // handle_exception_result(|| {
-  //   RTransactionBuilder::new(
-  //     &linear_fee.into(),
-  //     &to_bignum(minimum_utxo_val),
-  //     &to_bignum(pool_deposit),
-  //     &to_bignum(key_deposit),
-  //   )
-  //   .try_into()
-  // })
-  // .response(result, error)
+  handle_exception_result(|| {
+    RTransactionBuilder::new(
+      &linear_fee.into(),
+      &to_bignum(minimum_utxo_val),
+      &to_bignum(pool_deposit),
+      &to_bignum(key_deposit),
+      max_value_size,
+      max_tx_size,
+    )
+    .try_into()
+  })
+  .response(result, error)
 }
 
 #[no_mangle]
