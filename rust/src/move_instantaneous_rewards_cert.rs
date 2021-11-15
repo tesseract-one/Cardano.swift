@@ -65,12 +65,13 @@ impl TryFrom<MoveInstantaneousReward> for RMoveInstantaneousReward {
   type Error = CError;
 
   fn try_from(mir: MoveInstantaneousReward) -> Result<Self> {
-    let rewards = unsafe { mir.rewards.as_hash_map()? };
-    let mut mir = Self::new(mir.pot.into());
-    for (stake_credential, coin) in rewards {
-      mir.insert(&stake_credential.into(), &to_bignum(coin));
-    }
-    Ok(mir)
+    todo!()
+    // let rewards = unsafe { mir.rewards.as_hash_map()? };
+    // let mut mir = Self::new(mir.pot.into());
+    // for (stake_credential, coin) in rewards {
+    //   mir.insert(&stake_credential.into(), &to_bignum(coin));
+    // }
+    // Ok(mir)
   }
 }
 
@@ -78,25 +79,26 @@ impl TryFrom<RMoveInstantaneousReward> for MoveInstantaneousReward {
   type Error = CError;
 
   fn try_from(mir: RMoveInstantaneousReward) -> Result<Self> {
-    Ok(mir.keys()).and_then(|stake_credentials| {
-      (0..stake_credentials.len())
-        .map(|index| stake_credentials.get(index))
-        .map(|stake_credential| {
-          mir
-            .get(&stake_credential)
-            .ok_or("Cannot get Coin by StakeCredential".into())
-            .zip(stake_credential.try_into())
-            .map(|(coin, stake_credential)| (stake_credential, from_bignum(&coin)).into())
-        })
-        .collect::<Result<Vec<CKeyValue<StakeCredential, Coin>>>>()
-        .map(|rewards| {
-          let mir_t: TMoveInstantaneousReward = unsafe { std::mem::transmute(mir) };
-          Self {
-            pot: mir_t.pot.into(),
-            rewards: rewards.into(),
-          }
-        })
-    })
+    todo!()
+    // Ok(mir.keys()).and_then(|stake_credentials| {
+    //   (0..stake_credentials.len())
+    //     .map(|index| stake_credentials.get(index))
+    //     .map(|stake_credential| {
+    //       mir
+    //         .get(&stake_credential)
+    //         .ok_or("Cannot get Coin by StakeCredential".into())
+    //         .zip(stake_credential.try_into())
+    //         .map(|(coin, stake_credential)| (stake_credential, from_bignum(&coin)).into())
+    //     })
+    //     .collect::<Result<Vec<CKeyValue<StakeCredential, Coin>>>>()
+    //     .map(|rewards| {
+    //       let mir_t: TMoveInstantaneousReward = unsafe { std::mem::transmute(mir) };
+    //       Self {
+    //         pot: mir_t.pot.into(),
+    //         rewards: rewards.into(),
+    //       }
+    //     })
+    // })
   }
 }
 

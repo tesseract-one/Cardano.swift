@@ -478,19 +478,21 @@ impl TryFrom<PoolMetadata> for RPoolMetadata {
   type Error = CError;
 
   fn try_from(pool_metadata: PoolMetadata) -> Result<Self> {
-    pool_metadata
-      .url
-      .try_into()
-      .map(|url| Self::new(&url, &pool_metadata.metadata_hash.into()))
+    todo!();
+    // pool_metadata
+    //   .url
+    //   .try_into()
+    //   .map(|url| Self::new(&url, &pool_metadata.metadata_hash.into()))
   }
 }
 
 impl From<RPoolMetadata> for PoolMetadata {
   fn from(pool_metadata: RPoolMetadata) -> Self {
-    Self {
-      url: pool_metadata.url().into(),
-      metadata_hash: pool_metadata.metadata_hash().into(),
-    }
+    todo!();
+    // Self {
+    //   url: pool_metadata.url().into(),
+    //   metadata_hash: pool_metadata.metadata_hash().into(),
+    // }
   }
 }
 

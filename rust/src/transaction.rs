@@ -46,16 +46,17 @@ impl TryFrom<RTransaction> for Transaction {
   type Error = CError;
 
   fn try_from(transaction: RTransaction) -> Result<Self> {
-    transaction
-      .body()
-      .try_into()
-      .zip(transaction.witness_set().try_into())
-      .zip(transaction.metadata().map(|m| m.try_into()).transpose())
-      .map(|((body, witness_set), metadata)| Self {
-        body,
-        witness_set,
-        metadata: metadata.into(),
-      })
+    todo!();
+    // transaction
+    //   .body()
+    //   .try_into()
+    //   .zip(transaction.witness_set().try_into())
+    //   .zip(transaction.metadata().map(|m| m.try_into()).transpose())
+    //   .map(|((body, witness_set), metadata)| Self {
+    //     body,
+    //     witness_set,
+    //     metadata: metadata.into(),
+    //   })
   }
 }
 

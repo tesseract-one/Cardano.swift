@@ -8,7 +8,8 @@ use crate::panic::*;
 use crate::ptr::*;
 use crate::stake_credential::Ed25519KeyHash;
 use cardano_serialization_lib::{
-  metadata::TransactionMetadata as RTransactionMetadata, NativeScript as RNativeScript,
+  // TODO rename
+  metadata::AuxiliaryData as RTransactionMetadata, NativeScript as RNativeScript,
   NativeScriptKind, NativeScripts as RNativeScripts, ScriptAll as RScriptAll,
   ScriptAny as RScriptAny, ScriptHashNamespace as RScriptHashNamespace, ScriptNOfK as RScriptNOfK,
   ScriptPubkey as RScriptPubkey, TimelockExpiry as RTimelockExpiry,
@@ -406,18 +407,19 @@ impl TryFrom<TransactionMetadata> for RTransactionMetadata {
   type Error = CError;
 
   fn try_from(transaction_metadata: TransactionMetadata) -> Result<Self> {
-    transaction_metadata
-      .general
-      .try_into()
-      .zip({
-        let native_scripts: Option<NativeScripts> = transaction_metadata.native_scripts.into();
-        native_scripts.map(|ns| ns.try_into()).transpose()
-      })
-      .map(|(general, native_scripts)| {
-        let mut transaction_metadata = Self::new(&general);
-        native_scripts.map(|ns| transaction_metadata.set_native_scripts(&ns));
-        transaction_metadata
-      })
+    todo!();
+    // transaction_metadata
+    //   .general
+    //   .try_into()
+    //   .zip({
+    //     let native_scripts: Option<NativeScripts> = transaction_metadata.native_scripts.into();
+    //     native_scripts.map(|ns| ns.try_into()).transpose()
+    //   })
+    //   .map(|(general, native_scripts)| {
+    //     let mut transaction_metadata = Self::new(&general);
+    //     native_scripts.map(|ns| transaction_metadata.set_native_scripts(&ns));
+    //     transaction_metadata
+    //   })
   }
 }
 
@@ -425,19 +427,20 @@ impl TryFrom<RTransactionMetadata> for TransactionMetadata {
   type Error = CError;
 
   fn try_from(transaction_metadata: RTransactionMetadata) -> Result<Self> {
-    transaction_metadata
-      .general()
-      .try_into()
-      .zip(
-        transaction_metadata
-          .native_scripts()
-          .map(|native_scripts| native_scripts.try_into())
-          .transpose(),
-      )
-      .map(|(general, native_scripts)| Self {
-        general,
-        native_scripts: native_scripts.into(),
-      })
+    todo!();
+    // transaction_metadata
+    //   .general()
+    //   .try_into()
+    //   .zip(
+    //     transaction_metadata
+    //       .native_scripts()
+    //       .map(|native_scripts| native_scripts.try_into())
+    //       .transpose(),
+    //   )
+    //   .map(|(general, native_scripts)| Self {
+    //     general,
+    //     native_scripts: native_scripts.into(),
+    //   })
   }
 }
 

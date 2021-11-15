@@ -20,7 +20,8 @@ use cardano_serialization_lib::{
   address::{Address as RAddress, ByronAddress as RByronAddress},
   crypto::{Ed25519KeyHash as REd25519KeyHash, ScriptHash as RScriptHash},
   fees::LinearFee as RLinearFee,
-  metadata::TransactionMetadata as RTransactionMetadata,
+  // TODO rename
+  metadata::AuxiliaryData as RTransactionMetadata,
   tx_builder::TransactionBuilder as RTransactionBuilder,
   utils::{from_bignum, to_bignum, BigNum as RBigNum, Coin as RCoin, Value as RValue},
   Certificates as RCertificates, Mint as RMint, TransactionInput as RTransactionInput,
@@ -323,11 +324,12 @@ impl TryFrom<TransactionBuilder> for RTransactionBuilder {
   type Error = CError;
 
   fn try_from(transaction_builder: TransactionBuilder) -> Result<Self> {
-    transaction_builder
-      .try_into()
-      .map(|transaction_builder: TTransactionBuilder| unsafe {
-        std::mem::transmute(transaction_builder)
-      })
+    todo!();
+    // transaction_builder
+    //   .try_into()
+    //   .map(|transaction_builder: TTransactionBuilder| unsafe {
+    //     std::mem::transmute(transaction_builder)
+    //   })
   }
 }
 
@@ -335,9 +337,10 @@ impl TryFrom<RTransactionBuilder> for TransactionBuilder {
   type Error = CError;
 
   fn try_from(transaction_builder: RTransactionBuilder) -> Result<Self> {
-    let transaction_builder: TTransactionBuilder =
-      unsafe { std::mem::transmute(transaction_builder) };
-    transaction_builder.try_into()
+    todo!();
+    // let transaction_builder: TTransactionBuilder =
+    //   unsafe { std::mem::transmute(transaction_builder) };
+    // transaction_builder.try_into()
   }
 }
 
@@ -510,18 +513,19 @@ pub unsafe extern "C" fn cardano_transaction_builder_set_metadata(
   tb: TransactionBuilder, metadata: TransactionMetadata, result: &mut TransactionBuilder,
   error: &mut CError,
 ) -> bool {
-  handle_exception_result(|| {
-    tb.try_into()
-      .zip(metadata.try_into())
-      .map(
-        |(mut tb, metadata): (RTransactionBuilder, RTransactionMetadata)| {
-          tb.set_metadata(&metadata);
-          tb
-        },
-      )
-      .and_then(|tb| tb.try_into())
-  })
-  .response(result, error)
+  todo!();
+  // handle_exception_result(|| {
+  //   tb.try_into()
+  //     .zip(metadata.try_into())
+  //     .map(
+  //       |(mut tb, metadata): (RTransactionBuilder, RTransactionMetadata)| {
+  //         tb.set_metadata(&metadata);
+  //         tb
+  //       },
+  //     )
+  //     .and_then(|tb| tb.try_into())
+  // })
+  // .response(result, error)
 }
 
 #[no_mangle]
@@ -529,16 +533,17 @@ pub unsafe extern "C" fn cardano_transaction_builder_new(
   linear_fee: LinearFee, minimum_utxo_val: Coin, pool_deposit: BigNum, key_deposit: BigNum,
   result: &mut TransactionBuilder, error: &mut CError,
 ) -> bool {
-  handle_exception_result(|| {
-    RTransactionBuilder::new(
-      &linear_fee.into(),
-      &to_bignum(minimum_utxo_val),
-      &to_bignum(pool_deposit),
-      &to_bignum(key_deposit),
-    )
-    .try_into()
-  })
-  .response(result, error)
+  todo!();
+  // handle_exception_result(|| {
+  //   RTransactionBuilder::new(
+  //     &linear_fee.into(),
+  //     &to_bignum(minimum_utxo_val),
+  //     &to_bignum(pool_deposit),
+  //     &to_bignum(key_deposit),
+  //   )
+  //   .try_into()
+  // })
+  // .response(result, error)
 }
 
 #[no_mangle]

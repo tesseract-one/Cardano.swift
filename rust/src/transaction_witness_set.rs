@@ -28,21 +28,22 @@ impl TryFrom<RTransactionWitnessSet> for TransactionWitnessSet {
   type Error = CError;
 
   fn try_from(transaction_witness_set: RTransactionWitnessSet) -> Result<Self> {
-    transaction_witness_set
-      .scripts()
-      .map(|native_scripts| native_scripts.try_into())
-      .transpose()
-      .map(|native_scripts| Self {
-        vkeys: transaction_witness_set
-          .vkeys()
-          .map(|vkeywitnesses| vkeywitnesses.into())
-          .into(),
-        scripts: native_scripts.into(),
-        bootstraps: transaction_witness_set
-          .bootstraps()
-          .map(|bootstrap_witnesses| bootstrap_witnesses.into())
-          .into(),
-      })
+    todo!();
+    // transaction_witness_set
+    //   .scripts()
+    //   .map(|native_scripts| native_scripts.try_into())
+    //   .transpose()
+    //   .map(|native_scripts| Self {
+    //     vkeys: transaction_witness_set
+    //       .vkeys()
+    //       .map(|vkeywitnesses| vkeywitnesses.into())
+    //       .into(),
+    //     scripts: native_scripts.into(),
+    //     bootstraps: transaction_witness_set
+    //       .bootstraps()
+    //       .map(|bootstrap_witnesses| bootstrap_witnesses.into())
+    //       .into(),
+    //   })
   }
 }
 
@@ -50,23 +51,24 @@ impl TryFrom<TransactionWitnessSet> for RTransactionWitnessSet {
   type Error = CError;
 
   fn try_from(transaction_witness_set: TransactionWitnessSet) -> Result<Self> {
-    let vkeys: Option<Vkeywitnesses> = transaction_witness_set.vkeys.into();
-    let scripts: Option<NativeScripts> = transaction_witness_set.scripts.into();
-    let bootstraps: Option<BootstrapWitnesses> = transaction_witness_set.bootstraps.into();
-    let mut transaction_witness_set = RTransactionWitnessSet::new();
-    if let Some(vkeys) = vkeys {
-      let vkeys = vkeys.try_into()?;
-      transaction_witness_set.set_vkeys(&vkeys);
-    }
-    if let Some(scripts) = scripts {
-      let scripts = scripts.try_into()?;
-      transaction_witness_set.set_scripts(&scripts);
-    }
-    if let Some(bootstraps) = bootstraps {
-      let bootstraps = bootstraps.try_into()?;
-      transaction_witness_set.set_bootstraps(&bootstraps);
-    }
-    Ok(transaction_witness_set)
+    todo!();
+    // let vkeys: Option<Vkeywitnesses> = transaction_witness_set.vkeys.into();
+    // let scripts: Option<NativeScripts> = transaction_witness_set.scripts.into();
+    // let bootstraps: Option<BootstrapWitnesses> = transaction_witness_set.bootstraps.into();
+    // let mut transaction_witness_set = RTransactionWitnessSet::new();
+    // if let Some(vkeys) = vkeys {
+    //   let vkeys = vkeys.try_into()?;
+    //   transaction_witness_set.set_vkeys(&vkeys);
+    // }
+    // if let Some(scripts) = scripts {
+    //   let scripts = scripts.try_into()?;
+    //   transaction_witness_set.set_scripts(&scripts);
+    // }
+    // if let Some(bootstraps) = bootstraps {
+    //   let bootstraps = bootstraps.try_into()?;
+    //   transaction_witness_set.set_bootstraps(&bootstraps);
+    // }
+    // Ok(transaction_witness_set)
   }
 }
 

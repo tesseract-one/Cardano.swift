@@ -195,32 +195,34 @@ impl TryFrom<ProtocolParamUpdate> for RProtocolParamUpdate {
         extra_entropy.map(|extra_entropy| new_ppu.set_extra_entropy(&extra_entropy));
         protocol_version.map(|pv| new_ppu.set_protocol_version(&pv));
         let min_utxo_value: Option<Coin> = ppu.min_utxo_value.into();
-        min_utxo_value.map(|muv| new_ppu.set_min_utxo_value(&to_bignum(muv)));
-        new_ppu
+        todo!();
+        // min_utxo_value.map(|muv| new_ppu.set_min_utxo_value(&to_bignum(muv)));
+        // new_ppu
       })
   }
 }
 
 impl From<RProtocolParamUpdate> for ProtocolParamUpdate {
   fn from(ppu: RProtocolParamUpdate) -> Self {
-    Self {
-      minfee_a: ppu.minfee_a().map(|minfee_a| from_bignum(&minfee_a)).into(),
-      minfee_b: ppu.minfee_b().map(|minfee_b| from_bignum(&minfee_b)).into(),
-      max_block_body_size: ppu.max_block_body_size().into(),
-      max_tx_size: ppu.max_tx_size().into(),
-      max_block_header_size: ppu.max_block_header_size().into(),
-      key_deposit: ppu.key_deposit().map(|kd| from_bignum(&kd)).into(),
-      pool_deposit: ppu.pool_deposit().map(|pd| from_bignum(&pd)).into(),
-      max_epoch: ppu.max_epoch().into(),
-      n_opt: ppu.n_opt().into(),
-      pool_pledge_influence: ppu.pool_pledge_influence().map(|ppi| ppi.into()).into(),
-      expansion_rate: ppu.expansion_rate().map(|er| er.into()).into(),
-      treasury_growth_rate: ppu.treasury_growth_rate().map(|tgr| tgr.into()).into(),
-      d: ppu.d().map(|d| d.into()).into(),
-      extra_entropy: ppu.extra_entropy().map(|ee| ee.into()).into(),
-      protocol_version: ppu.protocol_version().map(|pv| pv.into()).into(),
-      min_utxo_value: ppu.min_utxo_value().map(|muv| from_bignum(&muv)).into(),
-    }
+    todo!();
+    // Self {
+    //   minfee_a: ppu.minfee_a().map(|minfee_a| from_bignum(&minfee_a)).into(),
+    //   minfee_b: ppu.minfee_b().map(|minfee_b| from_bignum(&minfee_b)).into(),
+    //   max_block_body_size: ppu.max_block_body_size().into(),
+    //   max_tx_size: ppu.max_tx_size().into(),
+    //   max_block_header_size: ppu.max_block_header_size().into(),
+    //   key_deposit: ppu.key_deposit().map(|kd| from_bignum(&kd)).into(),
+    //   pool_deposit: ppu.pool_deposit().map(|pd| from_bignum(&pd)).into(),
+    //   max_epoch: ppu.max_epoch().into(),
+    //   n_opt: ppu.n_opt().into(),
+    //   pool_pledge_influence: ppu.pool_pledge_influence().map(|ppi| ppi.into()).into(),
+    //   expansion_rate: ppu.expansion_rate().map(|er| er.into()).into(),
+    //   treasury_growth_rate: ppu.treasury_growth_rate().map(|tgr| tgr.into()).into(),
+    //   d: ppu.d().map(|d| d.into()).into(),
+    //   extra_entropy: ppu.extra_entropy().map(|ee| ee.into()).into(),
+    //   protocol_version: ppu.protocol_version().map(|pv| pv.into()).into(),
+    //   min_utxo_value: ppu.min_utxo_value().map(|muv| from_bignum(&muv)).into(),
+    // }
   }
 }
 
