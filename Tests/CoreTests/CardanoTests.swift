@@ -52,14 +52,6 @@ final class CardanoTests: XCTestCase {
         })
     }
     
-    func testMoveInstantaneousReward() throws {
-        let _ = _initialize
-        let data = Data(repeating: 1, count: 28)
-        var mir = MoveInstantaneousReward(pot: MIRPot.reserves)
-        mir.rewards.updateValue(1, forKey: StakeCredential.keyHash(try Ed25519KeyHash(bytes: data)))
-        XCTAssertNoThrow(try mir.bytes())
-    }
-    
     func testNativeScriptHash() throws {
         let hash = try Ed25519KeyHash(bytes: Data([143, 180, 186, 93, 223, 42, 243, 7, 81, 98, 86, 125, 97, 69, 110, 52, 130, 243, 244, 98, 246, 13, 33, 212, 128, 168, 136, 40]))
         XCTAssertEqual(try hash.data().hex(prefix: false), "8fb4ba5ddf2af3075162567d61456e3482f3f462f60d21d480a88828")

@@ -1,21 +1,18 @@
-use crate::array::AsHashMap;
-use crate::array::CArray;
-use crate::array::CKeyValue;
+use crate::array::*;
 use crate::data::CData;
 use crate::error::CError;
+use crate::int::CInt128;
 use crate::linear_fee::Coin;
 use crate::panic::*;
 use crate::ptr::*;
 use crate::stake_credential::StakeCredential;
-use cardano_serialization_lib::utils::from_bignum;
-use cardano_serialization_lib::MIRPot as RMIRPot;
+use cardano_serialization_lib::MIRKind;
 use cardano_serialization_lib::{
-  address::StakeCredential as RStakeCredential,
-  utils::{to_bignum, Coin as RCoin},
+  utils::{from_bignum, to_bignum},
+  MIRPot as RMIRPot, MIRToStakeCredentials as RMIRToStakeCredentials,
   MoveInstantaneousReward as RMoveInstantaneousReward,
   MoveInstantaneousRewardsCert as RMoveInstantaneousRewardsCert,
 };
-use linked_hash_map::LinkedHashMap;
 use std::convert::{TryFrom, TryInto};
 
 #[repr(C)]
@@ -45,19 +42,108 @@ impl From<RMIRPot> for MIRPot {
 
 #[repr(C)]
 #[derive(Copy, Clone)]
-pub struct MoveInstantaneousReward {
-  pot: MIRPot,
-  rewards: CArray<CKeyValue<StakeCredential, Coin>>,
+pub struct MIRToStakeCredentials {
+  rewards: CArray<CKeyValue<StakeCredential, CInt128>>,
 }
 
-struct TMoveInstantaneousReward {
-  pot: RMIRPot,
-  _rewards: LinkedHashMap<RStakeCredential, RCoin>,
+impl Free for CInt128 {
+  unsafe fn free(&mut self) {}
+}
+
+impl Free for MIRToStakeCredentials {
+  unsafe fn free(&mut self) {
+    self.rewards.free()
+  }
+}
+
+impl TryFrom<MIRToStakeCredentials> for RMIRToStakeCredentials {
+  type Error = CError;
+
+  fn try_from(mir_to_stake_credentials: MIRToStakeCredentials) -> Result<Self> {
+    let map = unsafe { mir_to_stake_credentials.rewards.as_hash_map()? };
+    let mut mir_to_stake_credentials = Self::new();
+    for (stake_credential, coin) in map {
+      mir_to_stake_credentials.insert(&stake_credential.into(), &coin.into());
+    }
+    Ok(mir_to_stake_credentials)
+  }
+}
+
+impl TryFrom<RMIRToStakeCredentials> for MIRToStakeCredentials {
+  type Error = CError;
+
+  fn try_from(mir_to_stake_credentials: RMIRToStakeCredentials) -> Result<Self> {
+    Ok(mir_to_stake_credentials.keys()).and_then(|stake_credentials| {
+      (0..stake_credentials.len())
+        .map(|index| stake_credentials.get(index))
+        .map(|stake_credential| {
+          mir_to_stake_credentials
+            .get(&stake_credential)
+            .ok_or("Cannot get DeltaCoin by StakeCredential".into())
+            .zip(stake_credential.try_into())
+            .map(|(delta_coin, stake_credential)| (stake_credential, delta_coin.into()).into())
+        })
+        .collect::<Result<Vec<CKeyValue<StakeCredential, CInt128>>>>()
+        .map(|mir_to_stake_credentials| Self {
+          rewards: mir_to_stake_credentials.into(),
+        })
+    })
+  }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_mir_to_stake_credentials_clone(
+  mir_to_stake_credentials: MIRToStakeCredentials, result: &mut MIRToStakeCredentials,
+  error: &mut CError,
+) -> bool {
+  handle_exception(|| mir_to_stake_credentials.clone()).response(result, error)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_mir_to_stake_credentials_free(
+  mir_to_stake_credentials: &mut MIRToStakeCredentials,
+) {
+  mir_to_stake_credentials.free()
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub enum MIREnum {
+  ToOtherPot(Coin),
+  ToStakeCredentials(MIRToStakeCredentials),
+}
+
+impl Free for MIREnum {
+  unsafe fn free(&mut self) {
+    match self {
+      MIREnum::ToStakeCredentials(mir_to_stake_credentials) => mir_to_stake_credentials.free(),
+      _ => return,
+    }
+  }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_mir_enum_clone(
+  mir_enum: MIREnum, result: &mut MIREnum, error: &mut CError,
+) -> bool {
+  handle_exception(|| mir_enum.clone()).response(result, error)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_mir_enum_free(mir_enum: &mut MIREnum) {
+  mir_enum.free()
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct MoveInstantaneousReward {
+  pot: MIRPot,
+  variant: MIREnum,
 }
 
 impl Free for MoveInstantaneousReward {
   unsafe fn free(&mut self) {
-    self.rewards.free()
+    self.variant.free()
   }
 }
 
@@ -65,13 +151,14 @@ impl TryFrom<MoveInstantaneousReward> for RMoveInstantaneousReward {
   type Error = CError;
 
   fn try_from(mir: MoveInstantaneousReward) -> Result<Self> {
-    todo!()
-    // let rewards = unsafe { mir.rewards.as_hash_map()? };
-    // let mut mir = Self::new(mir.pot.into());
-    // for (stake_credential, coin) in rewards {
-    //   mir.insert(&stake_credential.into(), &to_bignum(coin));
-    // }
-    // Ok(mir)
+    match mir.variant {
+      MIREnum::ToOtherPot(coin) => Ok(Self::new_to_other_pot(mir.pot.into(), &to_bignum(coin))),
+      MIREnum::ToStakeCredentials(mir_to_stake_credentials) => mir_to_stake_credentials
+        .try_into()
+        .map(|mir_to_stake_credentials| {
+          Self::new_to_stake_creds(mir.pot.into(), &mir_to_stake_credentials)
+        }),
+    }
   }
 }
 
@@ -79,26 +166,23 @@ impl TryFrom<RMoveInstantaneousReward> for MoveInstantaneousReward {
   type Error = CError;
 
   fn try_from(mir: RMoveInstantaneousReward) -> Result<Self> {
-    todo!()
-    // Ok(mir.keys()).and_then(|stake_credentials| {
-    //   (0..stake_credentials.len())
-    //     .map(|index| stake_credentials.get(index))
-    //     .map(|stake_credential| {
-    //       mir
-    //         .get(&stake_credential)
-    //         .ok_or("Cannot get Coin by StakeCredential".into())
-    //         .zip(stake_credential.try_into())
-    //         .map(|(coin, stake_credential)| (stake_credential, from_bignum(&coin)).into())
-    //     })
-    //     .collect::<Result<Vec<CKeyValue<StakeCredential, Coin>>>>()
-    //     .map(|rewards| {
-    //       let mir_t: TMoveInstantaneousReward = unsafe { std::mem::transmute(mir) };
-    //       Self {
-    //         pot: mir_t.pot.into(),
-    //         rewards: rewards.into(),
-    //       }
-    //     })
-    // })
+    match mir.kind() {
+      MIRKind::ToOtherPot => mir
+        .as_to_other_pot()
+        .ok_or("Empty ToOtherPot".into())
+        .map(|coin| Self {
+          pot: mir.pot().into(),
+          variant: MIREnum::ToOtherPot(from_bignum(&coin)),
+        }),
+      MIRKind::ToStakeCredentials => mir
+        .as_to_stake_creds()
+        .ok_or("Empty ToStakeCredentials".into())
+        .and_then(|mir_to_stake_credentials| mir_to_stake_credentials.try_into())
+        .map(|mir_to_stake_credentials| Self {
+          pot: mir.pot().into(),
+          variant: MIREnum::ToStakeCredentials(mir_to_stake_credentials),
+        }),
+    }
   }
 }
 
