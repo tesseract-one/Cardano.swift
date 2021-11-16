@@ -22,19 +22,22 @@ extension COption_AuxiliaryData: COption {
 }
 
 public struct Transaction {
-    public private(set) var body: TransactionBody
-    public private(set) var witnessSet: TransactionWitnessSet
-    public private(set) var auxiliaryData: AuxiliaryData?
+    public let body: TransactionBody
+    public let witnessSet: TransactionWitnessSet
+    public let isValid: Bool
+    public let auxiliaryData: AuxiliaryData?
     
     init(transaction: CCardano.Transaction) {
         body = transaction.body.copied()
         witnessSet = transaction.witness_set.copied()
+        isValid = transaction.is_valid
         auxiliaryData = transaction.auxiliary_data.get()?.copied()
     }
     
     public init(body: TransactionBody, witnessSet: TransactionWitnessSet, auxiliaryData: AuxiliaryData?) {
         self.body = body
         self.witnessSet = witnessSet
+        isValid = true
         self.auxiliaryData = auxiliaryData
     }
     
@@ -66,6 +69,7 @@ public struct Transaction {
                     try fn(CCardano.Transaction(
                         body: body,
                         witness_set: witnessSet,
+                        is_valid: isValid,
                         auxiliary_data: auxiliaryData
                     ))
                 }

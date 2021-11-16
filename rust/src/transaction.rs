@@ -15,6 +15,7 @@ use std::convert::{TryFrom, TryInto};
 pub struct Transaction {
   body: TransactionBody,
   witness_set: TransactionWitnessSet,
+  is_valid: bool,
   auxiliary_data: COption<AuxiliaryData>,
 }
 
@@ -40,7 +41,11 @@ impl TryFrom<Transaction> for RTransaction {
           .map(|auxiliary_data| auxiliary_data.try_into())
           .transpose()
       })
-      .map(|((body, witness_set), auxiliary_data)| Self::new(&body, &witness_set, auxiliary_data))
+      .map(|((body, witness_set), auxiliary_data)| {
+        let mut tx = Self::new(&body, &witness_set, auxiliary_data);
+        tx.set_is_valid(transaction.is_valid);
+        tx
+      })
   }
 }
 
@@ -61,6 +66,7 @@ impl TryFrom<RTransaction> for Transaction {
       .map(|((body, witness_set), auxiliary_data)| Self {
         body,
         witness_set,
+        is_valid: transaction.is_valid(),
         auxiliary_data: auxiliary_data.into(),
       })
   }
