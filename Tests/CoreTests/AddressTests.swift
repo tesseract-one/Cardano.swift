@@ -334,33 +334,6 @@ final class AddressTests: XCTestCase {
             try addrNet3.bech32(),
             "addr1qyy6nhfyks7wdu3dudslys37v252w2nwhv0fw2nfawemmn8k8ttq8f3gag0h89aepvx3xf69g0l9pf80tqv7cve0l33sdn8p3d"
         )
-
-        func testBip3224Enterprise() throws {
-            let spend = try rootKey24()
-                .derive(index: harden(1852))
-                .derive(index: harden(1815))
-                .derive(index: harden(0))
-                .derive(index: 0)
-                .derive(index: 0)
-                .publicKey()
-            let spendCred = StakeCredential.keyHash(try spend.toRawKey().hash())
-            let addrNet0 = EnterpriseAddress(
-                network: NetworkInfo.testnet.network_id,
-                payment: spendCred
-            ).toAddress()
-            XCTAssertEqual(
-                try addrNet0.bech32(),
-                "addr_test1vqy6nhfyks7wdu3dudslys37v252w2nwhv0fw2nfawemmnqtjtf68"
-            )
-            let addrNet3 = EnterpriseAddress(
-                network: NetworkInfo.mainnet.network_id,
-                payment: spendCred
-            ).toAddress()
-            XCTAssertEqual(
-                try addrNet3.bech32(),
-                "addr1vyy6nhfyks7wdu3dudslys37v252w2nwhv0fw2nfawemmnqs6l44z"
-            )
-        }
     }
     
     func testBip3224Enterprise() throws {
