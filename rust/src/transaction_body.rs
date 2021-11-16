@@ -14,17 +14,14 @@ use crate::ptr::*;
 use crate::transaction_input::TransactionInputs;
 use crate::transaction_output::TransactionOutputs;
 use crate::withdrawals::Withdrawals;
-use cardano_serialization_lib::utils::from_bignum;
-use cardano_serialization_lib::utils::to_bignum;
-use cardano_serialization_lib::utils::Int;
 use cardano_serialization_lib::{
-  // TODO rename
-  crypto::AuxiliaryDataHash as RMetadataHash, Mint as RMint, MintAssets as RMintAssets,
+  crypto::AuxiliaryDataHash as RAuxiliaryDataHash,
+  utils::{from_bignum, to_bignum, Int},
+  Mint as RMint, MintAssets as RMintAssets,
   ProposedProtocolParameterUpdates as RProposedProtocolParameterUpdates,
   TransactionBody as RTransactionBody, Update as RUpdate,
 };
-use std::convert::TryFrom;
-use std::convert::TryInto;
+use std::convert::{TryFrom, TryInto};
 
 pub type Epoch = u32;
 
@@ -128,40 +125,40 @@ pub unsafe extern "C" fn cardano_update_free(update: &mut Update) {
 
 #[repr(C)]
 #[derive(Copy, Clone)]
-pub struct MetadataHash([u8; 32]);
+pub struct AuxiliaryDataHash([u8; 32]);
 
-impl From<RMetadataHash> for MetadataHash {
-  fn from(hash: RMetadataHash) -> Self {
+impl From<RAuxiliaryDataHash> for AuxiliaryDataHash {
+  fn from(hash: RAuxiliaryDataHash) -> Self {
     Self(hash.to_bytes().try_into().unwrap())
   }
 }
 
-impl From<MetadataHash> for RMetadataHash {
-  fn from(hash: MetadataHash) -> Self {
+impl From<AuxiliaryDataHash> for RAuxiliaryDataHash {
+  fn from(hash: AuxiliaryDataHash) -> Self {
     hash.0.into()
   }
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn cardano_metadata_hash_to_bytes(
-  metadata_hash: MetadataHash, result: &mut CData, error: &mut CError,
+pub unsafe extern "C" fn cardano_auxiliary_data_hash_to_bytes(
+  auxiliary_data_hash: AuxiliaryDataHash, result: &mut CData, error: &mut CError,
 ) -> bool {
   handle_exception(|| {
-    let metadata_hash: RMetadataHash = metadata_hash.into();
-    metadata_hash.to_bytes().into()
+    let auxiliary_data_hash: RAuxiliaryDataHash = auxiliary_data_hash.into();
+    auxiliary_data_hash.to_bytes().into()
   })
   .response(result, error)
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn cardano_metadata_hash_from_bytes(
-  data: CData, result: &mut MetadataHash, error: &mut CError,
+pub unsafe extern "C" fn cardano_auxiliary_data_hash_from_bytes(
+  data: CData, result: &mut AuxiliaryDataHash, error: &mut CError,
 ) -> bool {
   handle_exception_result(|| {
     data
       .unowned()
-      .and_then(|bytes| RMetadataHash::from_bytes(bytes.to_vec()).into_result())
-      .map(|metadata_hash| metadata_hash.into())
+      .and_then(|bytes| RAuxiliaryDataHash::from_bytes(bytes.to_vec()).into_result())
+      .map(|auxiliary_data_hash| auxiliary_data_hash.into())
   })
   .response(result, error)
 }
@@ -262,7 +259,7 @@ pub struct TransactionBody {
   certs: COption<Certificates>,
   withdrawals: COption<Withdrawals>,
   update: COption<Update>,
-  metadata_hash: COption<MetadataHash>,
+  auxiliary_data_hash: COption<AuxiliaryDataHash>,
   validity_start_interval: COption<Slot>,
   mint: COption<Mint>,
 }
@@ -282,38 +279,37 @@ impl TryFrom<TransactionBody> for RTransactionBody {
   type Error = CError;
 
   fn try_from(tb: TransactionBody) -> Result<Self> {
-    todo!();
-    // tb.inputs
-    //   .try_into()
-    //   .zip(tb.outputs.try_into())
-    //   .map(|(inputs, outputs)| Self::new(&inputs, &outputs, &to_bignum(tb.fee), tb.ttl.into()))
-    //   .zip({
-    //     let certs: Option<Certificates> = tb.certs.into();
-    //     certs.map(|certs| certs.try_into()).transpose()
-    //   })
-    //   .zip({
-    //     let wls: Option<Withdrawals> = tb.withdrawals.into();
-    //     wls.map(|wls| wls.try_into()).transpose()
-    //   })
-    //   .zip({
-    //     let update: Option<Update> = tb.update.into();
-    //     update.map(|update| update.try_into()).transpose()
-    //   })
-    //   .zip({
-    //     let mint: Option<Mint> = tb.mint.into();
-    //     mint.map(|mint| mint.try_into()).transpose()
-    //   })
-    //   .map(|((((mut new_tb, certs), wls), update), mint)| {
-    //     let hash: Option<MetadataHash> = tb.metadata_hash.into();
-    //     let vsi: Option<Slot> = tb.validity_start_interval.into();
-    //     certs.map(|certs| new_tb.set_certs(&certs));
-    //     wls.map(|wls| new_tb.set_withdrawals(&wls));
-    //     update.map(|update| new_tb.set_update(&update));
-    //     hash.map(|hash| new_tb.set_metadata_hash(&hash.into()));
-    //     vsi.map(|vsi| new_tb.set_validity_start_interval(vsi));
-    //     mint.map(|mint| new_tb.set_mint(&mint));
-    //     new_tb
-    //   })
+    tb.inputs
+      .try_into()
+      .zip(tb.outputs.try_into())
+      .map(|(inputs, outputs)| Self::new(&inputs, &outputs, &to_bignum(tb.fee), tb.ttl.into()))
+      .zip({
+        let certs: Option<Certificates> = tb.certs.into();
+        certs.map(|certs| certs.try_into()).transpose()
+      })
+      .zip({
+        let wls: Option<Withdrawals> = tb.withdrawals.into();
+        wls.map(|wls| wls.try_into()).transpose()
+      })
+      .zip({
+        let update: Option<Update> = tb.update.into();
+        update.map(|update| update.try_into()).transpose()
+      })
+      .zip({
+        let mint: Option<Mint> = tb.mint.into();
+        mint.map(|mint| mint.try_into()).transpose()
+      })
+      .map(|((((mut new_tb, certs), wls), update), mint)| {
+        let hash: Option<AuxiliaryDataHash> = tb.auxiliary_data_hash.into();
+        let vsi: Option<Slot> = tb.validity_start_interval.into();
+        certs.map(|certs| new_tb.set_certs(&certs));
+        wls.map(|wls| new_tb.set_withdrawals(&wls));
+        update.map(|update| new_tb.set_update(&update));
+        hash.map(|hash| new_tb.set_auxiliary_data_hash(&hash.into()));
+        vsi.map(|vsi| new_tb.set_validity_start_interval(vsi));
+        mint.map(|mint| new_tb.set_mint(&mint));
+        new_tb
+      })
   }
 }
 
@@ -321,28 +317,27 @@ impl TryFrom<RTransactionBody> for TransactionBody {
   type Error = CError;
 
   fn try_from(tb: RTransactionBody) -> Result<Self> {
-    todo!();
-    // tb.inputs()
-    //   .try_into()
-    //   .zip(tb.outputs().try_into())
-    //   .zip(tb.certs().map(|certs| certs.try_into()).transpose())
-    //   .zip(tb.withdrawals().map(|wls| wls.try_into()).transpose())
-    //   .zip(tb.update().map(|update| update.try_into()).transpose())
-    //   .zip(tb.multiassets().map(|mint| mint.try_into()).transpose())
-    //   .map(
-    //     |(((((inputs, outputs), certs), withdrawals), update), mint)| Self {
-    //       inputs,
-    //       outputs,
-    //       fee: from_bignum(&tb.fee()),
-    //       ttl: tb.ttl().into(),
-    //       certs: certs.into(),
-    //       withdrawals: withdrawals.into(),
-    //       update: update.into(),
-    //       metadata_hash: tb.metadata_hash().map(|hash| hash.into()).into(),
-    //       validity_start_interval: tb.validity_start_interval().map(|vsi| vsi.into()).into(),
-    //       mint: mint.into(),
-    //     },
-    //   )
+    tb.inputs()
+      .try_into()
+      .zip(tb.outputs().try_into())
+      .zip(tb.certs().map(|certs| certs.try_into()).transpose())
+      .zip(tb.withdrawals().map(|wls| wls.try_into()).transpose())
+      .zip(tb.update().map(|update| update.try_into()).transpose())
+      .zip(tb.multiassets().map(|mint| mint.try_into()).transpose())
+      .map(
+        |(((((inputs, outputs), certs), withdrawals), update), mint)| Self {
+          inputs,
+          outputs,
+          fee: from_bignum(&tb.fee()),
+          ttl: tb.ttl().into(),
+          certs: certs.into(),
+          withdrawals: withdrawals.into(),
+          update: update.into(),
+          auxiliary_data_hash: tb.auxiliary_data_hash().map(|hash| hash.into()).into(),
+          validity_start_interval: tb.validity_start_interval().map(|vsi| vsi.into()).into(),
+          mint: mint.into(),
+        },
+      )
   }
 }
 

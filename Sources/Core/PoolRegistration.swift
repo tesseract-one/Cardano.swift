@@ -439,18 +439,39 @@ extension CCardano.URL {
     }
 }
 
+public typealias PoolMetadataHash = CCardano.PoolMetadataHash
+
+extension PoolMetadataHash: CType {}
+
+extension PoolMetadataHash {
+    public init(bytes: Data) throws {
+        self = try bytes.withCData { bytes in
+            RustResult<Self>.wrap { res, err in
+                cardano_pool_metadata_hash_from_bytes(bytes, res, err)
+            }
+        }.get()
+    }
+    
+    public func data() throws -> Data {
+        var data = try RustResult<CData>.wrap { res, err in
+            cardano_pool_metadata_hash_to_bytes(self, res, err)
+        }.get()
+        return data.owned()
+    }
+}
+
 public struct PoolMetadata {
     public private(set) var url: URL
-    public private(set) var metadataHash: MetadataHash
+    public private(set) var poolMetadataHash: PoolMetadataHash
 
     init(poolMetadata: CCardano.PoolMetadata) {
         url = poolMetadata.url.copied()
-        metadataHash = poolMetadata.metadata_hash
+        poolMetadataHash = poolMetadata.pool_metadata_hash
     }
 
-    public init(url: URL, metadataHash: MetadataHash) {
+    public init(url: URL, poolMetadataHash: PoolMetadataHash) {
         self.url = url
-        self.metadataHash = metadataHash
+        self.poolMetadataHash = poolMetadataHash
     }
 
     func clonedCPoolMetadata() throws -> CCardano.PoolMetadata {
@@ -461,7 +482,7 @@ public struct PoolMetadata {
         fn: @escaping (CCardano.PoolMetadata) throws -> T
     ) rethrows -> T {
         try url.withCURL { url in
-            try fn(CCardano.PoolMetadata(url: url, metadata_hash: metadataHash))
+            try fn(CCardano.PoolMetadata(url: url, pool_metadata_hash: poolMetadataHash))
         }
     }
 }

@@ -56,7 +56,7 @@ final class TransactionBodyTests: XCTestCase {
                 ],
                 poolMetadata: PoolMetadata(
                     url: URL(url: "url"),
-                    metadataHash: MetadataHash(bytes: data32)
+                    poolMetadataHash: PoolMetadataHash(bytes: data32)
                 )
             )
         )
@@ -75,7 +75,7 @@ final class TransactionBodyTests: XCTestCase {
             ], epoch: 1
         )
         transactionBody.update = update
-        transactionBody.metadataHash = try MetadataHash(bytes: data32)
+        transactionBody.auxiliaryDataHash = try AuxiliaryDataHash(bytes: data32)
         transactionBody.validityStartInterval = 1
         transactionBody.mint = [
             try ScriptHash(bytes: data28): [

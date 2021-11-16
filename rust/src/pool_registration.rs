@@ -11,16 +11,8 @@ use crate::stake_credential::Ed25519KeyHash;
 use crate::stake_credential::Ed25519KeyHashes;
 use crate::string::CharPtr;
 use crate::string::IntoCString;
-use crate::transaction_body::MetadataHash;
 use crate::transaction_builder::BigNum;
-use cardano_serialization_lib::{
-  utils::{from_bignum, to_bignum},
-  DNSRecordAorAAAA as RDNSRecordAorAAAA, DNSRecordSRV as RDNSRecordSRV, Ipv4 as RIpv4,
-  Ipv6 as RIpv6, MultiHostName as RMultiHostName, PoolMetadata as RPoolMetadata,
-  PoolParams as RPoolParams, PoolRegistration as RPoolRegistration, Relay as RRelay, RelayKind,
-  Relays as RRelays, SingleHostAddr as RSingleHostAddr, SingleHostName as RSingleHostName,
-  UnitInterval as RUnitInterval, URL as RURL,
-};
+use cardano_serialization_lib::{DNSRecordAorAAAA as RDNSRecordAorAAAA, DNSRecordSRV as RDNSRecordSRV, Ipv4 as RIpv4, Ipv6 as RIpv6, MultiHostName as RMultiHostName, PoolMetadata as RPoolMetadata, PoolParams as RPoolParams, PoolRegistration as RPoolRegistration, Relay as RRelay, RelayKind, Relays as RRelays, SingleHostAddr as RSingleHostAddr, SingleHostName as RSingleHostName, URL as RURL, UnitInterval as RUnitInterval, crypto::PoolMetadataHash as RPoolMetadataHash, utils::{from_bignum, to_bignum}};
 use std::convert::{TryFrom, TryInto};
 
 #[repr(C)]
@@ -463,9 +455,49 @@ pub unsafe extern "C" fn cardano_url_free(url: &mut URL) {
 
 #[repr(C)]
 #[derive(Copy, Clone)]
+pub struct PoolMetadataHash([u8; 32]);
+
+impl From<RPoolMetadataHash> for PoolMetadataHash {
+  fn from(hash: RPoolMetadataHash) -> Self {
+    Self(hash.to_bytes().try_into().unwrap())
+  }
+}
+
+impl From<PoolMetadataHash> for RPoolMetadataHash {
+  fn from(hash: PoolMetadataHash) -> Self {
+    hash.0.into()
+  }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_pool_metadata_hash_to_bytes(
+  pool_metadata_hash: PoolMetadataHash, result: &mut CData, error: &mut CError,
+) -> bool {
+  handle_exception(|| {
+    let pool_metadata_hash: RPoolMetadataHash = pool_metadata_hash.into();
+    pool_metadata_hash.to_bytes().into()
+  })
+  .response(result, error)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_pool_metadata_hash_from_bytes(
+  data: CData, result: &mut PoolMetadataHash, error: &mut CError,
+) -> bool {
+  handle_exception_result(|| {
+    data
+      .unowned()
+      .and_then(|bytes| RPoolMetadataHash::from_bytes(bytes.to_vec()).into_result())
+      .map(|pool_metadata_hash| pool_metadata_hash.into())
+  })
+  .response(result, error)
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
 pub struct PoolMetadata {
   url: URL,
-  metadata_hash: MetadataHash,
+  pool_metadata_hash: PoolMetadataHash,
 }
 
 impl Free for PoolMetadata {
@@ -478,21 +510,19 @@ impl TryFrom<PoolMetadata> for RPoolMetadata {
   type Error = CError;
 
   fn try_from(pool_metadata: PoolMetadata) -> Result<Self> {
-    todo!();
-    // pool_metadata
-    //   .url
-    //   .try_into()
-    //   .map(|url| Self::new(&url, &pool_metadata.metadata_hash.into()))
+    pool_metadata
+      .url
+      .try_into()
+      .map(|url| Self::new(&url, &pool_metadata.pool_metadata_hash.into()))
   }
 }
 
 impl From<RPoolMetadata> for PoolMetadata {
   fn from(pool_metadata: RPoolMetadata) -> Self {
-    todo!();
-    // Self {
-    //   url: pool_metadata.url().into(),
-    //   metadata_hash: pool_metadata.metadata_hash().into(),
-    // }
+    Self {
+      url: pool_metadata.url().into(),
+      pool_metadata_hash: pool_metadata.pool_metadata_hash().into(),
+    }
   }
 }
 

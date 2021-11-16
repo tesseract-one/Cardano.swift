@@ -80,22 +80,22 @@ extension CCardano.Update {
     }
 }
 
-public typealias MetadataHash = CCardano.MetadataHash
+public typealias AuxiliaryDataHash = CCardano.AuxiliaryDataHash
 
-extension MetadataHash: CType {}
+extension AuxiliaryDataHash: CType {}
 
-extension MetadataHash {
+extension AuxiliaryDataHash {
     public init(bytes: Data) throws {
         self = try bytes.withCData { bytes in
             RustResult<Self>.wrap { res, err in
-                cardano_metadata_hash_from_bytes(bytes, res, err)
+                cardano_auxiliary_data_hash_from_bytes(bytes, res, err)
             }
         }.get()
     }
     
     public func data() throws -> Data {
         var data = try RustResult<CData>.wrap { res, err in
-            cardano_metadata_hash_to_bytes(self, res, err)
+            cardano_auxiliary_data_hash_to_bytes(self, res, err)
         }.get()
         return data.owned()
     }
@@ -192,16 +192,16 @@ extension COption_Update: COption {
     }
 }
 
-extension COption_MetadataHash: COption {
-    typealias Tag = COption_MetadataHash_Tag
-    typealias Value = MetadataHash
+extension COption_AuxiliaryDataHash: COption {
+    typealias Tag = COption_AuxiliaryDataHash_Tag
+    typealias Value = AuxiliaryDataHash
 
     func someTag() -> Tag {
-        Some_MetadataHash
+        Some_AuxiliaryDataHash
     }
 
     func noneTag() -> Tag {
-        None_MetadataHash
+        None_AuxiliaryDataHash
     }
 }
 
@@ -226,7 +226,7 @@ public struct TransactionBody {
     public var certs: Certificates?
     public var withdrawals: Withdrawals?
     public var update: Update?
-    public var metadataHash: MetadataHash?
+    public var auxiliaryDataHash: AuxiliaryDataHash?
     public var validityStartInterval: Slot?
     public var mint: Mint?
     
@@ -242,7 +242,7 @@ public struct TransactionBody {
             })
         }
         update = transactionBody.update.get()?.copied()
-        metadataHash = transactionBody.metadata_hash.get()
+        auxiliaryDataHash = transactionBody.auxiliary_data_hash.get()
         validityStartInterval = transactionBody.validity_start_interval.get()
         mint = transactionBody.mint.get()?.copiedDictionary().mapValues { $0.copiedDictionary() }
     }
@@ -294,7 +294,7 @@ public struct TransactionBody {
                                     certs: certs,
                                     withdrawals: withdrawals,
                                     update: update,
-                                    metadata_hash: metadataHash.cOption(),
+                                    auxiliary_data_hash: auxiliaryDataHash.cOption(),
                                     validity_start_interval: validityStartInterval.cOption(),
                                     mint: mint
                                 ))
