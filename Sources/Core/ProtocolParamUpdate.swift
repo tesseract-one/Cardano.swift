@@ -145,7 +145,6 @@ public struct ProtocolParamUpdate {
     public var d: UnitInterval?
     public var extraEntropy: Nonce?
     public var protocolVersion: ProtocolVersions?
-    public var minUtxoValue: Coin?
     
     init(protocolParamUpdate: CCardano.ProtocolParamUpdate) {
         minfeeA = protocolParamUpdate.minfee_a.get()
@@ -163,7 +162,6 @@ public struct ProtocolParamUpdate {
         d = protocolParamUpdate.d.get()
         extraEntropy = protocolParamUpdate.extra_entropy.get()
         protocolVersion = protocolParamUpdate.protocol_version.get()?.copied()
-        minUtxoValue = protocolParamUpdate.min_utxo_value.get()
     }
     
     public init() {}
@@ -202,8 +200,7 @@ public struct ProtocolParamUpdate {
                 treasury_growth_rate: treasuryGrowthRate.cOption(),
                 d: d.cOption(),
                 extra_entropy: extraEntropy.cOption(),
-                protocol_version: protocolVersion,
-                min_utxo_value: minUtxoValue.cOption()
+                protocol_version: protocolVersion
             ))
         }
     }
