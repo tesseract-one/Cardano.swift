@@ -7,6 +7,7 @@
 
 import Foundation
 import CCardano
+import BigInt
 
 public typealias ProposedProtocolParameterUpdates = Dictionary<GenesisHash, ProtocolParamUpdate>
 
@@ -101,7 +102,14 @@ extension AuxiliaryDataHash {
     }
 }
 
-public typealias MintAssets = Dictionary<AssetName, UInt64>
+public typealias MintAssets = Dictionary<AssetName, BigInt>
+
+extension CCardano.MintAssetsKeyValue: CType {}
+
+extension CCardano.MintAssetsKeyValue: CKeyValue {
+    typealias Key = AssetName
+    typealias Value = CInt128
+}
 
 extension CCardano.MintAssets: CArray {
     typealias CElement = CCardano.MintAssetsKeyValue
@@ -113,7 +121,7 @@ extension CCardano.MintAssets: CArray {
 
 extension MintAssets {
     func withCKVArray<T>(fn: @escaping (CCardano.MintAssets) throws -> T) rethrows -> T {
-        try withCKVArr(fn: fn)
+        try withCKVArray(withValue: { try $1($0.cInt128) }, fn: fn)
     }
 }
 
@@ -244,7 +252,9 @@ public struct TransactionBody {
         update = transactionBody.update.get()?.copied()
         auxiliaryDataHash = transactionBody.auxiliary_data_hash.get()
         validityStartInterval = transactionBody.validity_start_interval.get()
-        mint = transactionBody.mint.get()?.copiedDictionary().mapValues { $0.copiedDictionary() }
+        mint = transactionBody.mint.get()?.copiedDictionary().mapValues {
+            $0.copiedDictionary().mapValues { $0.bigInt }
+        }
     }
     
     public init(

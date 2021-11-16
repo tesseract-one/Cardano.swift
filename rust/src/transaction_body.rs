@@ -5,6 +5,7 @@ use crate::certificate::Certificates;
 use crate::data::CData;
 use crate::error::CError;
 use crate::genesis_key_delegation::GenesisHash;
+use crate::int::CInt128;
 use crate::linear_fee::Coin;
 use crate::multi_asset::PolicyID;
 use crate::option::COption;
@@ -16,7 +17,7 @@ use crate::transaction_output::TransactionOutputs;
 use crate::withdrawals::Withdrawals;
 use cardano_serialization_lib::{
   crypto::AuxiliaryDataHash as RAuxiliaryDataHash,
-  utils::{from_bignum, to_bignum, Int},
+  utils::{from_bignum, to_bignum},
   Mint as RMint, MintAssets as RMintAssets,
   ProposedProtocolParameterUpdates as RProposedProtocolParameterUpdates,
   TransactionBody as RTransactionBody, Update as RUpdate,
@@ -163,7 +164,7 @@ pub unsafe extern "C" fn cardano_auxiliary_data_hash_from_bytes(
   .response(result, error)
 }
 
-pub type MintAssetsKeyValue = CKeyValue<AssetName, u64>;
+pub type MintAssetsKeyValue = CKeyValue<AssetName, CInt128>;
 pub type MintAssets = CArray<MintAssetsKeyValue>;
 
 impl TryFrom<MintAssets> for RMintAssets {
@@ -174,7 +175,7 @@ impl TryFrom<MintAssets> for RMintAssets {
     let mut mint_assets = RMintAssets::new();
     for (asset_name, int) in map {
       let asset_name = asset_name.try_into()?;
-      mint_assets.insert(&asset_name, Int::new(&to_bignum(int)));
+      mint_assets.insert(&asset_name, int.into());
     }
     Ok(mint_assets)
   }
@@ -191,9 +192,8 @@ impl TryFrom<RMintAssets> for MintAssets {
           mint_assets
             .get(&asset_name)
             .ok_or("Cannot get Int by AssetName".into())
-            .map(|int| int.as_positive().or(int.as_negative()).unwrap())
             .zip(asset_name.try_into())
-            .map(|(int, asset_name)| (asset_name, from_bignum(&int)).into())
+            .map(|(int, asset_name)| (asset_name, int.into()).into())
         })
         .collect::<Result<Vec<MintAssetsKeyValue>>>()
         .map(|mint_assets| mint_assets.into())

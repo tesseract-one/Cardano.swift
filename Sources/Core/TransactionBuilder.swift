@@ -195,7 +195,9 @@ public struct TransactionBuilder {
         auxiliaryData = transactionBuilder.auxiliary_data.get()?.copied()
         validityStartInterval = transactionBuilder.validity_start_interval.get()
         inputTypes = transactionBuilder.input_types.copied()
-        mint = transactionBuilder.mint.get()?.copiedDictionary().mapValues { $0.copiedDictionary() }
+        mint = transactionBuilder.mint.get()?.copiedDictionary().mapValues {
+            $0.copiedDictionary().mapValues { $0.bigInt }
+        }
     }
     
     public init(linearFee: LinearFee,
