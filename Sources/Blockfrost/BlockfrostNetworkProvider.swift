@@ -115,7 +115,7 @@ public struct BlockfrostNetworkProvider: NetworkProvider {
     
     public func getTransaction(hash: TransactionHash,
                                _ cb: @escaping (Result<ChainTransaction?, Error>) -> Void) {
-        let _ = transactionsApi.getTransaction(hash: hash.hex) { res in
+        let _ = transactionsApi.getTransaction(hash: Data(hash.hash).hex(prefix: false)) { res in
             switch res {
             case .success(let transactionContent):
                 cb(.success(ChainTransaction(blockfrost: transactionContent)))

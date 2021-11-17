@@ -185,18 +185,19 @@ final class CardanoSendApiTests: XCTestCase {
                 ? try! cardano.addresses.new(for: account, change: false)
                 : addresses.randomElement()!
             let amountSent: UInt64 = 10000000
-            cardano.balance.ada(in: account) { res in
-                let balanceFrom = try! res.get()
-                cardano.send.ada(to: to, lovelace: amountSent, from: account) { res in
-                    let transactionHash = try! res.get()
-                    self.getTransaction(cardano: cardano,
-                                        transactionHash: transactionHash) { chainTransaction in
-                        let outputAmount = try! Value(
-                            blockfrost: chainTransaction.outputAmount.map {
-                                (unit: $0.unit, quantity: $0.quantity)
-                            }
-                        ).coin
-                        XCTAssertEqual(outputAmount + UInt64(chainTransaction.fees)!, balanceFrom)
+            let change = try! cardano.addresses.new(for: account, change: true)
+            cardano.send.ada(to: to, lovelace: amountSent, from: account, change: change) { res in
+                let transactionHash = try! res.get()
+                self.getTransaction(cardano: cardano,
+                                    transactionHash: transactionHash) { chainTransaction in
+                    let outputAmount = try! Value(
+                        blockfrost: chainTransaction.outputAmount.map {
+                            (unit: $0.unit, quantity: $0.quantity)
+                        }
+                    ).coin
+                    cardano.balance.ada(in: change) { res in
+                        let balanceChange = try! res.get()
+                        XCTAssertEqual(outputAmount, amountSent + balanceChange)
                         cardano.balance.ada(in: to) { res in
                             let balanceTo = try! res.get()
                             XCTAssertEqual(balanceTo, amountSent)
