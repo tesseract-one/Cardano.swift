@@ -11,7 +11,7 @@ final class CardanoTests: XCTestCase {
     let publicKeyExample = "ed25519_pk1dgaagyh470y66p899txcl3r0jaeaxu6yd7z2dxyk55qcycdml8gszkxze2"
     
     func testLinearFee() throws {
-        let linearFee = try LinearFee(coefficient: 1, constant: 2)
+        let linearFee = LinearFee(constant: 2, coefficient: 1)
         XCTAssertEqual(1, linearFee.coefficient)
         XCTAssertEqual(2, linearFee.constant)
     }

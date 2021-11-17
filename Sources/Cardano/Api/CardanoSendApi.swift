@@ -34,71 +34,17 @@ public struct CardanoSendApi: CardanoApi {
         ada(to: to, amount: amount, from: addresses, change: changeAddress, cb)
     }
     
-    private func getUtxos(iterator: UtxoProviderAsyncIterator,
-                          to: Address,
-                          amount: UInt64,
-                          change: Address,
-                          slot: Int?,
-                          maxSlots: UInt32,
+    private func getAllUtxos(iterator: UtxoProviderAsyncIterator,
                           all: [UTXO],
-                          _ cb: @escaping (Result<TransactionBuilder, Error>) -> Void) {
+                          _ cb: @escaping (Result<[UTXO], Error>) -> Void) {
         iterator.next { (res, iterator) in
             switch res {
-            case .success(let utxosResult):
-                var notEnoughUtxos: Error?
-                var utxos = [UTXO]()
-                do {
-                    for utxo in utxosResult {
-                        utxos.append(utxo)
-                        var transactionBuilder = try TransactionBuilder(
-                            linearFee: cardano.info.linearFee,
-                            minimumUtxoVal: cardano.info.minimumUtxoVal,
-                            poolDeposit: cardano.info.poolDeposit,
-                            keyDeposit: cardano.info.keyDeposit,
-                            maxValueSize: cardano.info.maxValueSize,
-                            maxTxSize: cardano.info.maxTxSize
-                        )
-                        try utxos.forEach { utxo in
-                            try transactionBuilder.addInput(
-                                address: utxo.address,
-                                input: TransactionInput(
-                                    transaction_id: utxo.txHash,
-                                    index: utxo.index
-                                ),
-                                amount: utxo.value
-                            )
-                        }
-                        try transactionBuilder.addOutput(
-                            output: TransactionOutput(address: to, amount: Value(coin: amount))
-                        )
-                        if let slot = slot {
-                            transactionBuilder.ttl = UInt32(slot) + maxSlots
-                        }
-                        do {
-                            let _ = try transactionBuilder.addChangeIfNeeded(address: change)
-                            cb(.success(transactionBuilder))
-                            return
-                        } catch {
-                            notEnoughUtxos = error
-                        }
-                    }
-                } catch {
-                    cb(.failure(error))
-                }
+            case .success(let utxos):
                 guard let iterator = iterator else {
-                    cb(.failure(notEnoughUtxos!))
+                    cb(.success(all + utxos))
                     return
                 }
-                getUtxos(
-                    iterator: iterator,
-                    to: to,
-                    amount: amount,
-                    change: change,
-                    slot: slot,
-                    maxSlots: maxSlots,
-                    all: all + utxos,
-                    cb
-                )
+                getAllUtxos(iterator: iterator, all: all + utxos, cb)
             case .failure(let error):
                 cb(.failure(error))
             }
@@ -109,27 +55,57 @@ public struct CardanoSendApi: CardanoApi {
                     amount: UInt64,
                     from: [Address],
                     change: Address,
-                    maxSlots: UInt32 = 200,
+                    maxSlots: UInt32 = 300,
                     _ cb: @escaping ApiCallback<String>) {
         cardano.network.getSlotNumber { res in
             switch res {
             case .success(let slot):
-                getUtxos(
+                getAllUtxos(
                     iterator: cardano.utxos.get(for: from, asset: nil),
-                    to: to,
-                    amount: amount,
-                    change: change,
-                    slot: slot,
-                    maxSlots: maxSlots,
                     all: []
                 ) { res in
                     switch res {
-                    case .success(let transactionBuilder):
+                    case .success(let utxos):
                         do {
+                            var transactionBuilder = try TransactionBuilder(
+                                linearFee: cardano.info.linearFee,
+                                poolDeposit: cardano.info.poolDeposit,
+                                keyDeposit: cardano.info.keyDeposit,
+                                maxValueSize: cardano.info.maxValueSize,
+                                maxTxSize: cardano.info.maxTxSize,
+                                coinsPerUtxoWord: cardano.info.coinsPerUtxoWord
+                            )
+                            try transactionBuilder.addOutput(
+                                output: TransactionOutput(address: to, amount: Value(coin: amount))
+                            )
+                            if let slot = slot {
+                                transactionBuilder.ttl = UInt32(slot) + maxSlots
+                            }
+                            let transactionUnspentOutputs = utxos.map { utxo in
+                                TransactionUnspentOutput(
+                                    input: TransactionInput(
+                                        transaction_id: utxo.txHash,
+                                        index: utxo.index
+                                    ),
+                                    output: TransactionOutput(
+                                        address: utxo.address,
+                                        amount: utxo.value
+                                    )
+                                )
+                            }
+                            try transactionBuilder.addInputsFrom(inputs: transactionUnspentOutputs,
+                                                                 strategy: .largestFirst)
+                            let addresses = transactionBuilder.inputs.map { input in
+                                transactionUnspentOutputs.first { transactionUnspentOutput in
+                                    transactionUnspentOutput.input == input.input
+                                    && transactionUnspentOutput.output.amount == input.amount
+                                }!.output.address
+                            }
+                            let _ = try transactionBuilder.addChangeIfNeeded(address: change)
                             let transactionBody = try transactionBuilder.build()
                             let extendedTransaction = ExtendedTransaction(
                                 tx: transactionBody,
-                                addresses: try cardano.addresses.extended(addresses: from),
+                                addresses: try cardano.addresses.extended(addresses: addresses),
                                 auxiliaryData: nil
                             )
                             cardano.signer.sign(tx: extendedTransaction) { res in

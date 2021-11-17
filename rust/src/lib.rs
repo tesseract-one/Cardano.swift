@@ -42,6 +42,7 @@ pub mod transaction;
 pub mod transaction_builder;
 pub mod int;
 pub mod json_value;
+pub mod transaction_unspent_output;
 mod ptr;
 mod panic;
 mod array;

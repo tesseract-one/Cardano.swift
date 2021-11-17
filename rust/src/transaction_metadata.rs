@@ -7,6 +7,7 @@ use crate::option::COption;
 use crate::panic::*;
 use crate::ptr::*;
 use crate::stake_credential::Ed25519KeyHash;
+use crate::stake_credential::ScriptHash;
 use cardano_serialization_lib::{
   metadata::AuxiliaryData as RAuxiliaryData, NativeScript as RNativeScript, NativeScriptKind,
   NativeScripts as RNativeScripts, ScriptAll as RScriptAll, ScriptAny as RScriptAny,
@@ -126,7 +127,7 @@ impl TryFrom<RNativeScript> for NativeScript {
 
 #[no_mangle]
 pub unsafe extern "C" fn cardano_native_script_hash(
-  native_script: NativeScript, namespace: ScriptHashNamespace, result: &mut Ed25519KeyHash,
+  native_script: NativeScript, namespace: ScriptHashNamespace, result: &mut ScriptHash,
   error: &mut CError,
 ) -> bool {
   handle_exception_result(|| {

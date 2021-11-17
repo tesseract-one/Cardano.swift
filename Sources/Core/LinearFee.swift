@@ -22,11 +22,3 @@ extension LinearFee: Equatable, Hashable {
         hasher.combine(coefficient)
     }
 }
-
-extension LinearFee {
-    public init(coefficient: Coin, constant: Coin) throws {
-        self = try RustResult<Self>.wrap { result, error in
-            cardano_linear_fee_new(coefficient, constant, result, error)
-        }.get()
-    }
-}

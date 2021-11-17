@@ -171,14 +171,9 @@ final class CardanoSendApiTests: XCTestCase {
             password: Data()
         )
         let cardano = try Cardano(
+            blockfrost: TestEnvironment.instance.blockfrostProjectId,
             info: .testnet,
-            signer: keychain,
-            network: BlockfrostNetworkProvider(config: BlockfrostConfig(
-                basePath: "https://cardano-testnet.blockfrost.io/api/v0",
-                projectId: TestEnvironment.instance.blockfrostProjectId
-            )),
-            addresses: SimpleAddressManager(),
-            utxos: NonCachingUtxoProvider()
+            signer: keychain
         )
         let account = try keychain.addAccount(index: 0)
         cardano.addresses.fetch(for: [account]) { res in
@@ -209,7 +204,7 @@ final class CardanoSendApiTests: XCTestCase {
                 }
             }
         }
-        wait(for: [sent], timeout: 100)
+        wait(for: [sent], timeout: 300)
     }
     
     func testSendAdaFromAccount() throws {

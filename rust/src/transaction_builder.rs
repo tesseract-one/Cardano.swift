@@ -14,6 +14,7 @@ use crate::transaction_body::{Mint, TransactionBody};
 use crate::transaction_input::TransactionInput;
 use crate::transaction_metadata::AuxiliaryData;
 use crate::transaction_output::{TransactionOutput, TransactionOutputs};
+use crate::transaction_unspent_output::TransactionUnspentOutputs;
 use crate::value::Value;
 use crate::withdrawals::Withdrawals;
 use cardano_serialization_lib::{
@@ -21,13 +22,16 @@ use cardano_serialization_lib::{
   crypto::{Ed25519KeyHash as REd25519KeyHash, ScriptHash as RScriptHash},
   fees::LinearFee as RLinearFee,
   metadata::AuxiliaryData as RAuxiliaryData,
-  tx_builder::TransactionBuilder as RTransactionBuilder,
-  utils::{from_bignum, to_bignum, BigNum as RBigNum, Coin as RCoin, Value as RValue},
-  Certificates as RCertificates,
-  Mint as RMint,
-  TransactionInput as RTransactionInput,
-  TransactionOutput as RTransactionOutput,
-  TransactionOutputs as RTransactionOutputs,
+  tx_builder::{
+    CoinSelectionStrategyCIP2 as RCoinSelectionStrategyCIP2,
+    TransactionBuilder as RTransactionBuilder,
+  },
+  utils::{
+    from_bignum, to_bignum, BigNum as RBigNum, Coin as RCoin,
+    TransactionUnspentOutputs as RTransactionUnspentOutputs, Value as RValue,
+  },
+  Certificates as RCertificates, Mint as RMint, TransactionInput as RTransactionInput,
+  TransactionOutput as RTransactionOutput, TransactionOutputs as RTransactionOutputs,
   Withdrawals as RWithdrawals,
 };
 use std::collections::BTreeSet;
@@ -182,8 +186,33 @@ pub unsafe extern "C" fn cardano_tx_builder_input_free(tx_builder_input: &mut Tx
 
 #[repr(C)]
 #[derive(Copy, Clone)]
+pub enum CoinSelectionStrategyCIP2 {
+  LargestFirst,
+  RandomImprove,
+}
+
+impl From<CoinSelectionStrategyCIP2> for RCoinSelectionStrategyCIP2 {
+  fn from(coin_selection_strategy_cip2: CoinSelectionStrategyCIP2) -> Self {
+    match coin_selection_strategy_cip2 {
+      CoinSelectionStrategyCIP2::LargestFirst => Self::LargestFirst,
+      CoinSelectionStrategyCIP2::RandomImprove => Self::RandomImprove,
+    }
+  }
+}
+
+impl From<RCoinSelectionStrategyCIP2> for CoinSelectionStrategyCIP2 {
+  fn from(coin_selection_strategy_cip2: RCoinSelectionStrategyCIP2) -> Self {
+    match coin_selection_strategy_cip2 {
+      RCoinSelectionStrategyCIP2::LargestFirst => Self::LargestFirst,
+      RCoinSelectionStrategyCIP2::RandomImprove => Self::RandomImprove,
+    }
+  }
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
 pub struct TransactionBuilder {
-  minimum_utxo_val: BigNum,
+  coins_per_utxo_word: BigNum,
   pool_deposit: BigNum,
   key_deposit: BigNum,
   max_value_size: u32,
@@ -199,6 +228,8 @@ pub struct TransactionBuilder {
   validity_start_interval: COption<Slot>,
   input_types: MockWitnessSet,
   mint: COption<Mint>,
+  inputs_auto_added: bool,
+  prefer_pure_change: bool,
 }
 
 impl Free for TransactionBuilder {
@@ -214,7 +245,7 @@ impl Free for TransactionBuilder {
 
 // for transmute
 pub struct TTransactionBuilder {
-  minimum_utxo_val: RBigNum,
+  coins_per_utxo_word: RBigNum,
   pool_deposit: RBigNum,
   key_deposit: RBigNum,
   max_value_size: u32,
@@ -230,6 +261,8 @@ pub struct TTransactionBuilder {
   validity_start_interval: Option<Slot>,
   input_types: TMockWitnessSet,
   mint: Option<RMint>,
+  inputs_auto_added: bool,
+  prefer_pure_change: bool,
 }
 
 impl TryFrom<TransactionBuilder> for TTransactionBuilder {
@@ -253,7 +286,9 @@ impl TryFrom<TransactionBuilder> for TTransactionBuilder {
       })
       .zip({
         let auxiliary_data: Option<AuxiliaryData> = tb.auxiliary_data.into();
-        auxiliary_data.map(|auxiliary_data| auxiliary_data.try_into()).transpose()
+        auxiliary_data
+          .map(|auxiliary_data| auxiliary_data.try_into())
+          .transpose()
       })
       .zip(tb.input_types.try_into())
       .zip({
@@ -264,7 +299,7 @@ impl TryFrom<TransactionBuilder> for TTransactionBuilder {
         |((((((inputs, outputs), certs), withdrawals), auxiliary_data), input_types), mint)| {
           let fee: Option<Coin> = tb.fee.into();
           Self {
-            minimum_utxo_val: to_bignum(tb.minimum_utxo_val),
+            coins_per_utxo_word: to_bignum(tb.coins_per_utxo_word),
             pool_deposit: to_bignum(tb.pool_deposit),
             key_deposit: to_bignum(tb.key_deposit),
             max_value_size: tb.max_value_size,
@@ -280,6 +315,8 @@ impl TryFrom<TransactionBuilder> for TTransactionBuilder {
             validity_start_interval: tb.validity_start_interval.into(),
             input_types,
             mint: mint.into(),
+            inputs_auto_added: tb.inputs_auto_added,
+            prefer_pure_change: tb.prefer_pure_change,
           }
         },
       )
@@ -290,7 +327,7 @@ impl TryFrom<TTransactionBuilder> for TransactionBuilder {
   type Error = CError;
 
   fn try_from(tb: TTransactionBuilder) -> Result<Self> {
-    let minimum_utxo_val = from_bignum(&tb.minimum_utxo_val);
+    let coins_per_utxo_word = from_bignum(&tb.coins_per_utxo_word);
     let pool_deposit = from_bignum(&tb.pool_deposit);
     let key_deposit = from_bignum(&tb.key_deposit);
     let max_value_size = tb.max_value_size;
@@ -299,6 +336,8 @@ impl TryFrom<TTransactionBuilder> for TransactionBuilder {
     let fee = tb.fee.map(|fee| from_bignum(&fee)).into();
     let ttl = tb.ttl.into();
     let validity_start_interval = tb.validity_start_interval.into();
+    let inputs_auto_added = tb.inputs_auto_added;
+    let prefer_pure_change = tb.prefer_pure_change;
     tb.inputs
       .into_iter()
       .map(|input| input.try_into())
@@ -306,12 +345,16 @@ impl TryFrom<TTransactionBuilder> for TransactionBuilder {
       .zip(tb.outputs.try_into())
       .zip(tb.certs.map(|certs| certs.try_into()).transpose())
       .zip(tb.withdrawals.map(|wls| wls.try_into()).transpose())
-      .zip(tb.auxiliary_data.map(|auxiliary_data| auxiliary_data.try_into()).transpose())
+      .zip(
+        tb.auxiliary_data
+          .map(|auxiliary_data| auxiliary_data.try_into())
+          .transpose(),
+      )
       .zip(tb.input_types.try_into())
       .zip(tb.mint.map(|mint| mint.try_into()).transpose())
       .map(
         |((((((inputs, outputs), certs), withdrawals), auxiliary_data), input_types), mint)| Self {
-          minimum_utxo_val,
+          coins_per_utxo_word,
           pool_deposit,
           key_deposit,
           max_value_size,
@@ -327,6 +370,8 @@ impl TryFrom<TTransactionBuilder> for TransactionBuilder {
           validity_start_interval,
           input_types,
           mint: mint.into(),
+          inputs_auto_added,
+          prefer_pure_change,
         },
       )
   }
@@ -352,6 +397,26 @@ impl TryFrom<RTransactionBuilder> for TransactionBuilder {
       unsafe { std::mem::transmute(transaction_builder) };
     transaction_builder.try_into()
   }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_transaction_builder_add_inputs_from(
+  tb: TransactionBuilder, inputs: TransactionUnspentOutputs, strategy: CoinSelectionStrategyCIP2,
+  result: &mut TransactionBuilder, error: &mut CError,
+) -> bool {
+  handle_exception_result(|| {
+    tb.try_into()
+      .zip(inputs.try_into())
+      .and_then(
+        |(mut tb, inputs): (RTransactionBuilder, RTransactionUnspentOutputs)| {
+          tb.add_inputs_from(&inputs, strategy.into())
+            .into_result()
+            .zip(tb.try_into())
+        },
+      )
+      .map(|(_, tb)| tb)
+  })
+  .response(result, error)
 }
 
 #[no_mangle]
@@ -438,7 +503,7 @@ pub unsafe extern "C" fn cardano_transaction_builder_fee_for_input(
       .zip(address.try_into())
       .zip(amount.try_into())
       .and_then(
-        |((mut tb, address), amount): ((RTransactionBuilder, RAddress), RValue)| {
+        |((tb, address), amount): ((RTransactionBuilder, RAddress), RValue)| {
           tb.fee_for_input(&address, &input.into(), &amount)
             .into_result()
         },
@@ -473,11 +538,9 @@ pub unsafe extern "C" fn cardano_transaction_builder_fee_for_output(
   handle_exception_result(|| {
     tb.try_into()
       .zip(output.try_into())
-      .and_then(
-        |(tb, output): (RTransactionBuilder, RTransactionOutput)| {
-          tb.fee_for_output(&output).into_result()
-        },
-      )
+      .and_then(|(tb, output): (RTransactionBuilder, RTransactionOutput)| {
+        tb.fee_for_output(&output).into_result()
+      })
       .map(|fee| from_bignum(&fee))
   })
   .response(result, error)
@@ -520,17 +583,17 @@ pub unsafe extern "C" fn cardano_transaction_builder_set_withdrawals(
 
 #[no_mangle]
 pub unsafe extern "C" fn cardano_transaction_builder_new(
-  linear_fee: LinearFee, minimum_utxo_val: Coin, pool_deposit: BigNum, key_deposit: BigNum,
-  max_value_size: u32, max_tx_size: u32, result: &mut TransactionBuilder, error: &mut CError,
+  linear_fee: LinearFee, pool_deposit: BigNum, key_deposit: BigNum, max_value_size: u32,
+  max_tx_size: u32, coins_per_utxo_word: Coin, result: &mut TransactionBuilder, error: &mut CError,
 ) -> bool {
   handle_exception_result(|| {
     RTransactionBuilder::new(
       &linear_fee.into(),
-      &to_bignum(minimum_utxo_val),
       &to_bignum(pool_deposit),
       &to_bignum(key_deposit),
       max_value_size,
       max_tx_size,
+      &to_bignum(coins_per_utxo_word),
     )
     .try_into()
   })

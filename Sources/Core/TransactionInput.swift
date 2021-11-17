@@ -12,6 +12,13 @@ public typealias TransactionInput = CCardano.TransactionInput
 
 extension TransactionInput: CType {}
 
+extension TransactionInput: Equatable {
+    public static func == (lhs: TransactionInput, rhs: TransactionInput) -> Bool {
+        lhs.transaction_id == rhs.transaction_id
+        && lhs.index == rhs.index
+    }
+}
+
 extension TransactionInput {
     public init(bytes: Data) throws {
         self = try bytes.withCData { bytes in

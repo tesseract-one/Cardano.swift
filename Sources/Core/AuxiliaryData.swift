@@ -194,7 +194,7 @@ public enum NativeScript {
         }
     }
     
-    public func hash(namespace: ScriptHashNamespace) throws -> Ed25519KeyHash {
+    public func hash(namespace: ScriptHashNamespace) throws -> ScriptHash {
         try withCNativeScript { try $0.hash(namespace: namespace) }
     }
     
@@ -259,9 +259,9 @@ extension CCardano.NativeScript: CPtr {
 }
 
 extension CCardano.NativeScript {
-    public func hash(namespace: ScriptHashNamespace) throws -> Ed25519KeyHash {
+    public func hash(namespace: ScriptHashNamespace) throws -> ScriptHash {
         try namespace.withCScriptHashNamespace { namespace in
-            RustResult<Ed25519KeyHash>.wrap { result, error in
+            RustResult<ScriptHash>.wrap { result, error in
                 cardano_native_script_hash(self, namespace, result, error)
             }
         }.get()

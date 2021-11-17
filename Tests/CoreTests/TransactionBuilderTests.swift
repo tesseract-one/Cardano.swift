@@ -30,7 +30,7 @@ final class TransactionBuilderTests: XCTestCase {
     func testTransactionBuilder() throws {
         let data28 = Data(repeating: 1, count: 28)
         let data32 = Data(repeating: 1, count: 32)
-        let linearFee = try LinearFee(coefficient: 1, constant: 2)
+        let linearFee = LinearFee(constant: 2, coefficient: 1)
         var transactionBuilder = try TransactionBuilder(
             linearFee: linearFee,
             minimumUtxoVal: 1,
@@ -64,7 +64,7 @@ final class TransactionBuilderTests: XCTestCase {
     }
 
     func testBuildTxWithChange() throws {
-        let linearFee = try LinearFee(coefficient: 500, constant: 2)
+        let linearFee = LinearFee(constant: 2, coefficient: 500)
         var txBuilder = try TransactionBuilder(linearFee: linearFee, minimumUtxoVal: 1, poolDeposit: 1, keyDeposit: 1, maxValueSize: maxValueSize, maxTxSize: maxTxSize)
         let spend = try rootKey15()
             .derive(index: harden(1852))
@@ -118,7 +118,7 @@ final class TransactionBuilderTests: XCTestCase {
     }
     
     func testBuildTxWithoutChange() throws {
-        let linearFee = try LinearFee(coefficient: 500, constant: 2)
+        let linearFee = LinearFee(constant: 2, coefficient: 500)
         var txBuilder = try TransactionBuilder(linearFee: linearFee, minimumUtxoVal: 1, poolDeposit: 1, keyDeposit: 1, maxValueSize: maxValueSize, maxTxSize: maxTxSize)
         let spend = try rootKey15()
             .derive(index: harden(1852))
@@ -172,7 +172,7 @@ final class TransactionBuilderTests: XCTestCase {
     }
     
     func testBuildTxWithCerts() throws {
-        let linearFee = try LinearFee(coefficient: 500, constant: 2)
+        let linearFee = LinearFee(constant: 2, coefficient: 500)
         var txBuilder = try TransactionBuilder(linearFee: linearFee, minimumUtxoVal: 1, poolDeposit: 1, keyDeposit: 1_000_000, maxValueSize: maxValueSize, maxTxSize: maxTxSize)
         let spend = try rootKey15()
             .derive(index: harden(1852))
@@ -229,7 +229,7 @@ final class TransactionBuilderTests: XCTestCase {
     }
     
     func testBuildTxExactAmount() throws {
-        let linearFee = try LinearFee(coefficient: 0, constant: 0)
+        let linearFee = LinearFee(constant: 0, coefficient: 0)
         var txBuilder = try TransactionBuilder(linearFee: linearFee, minimumUtxoVal: 1, poolDeposit: 0, keyDeposit: 0, maxValueSize: maxValueSize, maxTxSize: maxTxSize)
         let spend = try rootKey15()
             .derive(index: harden(1852))
@@ -279,7 +279,7 @@ final class TransactionBuilderTests: XCTestCase {
     }
     
     func testBuildTxExactChange() throws {
-        let linearFee = try LinearFee(coefficient: 0, constant: 0)
+        let linearFee = LinearFee(constant: 0, coefficient: 0)
         var txBuilder = try TransactionBuilder(linearFee: linearFee, minimumUtxoVal: 1, poolDeposit: 0, keyDeposit: 0, maxValueSize: maxValueSize, maxTxSize: maxTxSize)
         let spend = try rootKey15()
             .derive(index: harden(1852))
@@ -330,7 +330,7 @@ final class TransactionBuilderTests: XCTestCase {
     }
     
     func testBuildTxInsufficientDeposit() throws {
-        let linearFee = try LinearFee(coefficient: 0, constant: 0)
+        let linearFee = LinearFee(constant: 0, coefficient: 0)
         var txBuilder = try TransactionBuilder(linearFee: linearFee, minimumUtxoVal: 1, poolDeposit: 0, keyDeposit: 5, maxValueSize: maxValueSize, maxTxSize: maxTxSize)
         let spend = try rootKey15()
             .derive(index: harden(1852))
@@ -381,7 +381,7 @@ final class TransactionBuilderTests: XCTestCase {
     }
     
     func testBuildTxWithInputs() throws {
-        let linearFee = try LinearFee(coefficient: 500, constant: 2)
+        let linearFee = LinearFee(constant: 2, coefficient: 500)
         var txBuilder = try TransactionBuilder(linearFee: linearFee, minimumUtxoVal: 1, poolDeposit: 1, keyDeposit: 1, maxValueSize: maxValueSize, maxTxSize: maxTxSize)
         let spend = try rootKey15()
             .derive(index: harden(1852))
@@ -435,7 +435,7 @@ final class TransactionBuilderTests: XCTestCase {
     }
     
     func testBuildTxWithNativeAssetsChange() throws {
-        let linearFee = try LinearFee(coefficient: 0, constant: 1)
+        let linearFee = LinearFee(constant: 1, coefficient: 0)
         let minimumUtxoValue: UInt64 = 1
         var txBuilder = try TransactionBuilder(
             linearFee: linearFee,
@@ -506,7 +506,7 @@ final class TransactionBuilderTests: XCTestCase {
     }
     
     func testBuildTxLeftoverAssets() throws {
-        let linearFee = try LinearFee(coefficient: 500, constant: 2)
+        let linearFee = LinearFee(constant: 2, coefficient: 500)
         var txBuilder = try TransactionBuilder(linearFee: linearFee, minimumUtxoVal: 1, poolDeposit: 1, keyDeposit: 1, maxValueSize: maxValueSize, maxTxSize: maxTxSize)
         let spend = try rootKey15()
             .derive(index: harden(1852))
@@ -560,7 +560,7 @@ final class TransactionBuilderTests: XCTestCase {
     }
     
     func testBuildTxBurnLessThanMinAda() throws {
-        let linearFee = try LinearFee(coefficient: 44, constant: 155381)
+        let linearFee = LinearFee(constant: 155381, coefficient: 44)
         var txBuilder = try TransactionBuilder(
             linearFee: linearFee,
             minimumUtxoVal: 1000000,
@@ -591,7 +591,7 @@ final class TransactionBuilderTests: XCTestCase {
     }
     
     func testBuildTxBurnEmptyAssets() throws {
-        let linearFee = try LinearFee(coefficient: 44, constant: 155381)
+        let linearFee = LinearFee(constant: 155381, coefficient: 44)
         var txBuilder = try TransactionBuilder(
             linearFee: linearFee,
             minimumUtxoVal: 1000000,

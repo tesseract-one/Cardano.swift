@@ -157,8 +157,96 @@ extension COption_Coin: COption {
     }
 }
 
+public enum CoinSelectionStrategyCIP2 {
+    case largestFirst
+    case randomImprove
+
+    init(coinSelectionStrategyCIP2: CCardano.CoinSelectionStrategyCIP2) {
+        switch coinSelectionStrategyCIP2 {
+        case LargestFirst: self = .largestFirst
+        case RandomImprove: self = .randomImprove
+        default: fatalError("Unknown CoinSelectionStrategyCIP2 type")
+        }
+    }
+
+    func withCCoinSelectionStrategyCIP2<T>(
+        fn: @escaping (CCardano.CoinSelectionStrategyCIP2) throws -> T
+    ) rethrows -> T {
+        switch self {
+        case .largestFirst: return try fn(LargestFirst)
+        case .randomImprove: return try fn(RandomImprove)
+        }
+    }
+}
+
+public struct TransactionUnspentOutput {
+    public let input: TransactionInput
+    public let output: TransactionOutput
+    
+    init(transactionUnspentOutput: CCardano.TransactionUnspentOutput) {
+        input = transactionUnspentOutput.input
+        output = transactionUnspentOutput.output.copied()
+    }
+    
+    public init(input: TransactionInput, output: TransactionOutput) {
+        self.input = input
+        self.output = output
+    }
+    
+    func clonedTransactionUnspentOutput() throws -> CCardano.TransactionUnspentOutput {
+        try withCTransactionUnspentOutput { try $0.clone() }
+    }
+
+    func withCTransactionUnspentOutput<T>(
+        fn: @escaping (CCardano.TransactionUnspentOutput) throws -> T
+    ) rethrows -> T {
+        try output.withCTransactionOutput { output in
+            try fn(CCardano.TransactionUnspentOutput(
+                input: input,
+                output: output
+            ))
+        }
+    }
+}
+
+extension CCardano.TransactionUnspentOutput: CPtr {
+    typealias Val = TransactionUnspentOutput
+
+    func copied() -> TransactionUnspentOutput {
+        TransactionUnspentOutput(transactionUnspentOutput: self)
+    }
+
+    mutating func free() {
+        cardano_transaction_unspent_output_free(&self)
+    }
+}
+
+extension CCardano.TransactionUnspentOutput {
+    public func clone() throws -> Self {
+        try RustResult<Self>.wrap { result, error in
+            cardano_transaction_unspent_output_clone(self, result, error)
+        }.get()
+    }
+}
+
+public typealias TransactionUnspentOutputs = Array<TransactionUnspentOutput>
+
+extension CCardano.TransactionUnspentOutputs: CArray {
+    typealias CElement = CCardano.TransactionUnspentOutput
+
+    mutating func free() {
+        cardano_transaction_unspent_outputs_free(&self)
+    }
+}
+
+extension TransactionUnspentOutputs {
+    func withCArray<T>(fn: @escaping (CCardano.TransactionUnspentOutputs) throws -> T) rethrows -> T {
+        try withCArray(with: { try $0.withCTransactionUnspentOutput(fn: $1) }, fn: fn)
+    }
+}
+
 public struct TransactionBuilder {
-    public private(set) var minimumUtxoVal: BigNum
+    public private(set) var coinsPerUtxoWord: BigNum
     public private(set) var poolDeposit: BigNum
     public private(set) var keyDeposit: BigNum
     public private(set) var maxValueSize: UInt32
@@ -174,9 +262,11 @@ public struct TransactionBuilder {
     public var validityStartInterval: Slot?
     public private(set) var inputTypes: MockWitnessSet
     public private(set) var mint: Mint?
+    public private(set) var inputsAutoAdded: Bool
+    public private(set) var preferPureChange: Bool
     
     init(transactionBuilder: CCardano.TransactionBuilder) {
-        minimumUtxoVal = transactionBuilder.minimum_utxo_val
+        coinsPerUtxoWord = transactionBuilder.coins_per_utxo_word
         poolDeposit = transactionBuilder.pool_deposit
         keyDeposit = transactionBuilder.key_deposit
         maxValueSize = transactionBuilder.max_value_size
@@ -198,23 +288,46 @@ public struct TransactionBuilder {
         mint = transactionBuilder.mint.get()?.copiedDictionary().mapValues {
             $0.copiedDictionary().mapValues { $0.bigInt }
         }
+        inputsAutoAdded = transactionBuilder.inputs_auto_added
+        preferPureChange = transactionBuilder.prefer_pure_change
     }
     
-    public init(linearFee: LinearFee,
-                minimumUtxoVal: Coin,
-                poolDeposit: BigNum,
-                keyDeposit: BigNum,
-                maxValueSize: UInt32,
-                maxTxSize: UInt32) throws {
+    // TODO: remove
+    public init(
+        linearFee: LinearFee,
+        minimumUtxoVal: UInt64,
+        poolDeposit: BigNum,
+        keyDeposit: BigNum,
+        maxValueSize: UInt32,
+        maxTxSize: UInt32
+    ) throws {
+        fatalError()
+    }
+    
+    public init(
+        linearFee: LinearFee,
+        poolDeposit: BigNum,
+        keyDeposit: BigNum,
+        maxValueSize: UInt32,
+        maxTxSize: UInt32,
+        coinsPerUtxoWord: Coin
+    ) throws {
         var transactionBuilder = try CCardano.TransactionBuilder(
             linearFee: linearFee,
-            minimumUtxoVal: minimumUtxoVal,
             poolDeposit: poolDeposit,
             keyDeposit: keyDeposit,
             maxValueSize: maxValueSize,
-            maxTxSize: maxTxSize
+            maxTxSize: maxTxSize,
+            coinsPerUtxoWord: coinsPerUtxoWord
         )
         self = transactionBuilder.owned()
+    }
+    
+    public mutating func addInputsFrom(inputs: TransactionUnspentOutputs,
+                                       strategy: CoinSelectionStrategyCIP2) throws {
+        self = try withCTransactionBuilder {
+            try $0.addInputsFrom(inputs: inputs, strategy: strategy)
+        }
     }
     
     public mutating func addKeyInput(hash: Ed25519KeyHash, input: TransactionInput, amount: Value) throws {
@@ -320,7 +433,7 @@ public struct TransactionBuilder {
                                     with: { try $0.withCKVArray(fn: $1) }
                                 ) { mint in
                                     try fn(CCardano.TransactionBuilder(
-                                        minimum_utxo_val: minimumUtxoVal,
+                                        coins_per_utxo_word: coinsPerUtxoWord,
                                         pool_deposit: poolDeposit,
                                         key_deposit: keyDeposit,
                                         max_value_size: maxValueSize,
@@ -335,7 +448,9 @@ public struct TransactionBuilder {
                                         auxiliary_data: auxiliaryData,
                                         validity_start_interval: validityStartInterval.cOption(),
                                         input_types: inputTypes,
-                                        mint: mint
+                                        mint: mint,
+                                        inputs_auto_added: inputsAutoAdded,
+                                        prefer_pure_change: preferPureChange
                                     ))
                                 }
                             }
@@ -362,16 +477,37 @@ extension CCardano.TransactionBuilder: CPtr {
 extension CCardano.TransactionBuilderBool: CType {}
 
 extension CCardano.TransactionBuilder {
-    public init(linearFee: LinearFee,
-                minimumUtxoVal: Coin,
-                poolDeposit: BigNum,
-                keyDeposit: BigNum,
-                maxValueSize: UInt32,
-                maxTxSize: UInt32) throws {
+    public init(
+        linearFee: LinearFee,
+        poolDeposit: BigNum,
+        keyDeposit: BigNum,
+        maxValueSize: UInt32,
+        maxTxSize: UInt32,
+        coinsPerUtxoWord: Coin
+    ) throws {
         self = try RustResult<Self>.wrap { result, error in
-            cardano_transaction_builder_new(linearFee, minimumUtxoVal, poolDeposit, keyDeposit,
-                                            maxValueSize, maxTxSize, result, error)
+            cardano_transaction_builder_new(
+                linearFee,
+                poolDeposit,
+                keyDeposit,
+                maxValueSize,
+                maxTxSize,
+                coinsPerUtxoWord,
+                result,
+                error
+            )
         }.get()
+    }
+    
+    public func addInputsFrom(inputs: TransactionUnspentOutputs, strategy: CoinSelectionStrategyCIP2) throws -> TransactionBuilder {
+        var transactionBuilder = try inputs.withCArray { inputs in
+            strategy.withCCoinSelectionStrategyCIP2 { strategy in
+                RustResult<Self>.wrap { result, error in
+                    cardano_transaction_builder_add_inputs_from(self, inputs, strategy, result, error)
+                }
+            }
+        }.get()
+        return transactionBuilder.owned()
     }
     
     public func addKeyInput(hash: Ed25519KeyHash, input: TransactionInput, amount: Value) throws -> TransactionBuilder {

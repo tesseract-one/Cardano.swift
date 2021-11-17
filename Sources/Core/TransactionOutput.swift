@@ -22,7 +22,7 @@ public struct TransactionOutput {
         self.amount = amount
     }
     
-    func clonedTransactionOutput() throws -> CCardano.TransactionOutput {
+    func clonedCTransactionOutput() throws -> CCardano.TransactionOutput {
         try withCTransactionOutput { try $0.clone() }
     }
 

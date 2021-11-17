@@ -156,13 +156,14 @@ pub unsafe extern "C" fn cardano_value_partial_cmp(
 pub unsafe extern "C" fn cardano_value_min_ada_required(
   assets: Value, minimum_utxo_val: u64, result: &mut u64, error: &mut CError,
 ) -> bool {
-  handle_exception_result(|| {
-    assets
-      .try_into()
-      .map(|assets| min_ada_required(&assets, &to_bignum(minimum_utxo_val)))
-      .map(|big_num| from_bignum(&big_num))
-  })
-  .response(result, error)
+  todo!()
+  // handle_exception_result(|| {
+  //   assets
+  //     .try_into()
+  //     .map(|assets| min_ada_required(&assets, &to_bignum(minimum_utxo_val)))
+  //     .map(|big_num| from_bignum(&big_num))
+  // })
+  // .response(result, error)
 }
 
 #[no_mangle]

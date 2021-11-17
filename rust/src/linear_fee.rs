@@ -1,5 +1,3 @@
-use super::error::CError;
-use super::panic::*;
 use cardano_serialization_lib::{
   fees::LinearFee as RLinearFee,
   utils::{from_bignum, to_bignum},
@@ -30,12 +28,4 @@ impl From<RLinearFee> for LinearFee {
       coefficient: from_bignum(&linear_fee.coefficient()),
     }
   }
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn cardano_linear_fee_new(
-  coefficient: Coin, constant: Coin, result: &mut LinearFee, error: &mut CError,
-) -> bool {
-  handle_exception(|| RLinearFee::new(&to_bignum(coefficient), &to_bignum(constant)).into())
-    .response(result, error)
 }
