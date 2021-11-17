@@ -15,11 +15,11 @@ public protocol CardanoBootstrapAware {
 }
 
 public class Cardano: CardanoProtocol {
-    public var info: NetworkApiInfo
-    public var addresses: AddressManager
-    public var utxos: UtxoProvider
-    public var signer: SignatureProvider
-    public var network: NetworkProvider
+    public let info: NetworkApiInfo
+    public let addresses: AddressManager
+    public let utxos: UtxoProvider
+    public let signer: SignatureProvider
+    public let network: NetworkProvider
     
     private var apis: Dictionary<String, CardanoApi>
     private let syncQueue: DispatchQueue
