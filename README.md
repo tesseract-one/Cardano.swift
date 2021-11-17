@@ -24,11 +24,13 @@ Setup instructions:
     ```Swift
     .package(url: "https://github.com/tesseract-one/Cardano.swift.git", from: "0.0.1")
     ```
+  SPM build provides 2 targets: `Cardano` and `CardanoBlockfrost` (networking library).
 
 - **CocoaPods:** Put this in your `Podfile`:
 
     ```Ruby
-    pod 'Cardano', '~> 0.0.1'
+    pod 'Cardano/Binary', '~> 0.0.1'
+    pod 'Cardano/Blockfrost' # networking
     ```
   
 - **CocoaPods with Rust part built from sources:**
@@ -36,6 +38,7 @@ Setup instructions:
   If you want to build Rust part from sources add this in your `Podfile`:
     ```Ruby
     pod 'Cardano/Build', '~> 0.0.1'
+    pod 'Cardano/Blockfrost' # networking
     ```
   And install Rust targets:
     ```sh
@@ -53,124 +56,124 @@ Setup instructions:
   swift build -Xlinker -L"SOME_INSTALL_PATH/lib" -Xcc -I"SOME_INSTALL_PATH/include"
   ```
 
-## Usage Examples
+## Usage
 
-**SDK is in active development stage. We will provide usage examples soon. Stay tuned!**
+Library provides a set of high-level APIs for standard tasks.
+Lets try to send ADA to another address on the test net.
+We will use Blockfrost API for simplicity.
 
-## Development Plan
+### Initialize library
+```swift
+import Foundation
+import Cardano
+// Needed for SPM only
+import CardanoBlockfrost
 
-Right now SDK is in the active development stage. You can check our progress and plan below.
+// We need Keychain with our keys first to sign our transactions
+let keychain = try Keychain(mnemonic: ["your", "mnemonic", "phrase"])
 
-### Part 1: Core
+// Generate first account in keychain
+try keychain.addAccount(index: 0)
 
-![100%](https://progress-bar.dev/100?title=progress&width=150)
+// Create main Cardano object
+let cardano = try! Cardano(blockfrost: "your-project-key",
+                           info: .testnet,
+                           signer: keychain)
 
-This is the core part of the SDK. Has all needed primitives for transaction building and signing.
-This is a wrapper for [cardano-serialization-lib](https://github.com/Emurgo/cardano-serialization-lib).
+//Sync addresses with network and call our sendAda method
+cardano.addresses.fetch { _ in
+  sendAda(cardano: cardano)
+}
+```
 
-Provided structures:
+### Send ADA
+```swift
+func sendAda(cardano: Cardano) {
+  // Get our account from fetched accounts
+  let account = try cardano.addresses.fetchedAccounts()[0]
 
-- [x] Address
-- [x] AssetName
-- [x] Assets
-- [x] Bip32PrivateKey
-- [x] Bip32PublicKey
-- [x] BootstrapWitness
-- [x] Ed25519Signature
-- [x] LinearFee
-- [x] MultiAsset
-- [x] NetworkInfo
-- [x] PrivateKey
-- [x] PublicKey
-- [x] StakeCredential
-- [x] TransactionHash
-- [x] TransactionInput
-- [x] TransactionWitnessSet
-- [x] Vkey
-- [x] Vkeywitness
-- [x] Withdrawals
-- [x] Certificate
-- [x] GeneralTransactionMetadata
-- [x] TransactionBody
-- [x] TransactionBuilder
-- [x] TransactionMetadata
-- [x] TransactionMetadatumLabels
-- [x] Transaction
-- [x] Value
+  // Create recepient address
+  let to = try Address(bech32: "addr_test1qzdj7sr6ymlqmrpvvd5qg9ct55kx6kcev67u33uc9grgm3dc4rwdulp233ujjmc09g446unlhtt0ekdqds2t2qccxxmspd22lj")
 
-#### Part 1.1: Core unit tests
+  // Send ADA
+  cardano.send.ada(to: to, lovelace: 10000000, from: account) { res in
+    switch res {
+      case .failure(let err): print("TX Failed: \(err)")
+      case .success(let txId): print("TX Id: \(txId)")
+    }
+  }
+}
+```
 
-![100%](https://progress-bar.dev/100?title=passed&width=150)
+### Addresses and UTXOs
+We have two helper interfaces for `Address` and `UTXO` management. They can be obtained as `addresses` and `utxos` from `Cardano` object.
 
-Test categories:
+#### Address Manager
+```swift
+var account: Account? = nil
+// Get list of accounts from Signer
+cardano.addresses.accounts() { res in
+  account = try res.get()[0]
+}
 
-- ![100%](https://progress-bar.dev/100?width=150) AddressTests
-- ![100%](https://progress-bar.dev/100?width=150) CryptoTests
-- ![100%](https://progress-bar.dev/100?width=150) FeesTests
-- ![100%](https://progress-bar.dev/100?width=150) MetadataTests
-- ![100%](https://progress-bar.dev/100?width=150) TransationBuilderTests
-- ![100%](https://progress-bar.dev/100?width=150) UtilsTests
+// Fetch list of addresses from the network for provided accounts
+cardano.addresses.fetch(for: [account]) { _ in }
 
-### Part 2: Networking
+// Get list and fetch addresses (bot methods together)
+cardano.addresses.fetch() { _ in }
 
-![0%](https://progress-bar.dev/0?title=progress&width=150)
+// Get list of fetched accounts
+let accounts = cardano.addresses.fetchedAccounts()
 
-This part provides Swift APIs for communication with the Cardano node through GraphQL. Methods for connection to the Cardano node, obtaining info from it, and submitting new transactions will be implemented.
+// Get list of fetched addresses for Account
+let addresses = try cardano.addresses.get(cached: account)
 
-Models:
+// Create new address for the Account
+let address = try cardano.addresses.new(for: account, change: false)
+```
 
-- [ ] Transactions
-- [ ] Addresses
-- [ ] UtXOs
-- [ ] Balances
+#### UTXO provider
+```swift
+// Obtain list of UTXOs from the network for addresses
+cardano.utxos.get(for: [address]).next { res, next in
+  let utxos = try! res.get()
+  print("UTXOs: \(utxos), has more: \(next != nil)")
+}
+// Obtain list of UTXOs from the network for transaction
+cardano.utxos.get(for: try! TransactionHash(hex: "0x..")).next { res, next in
+  let utxos = try! res.get()
+  print("UTXOs: \(utxos), has more: \(next != nil)")
+}
+```
 
-### Part 3: Developer-friendly APIs
+### Custom Transaction
+`TransactionBuilder` class can be used for building custom transactions.
+```swift
+let info = NetworkApiInfo.testnet
 
-![0%](https://progress-bar.dev/0?title=progress&width=150)
+var builder = try! TransactionBuilder(linearFee: info.linearFee,
+                                      minimumUtxoVal: info.minimumUtxoVal,
+                                      poolDeposit: info.poolDeposit,
+                                      keyDeposit: info.keyDeposit,
+                                      maxValueSize: info.maxValueSize,
+                                      maxTxSize: info.maxTxSize)
+// Add tx information
+builder.addInput(....)
+builder.addOutput(....)
 
-Having GraphQL and Core wrapped is great, but it's not developer-friendly yet. In this part, we are covering up all "exposed wires" under the hood with Swift-style neat APIs available for rapid dApps development.
+// Build TX
+let tx = try builder.build()
 
-We will provide APIs for:
+// Sign and submit
+builder.tx.signAndSubmit(tx: tx, addresses: [/* used addresses in tx*/]) { res in
+  print("Result: \(res)")
+}
+)
+```
 
-- [ ] Obtaining the list of accounts from Keychain
-- [ ] Obtaining all used addresses for account
-- [ ] Obtaining balance for account / address
-- [ ] Obtaining list of transactions for account / address
-- [ ] Signing transaction with the account
-- [ ] Submitting signed transaction 
-- [ ] Transferring ADA (a simple way to build, sign and submit transfer transaction)
+## Further Development
 
-### Part 4: Keychain
-
-![0%](https://progress-bar.dev/0?title=progress&width=150)
-
-In this part, we will provide Keychain with easy private/public key management inside the dApp and Keychain API for more Keychain implementations.
-The Keychain API will allow integration with signers and key providers, which is critical for further integration with Tesseract or any solution that keep private keys safe apart from the dApp.
-
-Keychain API metods:
-
-- [ ] generate key
-- [ ] create key (from bytes / string)
-- [ ] derive addresses
-- [ ] return extended public key
-- [ ] derive addresses from the extended public key
-- [ ] sign transaction
-
-### Part 5: Tests, Documentation and Examples
-
-![0%](https://progress-bar.dev/0?title=progress&width=150)
-
-Having a library is good but it should have proper documentation, examples and be properly tested for real-life usage.
-In this part, we will work on that.
-
-We will provide:
-
-- [ ] unit-tests for Core
-- [ ] unit-tests for Keychain
-- [ ] integration tests for Networking
-- [ ] integration tests for developer-friendly APIs
-- [ ] usage examples
-- [ ] example dApp which will show how to integrate and use SDK
+Further development plans based on requests from the users. If you need more APIs for your dApp - create Issue and we will add them.
 
 ## License
 
