@@ -13,7 +13,7 @@ Pod::Spec.new do |s|
   s.osx.deployment_target = '10.12'
   # s.tvos.deployment_target = '11.0'
   
-  s.swift_versions = ['5.3', '5.4']
+  s.swift_versions = ['5.3', '5.4', '5.5']
   
   s.module_name = 'Cardano'
   
@@ -62,33 +62,30 @@ Pod::Spec.new do |s|
   
   s.subspec 'Binary' do |ss|
     ss.source_files = 'Sources/Cardano/**/*.swift'
+    
+    ss.dependency 'Bip39.swift', '~> 0.1'
 
     ss.dependency 'Cardano/CoreBinary'
   end
   
   s.subspec 'Build' do |ss|
     ss.source_files = 'Sources/Cardano/**/*.swift'
+    
+    ss.dependency 'Bip39.swift', '~> 0.1'
 
     ss.dependency 'Cardano/CoreBuild'
   end
   
-  s.subspec 'Cardano' do |ss|
-    ss.source_files = 'Sources/Cardano/**/*.swift'
-    
-    ss.dependency 'Cardano/CoreBuild'
-    ss.dependency 'Bip39.swift', '~> 0.1'
-  end
-    
-  s.subspec 'CardanoBlockfrost' do |ss|
+  s.subspec 'Blockfrost' do |ss|
     ss.source_files = 'Sources/Blockfrost/**/*.swift'
     
-    ss.dependency 'Cardano/Cardano'
     ss.dependency 'BlockfrostSwiftSDK', '~> 0.0.5'
     
     ss.test_spec 'ApiTests' do |test_spec|
+      test_spec.dependency = 'Cardano/CoreBinary'
       test_spec.source_files = 'Tests/ApiTests/**/*.swift'
     end
   end
   
-  s.default_subspecs = 'Binary'
+  s.default_subspecs = 'Binary', 'Blockfrost'
 end
