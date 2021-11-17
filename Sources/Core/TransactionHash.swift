@@ -52,7 +52,7 @@ extension TransactionHash {
     }
     
     public var hex: String {
-        Data(hash).hex()
+        Data(hash).hex(prefix: false)
     }
 }
 
