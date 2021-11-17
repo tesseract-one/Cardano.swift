@@ -22,7 +22,7 @@ public protocol NetworkProvider {
     func getTransactionCount(for address: Address,
                              _ cb: @escaping (Result<Int, Error>) -> Void)
     
-    func getTransaction(hash: String,
+    func getTransaction(hash: TransactionHash,
                         _ cb: @escaping (Result<ChainTransaction?, Error>) -> Void)
     
     func getUtxos(for addresses: [Address],
@@ -33,5 +33,5 @@ public protocol NetworkProvider {
                   _ cb: @escaping (Result<[UTXO], Error>) -> Void)
     
     func submit(tx: Transaction,
-                _ cb: @escaping (Result<String, Error>) -> Void)
+                _ cb: @escaping (Result<TransactionHash, Error>) -> Void)
 }

@@ -45,10 +45,11 @@ public class Keychain {
     private var _cache: [UInt32: KeyPair]
     private var syncQueue: DispatchQueue
     
-    public init(mnemonic: [String], password: Data) throws {
+    public init(mnemonic: [String], password: Data? = nil) throws {
         syncQueue = DispatchQueue(label: "Keychain.Sync.Queue", target: .global())
         let entropy = try Mnemonic(mnemonic: mnemonic).entropy
-        _root = try KeyPair(sk: try Bip32PrivateKey(bip39: Data(entropy), password: password))
+        let b32Key = try Bip32PrivateKey(bip39: Data(entropy), password: password ?? Data())
+        _root = try KeyPair(sk: b32Key)
         _cache = [:]
     }
     
@@ -64,6 +65,7 @@ public class Keychain {
         return .success(derived)
     }
     
+    @discardableResult
     public func addAccount(index: UInt32) throws -> Account {
         var path = Bip32Path.prefix
         path = try path.appending(index, hard: true)

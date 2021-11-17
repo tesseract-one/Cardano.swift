@@ -18,10 +18,10 @@ public struct CardanoSendApi: CardanoApi {
     }
     
     public func ada(to: Address,
-                    amount: UInt64,
+                    lovelace amount: UInt64,
                     from: Account,
                     change: Address? = nil,
-                    _ cb: @escaping ApiCallback<String>) {
+                    _ cb: @escaping ApiCallback<TransactionHash>) {
         let addresses: [Address]
         let changeAddress: Address
         do {
@@ -31,12 +31,12 @@ public struct CardanoSendApi: CardanoApi {
             cb(.failure(error))
             return
         }
-        ada(to: to, amount: amount, from: addresses, change: changeAddress, cb)
+        ada(to: to, lovelace: amount, from: addresses, change: changeAddress, cb)
     }
     
     private func getAllUtxos(iterator: UtxoProviderAsyncIterator,
-                          all: [UTXO],
-                          _ cb: @escaping (Result<[UTXO], Error>) -> Void) {
+                             all: [UTXO],
+                             _ cb: @escaping (Result<[UTXO], Error>) -> Void) {
         iterator.next { (res, iterator) in
             switch res {
             case .success(let utxos):
@@ -52,11 +52,11 @@ public struct CardanoSendApi: CardanoApi {
     }
     
     public func ada(to: Address,
-                    amount: UInt64,
+                    lovelace amount: UInt64,
                     from: [Address],
                     change: Address,
                     maxSlots: UInt32 = 300,
-                    _ cb: @escaping ApiCallback<String>) {
+                    _ cb: @escaping ApiCallback<TransactionHash>) {
         cardano.network.getSlotNumber { res in
             switch res {
             case .success(let slot):

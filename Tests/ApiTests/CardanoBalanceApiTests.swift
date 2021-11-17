@@ -73,6 +73,8 @@ final class CardanoBalanceApiTests: XCTestCase {
         func fetch(for accounts: [Account],
                    _ cb: @escaping (Result<Void, Error>) -> Void) {}
         
+        func fetch(_ cb: @escaping (Result<Void, Error>) -> Void) {}
+        
         func fetchedAccounts() -> [Account] {
             []
         }
@@ -103,7 +105,7 @@ final class CardanoBalanceApiTests: XCTestCase {
         func getTransactionCount(for address: Address,
                                  _ cb: @escaping (Result<Int, Error>) -> Void) {}
         
-        func getTransaction(hash: String,
+        func getTransaction(hash: TransactionHash,
                             _ cb: @escaping (Result<ChainTransaction?, Error>) -> Void) {}
         
         func getUtxos(for addresses: [Address],
@@ -114,7 +116,7 @@ final class CardanoBalanceApiTests: XCTestCase {
                       _ cb: @escaping (Result<[UTXO], Error>) -> Void) {}
         
         func submit(tx: Transaction,
-                    _ cb: @escaping (Result<String, Error>) -> Void) {}
+                    _ cb: @escaping (Result<TransactionHash, Error>) -> Void) {}
     }
 
     func testAdaInAccount() throws {

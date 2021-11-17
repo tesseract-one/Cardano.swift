@@ -163,6 +163,15 @@ public class SimpleAddressManager: AddressManager, CardanoBootstrapAware {
         }.exec { cb($0.map { _ in }) }
     }
     
+    public func fetch(_ cb: @escaping (Result<Void, Error>) -> Void) {
+        cardano.signer.accounts { res in
+            switch res {
+            case .failure(let err): cb(.failure(err))
+            case .success(let accounts): self.fetch(for: accounts, cb)
+            }
+        }
+    }
+    
     public func fetchedAccounts() -> [Account] {
         syncQueue.sync {
             Array(accountAddresses.keys) + accountChangeAddresses.keys.filter {

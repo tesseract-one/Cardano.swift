@@ -33,6 +33,9 @@ public protocol AddressManager {
     func fetch(for accounts: [Account],
                _ cb: @escaping (Result<Void, Error>) -> Void)
     
+    // Obtains accounts from Signer and fetches all of them
+    func fetch(_ cb: @escaping (Result<Void, Error>) -> Void)
+    
     // Returns list of accounts
     func fetchedAccounts() -> [Account]
     

@@ -52,7 +52,7 @@ final class UtxoProviderTests: XCTestCase {
         func getTransactionCount(for address: Address,
                                  _ cb: @escaping (Result<Int, Error>) -> Void) {}
         
-        func getTransaction(hash: String,
+        func getTransaction(hash: TransactionHash,
                             _ cb: @escaping (Result<ChainTransaction?, Error>) -> Void) {}
         
         func getUtxos(for addresses: [Address],
@@ -75,7 +75,7 @@ final class UtxoProviderTests: XCTestCase {
         }
         
         func submit(tx: Transaction,
-                    _ cb: @escaping (Result<String, Error>) -> Void) {}
+                    _ cb: @escaping (Result<TransactionHash, Error>) -> Void) {}
     }
     
     private func getUtxos(iterator: UtxoProviderAsyncIterator,

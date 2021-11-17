@@ -53,7 +53,7 @@ final class CardanoSendApiTests: XCTestCase {
         value: Value(coin: 1000)
     )
 
-    private static let testTransactionHash = "testTransactionHash"
+    private static let testTransactionHash = try! TransactionHash(bytes: Data(repeating: 0, count: 32))
     
     private static let testTransaction = Transaction(
         body: TransactionBody(inputs: [], outputs: [], fee: 0, ttl: nil),
@@ -96,6 +96,8 @@ final class CardanoSendApiTests: XCTestCase {
         
         func fetch(for accounts: [Account], _ cb: @escaping (Result<Void, Error>) -> Void) {}
         
+        func fetch(_ cb: @escaping (Result<Void, Error>) -> Void) {}
+        
         func fetchedAccounts() -> [Account] {
             []
         }
@@ -130,7 +132,7 @@ final class CardanoSendApiTests: XCTestCase {
         func getTransactionCount(for address: Address,
                                  _ cb: @escaping (Result<Int, Error>) -> Void) {}
         
-        func getTransaction(hash: String,
+        func getTransaction(hash: TransactionHash,
                             _ cb: @escaping (Result<ChainTransaction?, Error>) -> Void) {}
         
         func getUtxos(for addresses: [Address],
@@ -141,7 +143,7 @@ final class CardanoSendApiTests: XCTestCase {
                       _ cb: @escaping (Result<[UTXO], Error>) -> Void) {}
         
         func submit(tx: Transaction,
-                    _ cb: @escaping (Result<String, Error>) -> Void) {
+                    _ cb: @escaping (Result<TransactionHash, Error>) -> Void) {
             guard try! tx.bytes() == testTransaction.bytes() else {
                 cb(.failure(TestError.error))
                 return
@@ -151,7 +153,7 @@ final class CardanoSendApiTests: XCTestCase {
     }
     
     private func getTransaction(cardano: Cardano,
-                                transactionHash: String,
+                                transactionHash: TransactionHash,
                                 _ cb: @escaping (ChainTransaction) -> Void) {
         cardano.tx.get(hash: transactionHash) { res in
             guard let chainTransaction = try! res.get() else {
@@ -185,7 +187,7 @@ final class CardanoSendApiTests: XCTestCase {
             let amountSent: UInt64 = 10000000
             cardano.balance.ada(in: account) { res in
                 let balanceFrom = try! res.get()
-                cardano.send.ada(to: to, amount: amountSent, from: account) { res in
+                cardano.send.ada(to: to, lovelace: amountSent, from: account) { res in
                     let transactionHash = try! res.get()
                     self.getTransaction(cardano: cardano,
                                         transactionHash: transactionHash) { chainTransaction in
@@ -216,7 +218,7 @@ final class CardanoSendApiTests: XCTestCase {
             addresses: AddressManagerMock(),
             utxos: UtxoProviderMock()
         )
-        cardano.send.ada(to: Self.testToAddress, amount: 100, from: Self.testAccount) { res in
+        cardano.send.ada(to: Self.testToAddress, lovelace: 100, from: Self.testAccount) { res in
             let transactionHash = try! res.get()
             XCTAssertEqual(transactionHash, Self.testTransactionHash)
             success.fulfill()
@@ -234,7 +236,7 @@ final class CardanoSendApiTests: XCTestCase {
             utxos: UtxoProviderMock()
         )
         cardano.send.ada(to: Self.testToAddress,
-                         amount: 100,
+                         lovelace: 100,
                          from: [Self.testExtendedAddress.address],
                          change: Self.testChangeAddress) { res in
             let transactionHash = try! res.get()

@@ -56,7 +56,7 @@ final class AddressManagerTests: XCTestCase {
             cb(.success(0))
         }
         
-        func getTransaction(hash: String,
+        func getTransaction(hash: TransactionHash,
                             _ cb: @escaping (Result<ChainTransaction?, Error>) -> Void) {}
         
         func getUtxos(for addresses: [Address],
@@ -67,7 +67,7 @@ final class AddressManagerTests: XCTestCase {
                       _ cb: @escaping (Result<[UTXO], Error>) -> Void) {}
         
         func submit(tx: Transaction,
-                    _ cb: @escaping (Result<String, Error>) -> Void) {}
+                    _ cb: @escaping (Result<TransactionHash, Error>) -> Void) {}
     }
     
     private struct NetworkProviderMock: NetworkProvider {
@@ -87,7 +87,7 @@ final class AddressManagerTests: XCTestCase {
             cb(.success(1))
         }
         
-        func getTransaction(hash: String,
+        func getTransaction(hash: TransactionHash,
                             _ cb: @escaping (Result<ChainTransaction?, Error>) -> Void) {}
         
         func getUtxos(for addresses: [Address],
@@ -98,7 +98,7 @@ final class AddressManagerTests: XCTestCase {
                       _ cb: @escaping (Result<[UTXO], Error>) -> Void) {}
         
         func submit(tx: Transaction,
-                    _ cb: @escaping (Result<String, Error>) -> Void) {}
+                    _ cb: @escaping (Result<TransactionHash, Error>) -> Void) {}
     }
     
     func testFetchOnTestnet() throws {

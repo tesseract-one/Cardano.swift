@@ -17,7 +17,7 @@ public struct CardanoTxApi: CardanoApi {
         self.cardano = cardano
     }
     
-    public func get(hash: String,
+    public func get(hash: TransactionHash,
                     _ cb: @escaping ApiCallback<ChainTransaction?>) {
         cardano.network.getTransaction(hash: hash, cb)
     }
@@ -25,7 +25,7 @@ public struct CardanoTxApi: CardanoApi {
     public func signAndSubmit(tx: TransactionBody,
                               with addresses: [Address],
                               auxiliaryData: AuxiliaryData?,
-                              _ cb: @escaping ApiCallback<String>) {
+                              _ cb: @escaping ApiCallback<TransactionHash>) {
         let extended: [ExtendedAddress]
         do {
             extended = try cardano.addresses.extended(addresses: addresses)
@@ -48,7 +48,7 @@ public struct CardanoTxApi: CardanoApi {
     }
     
     public func submit(tx: Transaction,
-                       _ cb: @escaping ApiCallback<String>) {
+                       _ cb: @escaping ApiCallback<TransactionHash>) {
         cardano.network.submit(tx: tx, cb)
     }
 }

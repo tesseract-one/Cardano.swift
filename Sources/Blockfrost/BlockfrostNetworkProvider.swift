@@ -113,9 +113,9 @@ public struct BlockfrostNetworkProvider: NetworkProvider {
         }
     }
     
-    public func getTransaction(hash: String,
+    public func getTransaction(hash: TransactionHash,
                                _ cb: @escaping (Result<ChainTransaction?, Error>) -> Void) {
-        let _ = transactionsApi.getTransaction(hash: hash) { res in
+        let _ = transactionsApi.getTransaction(hash: hash.hex) { res in
             switch res {
             case .success(let transactionContent):
                 cb(.success(ChainTransaction(blockfrost: transactionContent)))
@@ -197,22 +197,21 @@ public struct BlockfrostNetworkProvider: NetworkProvider {
     }
     
     public func submit(tx: Transaction,
-                       _ cb: @escaping (Result<String, Error>) -> Void) {
+                       _ cb: @escaping (Result<TransactionHash, Error>) -> Void) {
+        let bytes: Data
         do {
-            let _ = transactionsApi.submitTransaction(transaction: try tx.bytes()) { res in
-                switch res {
-                case .success(let hash):
-                    cb(.success(hash.trimmingCharacters(in: ["\""])))
-                case .failure(let error):
-                    self.config.apiResponseQueue.async {
-                        cb(.failure(error))
-                    }
-                }
-            }
+            bytes = try tx.bytes()
         } catch {
             self.config.apiResponseQueue.async {
                 cb(.failure(error))
             }
+            return
+        }
+        let _ = transactionsApi.submitTransaction(transaction: bytes) { res in
+            let mapped = res.flatMap { hash in
+                Result { try TransactionHash(hex: hash.trimmingCharacters(in: ["\""])) }
+            }
+            cb(mapped)
         }
     }
 }

@@ -31,6 +31,13 @@ extension TransactionHash {
         }.get()
     }
     
+    public init(hex: String) throws {
+        guard let data = Data(hex: hex) else {
+            throw CardanoRustError.deserialization(message: "bad hex string")
+        }
+        try self.init(bytes: data)
+    }
+    
     public func bytes() throws -> Data {
         var bytes = try RustResult<CData>.wrap { result, error in
             cardano_transaction_hash_to_bytes(self, result, error)
@@ -38,21 +45,25 @@ extension TransactionHash {
         return bytes.owned()
     }
     
-    public var bytesArray: [UInt8] {
-        withUnsafeBytes(of: bytes) { ptr in
+    public var hash: [UInt8] {
+        withUnsafeBytes(of: _0) { ptr in
             Array(ptr.bindMemory(to: UInt8.self).prefix(32))
         }
+    }
+    
+    public var hex: String {
+        Data(hash).hex()
     }
 }
 
 extension TransactionHash: Equatable {
     public static func == (lhs: TransactionHash, rhs: TransactionHash) -> Bool {
-        lhs.bytesArray == rhs.bytesArray
+        lhs.hash == rhs.hash
     }
 }
 
 extension TransactionHash: Hashable {
     public func hash(into hasher: inout Hasher) {
-        hasher.combine(bytesArray)
+        hasher.combine(hash)
     }
 }

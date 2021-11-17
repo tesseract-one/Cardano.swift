@@ -29,9 +29,8 @@ final class CardanoTxApiTests: XCTestCase {
     )
     
     private static let testTransactionHash = try! TransactionHash(bytes: Data(count: 32))
-    private static let testTransactionHashString = "transactionHashString"
     private static let testChainTransaction = ChainTransaction(
-        hash: testTransactionHashString,
+        hash: testTransactionHash.hex,
         block: "",
         blockHeight: 0,
         slot: 0,
@@ -79,6 +78,8 @@ final class CardanoTxApiTests: XCTestCase {
         func fetch(for accounts: [Account],
                    _ cb: @escaping (Result<Void, Error>) -> Void) {}
         
+        func fetch(_ cb: @escaping (Result<Void, Error>) -> Void) {}
+        
         func fetchedAccounts() -> [Account] {
             []
         }
@@ -116,9 +117,9 @@ final class CardanoTxApiTests: XCTestCase {
         func getTransactionCount(for address: Address,
                                  _ cb: @escaping (Result<Int, Error>) -> Void) {}
         
-        func getTransaction(hash: String,
+        func getTransaction(hash: TransactionHash,
                             _ cb: @escaping (Result<ChainTransaction?, Error>) -> Void) {
-            guard hash == testTransactionHashString else {
+            guard hash == testTransactionHash else {
                 cb(.success(nil))
                 return
             }
@@ -133,11 +134,11 @@ final class CardanoTxApiTests: XCTestCase {
                       _ cb: @escaping (Result<[UTXO], Error>) -> Void) {}
         
         func submit(tx: Transaction,
-                    _ cb: @escaping (Result<String, Error>) -> Void) {
+                    _ cb: @escaping (Result<TransactionHash, Error>) -> Void) {
             guard try! tx.bytes() == testTransaction.bytes() else {
                 return
             }
-            cb(.success(testTransactionHashString))
+            cb(.success(testTransactionHash))
         }
     }
     
@@ -150,7 +151,7 @@ final class CardanoTxApiTests: XCTestCase {
             addresses: SimpleAddressManager(),
             utxos: NonCachingUtxoProvider()
         )
-        cardano.tx.get(hash: Self.testTransactionHashString) { res in
+        cardano.tx.get(hash: Self.testTransactionHash) { res in
             let chainTransaction = try! res.get()
             XCTAssertEqual(chainTransaction, Self.testChainTransaction)
             success.fulfill()
@@ -169,7 +170,7 @@ final class CardanoTxApiTests: XCTestCase {
         )
         cardano.tx.submit(tx: Self.testTransaction) { res in
             let transactionHash = try! res.get()
-            XCTAssertEqual(transactionHash, Self.testTransactionHashString)
+            XCTAssertEqual(transactionHash, Self.testTransactionHash)
             success.fulfill()
         }
         wait(for: [success], timeout: 10)
@@ -190,7 +191,7 @@ final class CardanoTxApiTests: XCTestCase {
             auxiliaryData: nil
         ) { res in
             let transactionHash = try! res.get()
-            XCTAssertEqual(transactionHash, Self.testTransactionHashString)
+            XCTAssertEqual(transactionHash, Self.testTransactionHash)
             success.fulfill()
         }
         wait(for: [success], timeout: 10)
