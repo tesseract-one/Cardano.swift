@@ -121,10 +121,10 @@ final class CardanoBalanceApiTests: XCTestCase {
         let success = expectation(description: "success")
         let cardano = try Cardano(
             info: .testnet,
-            addresses: TestAddressManager(),
-            utxos: NonCachingUtxoProvider(),
             signer: TestSigner(),
-            network: NetworkProviderMock()
+            network: NetworkProviderMock(),
+            addresses: TestAddressManager(),
+            utxos: NonCachingUtxoProvider()
         )
         cardano.balance.ada(in: Self.testAccount) { res in
             let amount = try! res.get()
@@ -138,10 +138,10 @@ final class CardanoBalanceApiTests: XCTestCase {
         let success = expectation(description: "success")
         let cardano = try Cardano(
             info: .testnet,
-            addresses: TestAddressManager(),
-            utxos: NonCachingUtxoProvider(),
             signer: TestSigner(),
-            network: NetworkProviderMock()
+            network: NetworkProviderMock(),
+            addresses: TestAddressManager(),
+            utxos: NonCachingUtxoProvider()
         )
         cardano.balance.ada(in: Self.testAccount, update: true) { res in
             let amount = try! res.get()
@@ -155,10 +155,10 @@ final class CardanoBalanceApiTests: XCTestCase {
         let success = expectation(description: "success")
         let cardano = try Cardano(
             info: .testnet,
-            addresses: SimpleAddressManager(),
-            utxos: NonCachingUtxoProvider(),
             signer: TestSigner(),
-            network: NetworkProviderMock()
+            network: NetworkProviderMock(),
+            addresses: SimpleAddressManager(),
+            utxos: NonCachingUtxoProvider()
         )
         cardano.balance.ada(in: Self.testAddress) { res in
             let amount = try! res.get()

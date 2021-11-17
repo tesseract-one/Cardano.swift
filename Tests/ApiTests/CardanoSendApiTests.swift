@@ -172,13 +172,13 @@ final class CardanoSendApiTests: XCTestCase {
         )
         let cardano = try Cardano(
             info: .testnet,
-            addresses: SimpleAddressManager(),
-            utxos: NonCachingUtxoProvider(),
             signer: keychain,
             network: BlockfrostNetworkProvider(config: BlockfrostConfig(
                 basePath: "https://cardano-testnet.blockfrost.io/api/v0",
                 projectId: TestEnvironment.instance.blockfrostProjectId
-            ))
+            )),
+            addresses: SimpleAddressManager(),
+            utxos: NonCachingUtxoProvider()
         )
         let account = try keychain.addAccount(index: 0)
         cardano.addresses.fetch(for: [account]) { res in
@@ -216,10 +216,10 @@ final class CardanoSendApiTests: XCTestCase {
         let success = expectation(description: "success")
         let cardano = try Cardano(
             info: .testnet,
-            addresses: AddressManagerMock(),
-            utxos: UtxoProviderMock(),
             signer: SignatureProviderMock(),
-            network: NetworkProviderMock()
+            network: NetworkProviderMock(),
+            addresses: AddressManagerMock(),
+            utxos: UtxoProviderMock()
         )
         cardano.send.ada(to: Self.testToAddress, amount: 100, from: Self.testAccount) { res in
             let transactionHash = try! res.get()
@@ -233,10 +233,10 @@ final class CardanoSendApiTests: XCTestCase {
         let success = expectation(description: "success")
         let cardano = try Cardano(
             info: .testnet,
-            addresses: AddressManagerMock(),
-            utxos: UtxoProviderMock(),
             signer: SignatureProviderMock(),
-            network: NetworkProviderMock()
+            network: NetworkProviderMock(),
+            addresses: AddressManagerMock(),
+            utxos: UtxoProviderMock()
         )
         cardano.send.ada(to: Self.testToAddress,
                          amount: 100,

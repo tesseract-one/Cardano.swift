@@ -105,13 +105,13 @@ final class AddressManagerTests: XCTestCase {
         let fetchSuccessful = expectation(description: "Fetch successful")
         let cardano = try Cardano(
             info: .testnet,
-            addresses: SimpleAddressManager(),
-            utxos: NonCachingUtxoProvider(),
             signer: TestSigner(),
             network: BlockfrostNetworkProvider(config: BlockfrostConfig(
                 basePath: "https://cardano-testnet.blockfrost.io/api/v0",
                 projectId: TestEnvironment.instance.blockfrostProjectId
-            ))
+            )),
+            addresses: SimpleAddressManager(),
+            utxos: NonCachingUtxoProvider()
         )
         let account = Account(publicKey: TestEnvironment.instance.publicKey, index: 0)
         cardano.addresses.fetch(for: [account]) { res in
@@ -136,10 +136,10 @@ final class AddressManagerTests: XCTestCase {
         let success = expectation(description: "success")
         let cardano = try Cardano(
             info: .testnet,
-            addresses: SimpleAddressManager(),
-            utxos: NonCachingUtxoProvider(),
             signer: TestSignerAccounts(),
-            network: NetworkProviderMock()
+            network: NetworkProviderMock(),
+            addresses: SimpleAddressManager(),
+            utxos: NonCachingUtxoProvider()
         )
         cardano.addresses.accounts { res in
             let accounts = try! res.get()
@@ -153,10 +153,10 @@ final class AddressManagerTests: XCTestCase {
         let success = expectation(description: "success")
         let cardano = try Cardano(
             info: .testnet,
-            addresses: SimpleAddressManager(),
-            utxos: NonCachingUtxoProvider(),
             signer: TestSignerAccounts(),
-            network: NetworkProviderMockTestNew()
+            network: NetworkProviderMockTestNew(),
+            addresses: SimpleAddressManager(),
+            utxos: NonCachingUtxoProvider()
         )
         cardano.addresses.accounts { res in
             let accounts = try! res.get()
@@ -178,10 +178,10 @@ final class AddressManagerTests: XCTestCase {
         let success = expectation(description: "success")
         let cardano = try Cardano(
             info: .testnet,
-            addresses: SimpleAddressManager(),
-            utxos: NonCachingUtxoProvider(),
             signer: TestSignerAccounts(),
-            network: NetworkProviderMock()
+            network: NetworkProviderMock(),
+            addresses: SimpleAddressManager(),
+            utxos: NonCachingUtxoProvider()
         )
         cardano.addresses.accounts { res in
             let accounts = try! res.get()
@@ -206,10 +206,10 @@ final class AddressManagerTests: XCTestCase {
         let success = expectation(description: "success")
         let cardano = try Cardano(
             info: .testnet,
-            addresses: SimpleAddressManager(),
-            utxos: NonCachingUtxoProvider(),
             signer: TestSignerAccounts(),
-            network: NetworkProviderMock()
+            network: NetworkProviderMock(),
+            addresses: SimpleAddressManager(),
+            utxos: NonCachingUtxoProvider()
         )
         cardano.addresses.accounts { res in
             let accounts = try! res.get()
@@ -229,10 +229,10 @@ final class AddressManagerTests: XCTestCase {
         let success = expectation(description: "success")
         let cardano = try Cardano(
             info: .testnet,
-            addresses: SimpleAddressManager(),
-            utxos: NonCachingUtxoProvider(),
             signer: TestSignerAccounts(),
-            network: NetworkProviderMock()
+            network: NetworkProviderMock(),
+            addresses: SimpleAddressManager(),
+            utxos: NonCachingUtxoProvider()
         )
         cardano.addresses.accounts { res in
             let accounts = try! res.get()
@@ -258,10 +258,10 @@ final class AddressManagerTests: XCTestCase {
         let success = expectation(description: "success")
         let cardano = try Cardano(
             info: .testnet,
-            addresses: SimpleAddressManager(),
-            utxos: NonCachingUtxoProvider(),
             signer: TestSignerAccounts(),
-            network: NetworkProviderMockTestNew()
+            network: NetworkProviderMockTestNew(),
+            addresses: SimpleAddressManager(),
+            utxos: NonCachingUtxoProvider()
         )
         cardano.addresses.accounts { res in
             let accounts = try! res.get()

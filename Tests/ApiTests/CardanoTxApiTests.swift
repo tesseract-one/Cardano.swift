@@ -145,10 +145,10 @@ final class CardanoTxApiTests: XCTestCase {
         let success = expectation(description: "success")
         let cardano = try Cardano(
             info: .testnet,
-            addresses: SimpleAddressManager(),
-            utxos: NonCachingUtxoProvider(),
             signer: TestSigner(),
-            network: NetworkProviderMock()
+            network: NetworkProviderMock(),
+            addresses: SimpleAddressManager(),
+            utxos: NonCachingUtxoProvider()
         )
         cardano.tx.get(hash: Self.testTransactionHashString) { res in
             let chainTransaction = try! res.get()
@@ -162,10 +162,10 @@ final class CardanoTxApiTests: XCTestCase {
         let success = expectation(description: "success")
         let cardano = try Cardano(
             info: .testnet,
-            addresses: SimpleAddressManager(),
-            utxos: NonCachingUtxoProvider(),
             signer: TestSigner(),
-            network: NetworkProviderMock()
+            network: NetworkProviderMock(),
+            addresses: SimpleAddressManager(),
+            utxos: NonCachingUtxoProvider()
         )
         cardano.tx.submit(tx: Self.testTransaction) { res in
             let transactionHash = try! res.get()
@@ -179,10 +179,10 @@ final class CardanoTxApiTests: XCTestCase {
         let success = expectation(description: "success")
         let cardano = try Cardano(
             info: .testnet,
-            addresses: TestAddressManager(),
-            utxos: NonCachingUtxoProvider(),
             signer: TestSigner(),
-            network: NetworkProviderMock()
+            network: NetworkProviderMock(),
+            addresses: TestAddressManager(),
+            utxos: NonCachingUtxoProvider()
         )
         cardano.tx.signAndSubmit(
             tx: Self.testTransaction.body,

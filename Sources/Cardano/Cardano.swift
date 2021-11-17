@@ -25,10 +25,10 @@ public class Cardano: CardanoProtocol {
     private let syncQueue: DispatchQueue
     
     public init(info: NetworkApiInfo,
-                addresses: AddressManager,
-                utxos: UtxoProvider,
                 signer: SignatureProvider,
-                network: NetworkProvider) throws {
+                network: NetworkProvider,
+                addresses: AddressManager = SimpleAddressManager(),
+                utxos: UtxoProvider = NonCachingUtxoProvider()) throws {
         let _ = Cardano._initialize
         self.syncQueue = DispatchQueue(label: "Cardano Sync Queue", target: .global())
         self.addresses = addresses

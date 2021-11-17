@@ -100,10 +100,10 @@ final class UtxoProviderTests: XCTestCase {
         let success = expectation(description: "success")
         let cardano = try Cardano(
             info: .testnet,
-            addresses: SimpleAddressManager(),
-            utxos: NonCachingUtxoProvider(),
             signer: TestSigner(),
-            network: NetworkProviderMock()
+            network: NetworkProviderMock(),
+            addresses: SimpleAddressManager(),
+            utxos: NonCachingUtxoProvider()
         )
         getUtxos(iterator: cardano.utxos.get(for: [Self.testAddress], asset: nil), all: []) { res in
             let utxos = try! res.get()
@@ -118,10 +118,10 @@ final class UtxoProviderTests: XCTestCase {
         let success = expectation(description: "success")
         let cardano = try Cardano(
             info: .testnet,
-            addresses: SimpleAddressManager(),
-            utxos: NonCachingUtxoProvider(),
             signer: TestSigner(),
-            network: NetworkProviderMock()
+            network: NetworkProviderMock(),
+            addresses: SimpleAddressManager(),
+            utxos: NonCachingUtxoProvider()
         )
         cardano.utxos.get(for: Self.testUtxo.txHash) { res in
             let utxos = try! res.get()

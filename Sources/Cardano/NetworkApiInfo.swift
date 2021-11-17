@@ -10,7 +10,7 @@ import Foundation
 import CardanoCore
 #endif
 
-public struct NetworkApiInfo {
+public struct NetworkApiInfo: Equatable, Hashable {
     public let networkID: NetworkID
     public let protocolMagic: UInt32
     public let linearFee: LinearFee
