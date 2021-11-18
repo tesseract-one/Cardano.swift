@@ -1,15 +1,23 @@
+use crate::array::*;
+use crate::data::CData;
 use crate::error::CError;
+use crate::int::CInt128;
 use crate::linear_fee::Coin;
 use crate::option::COption;
 use crate::panic::*;
 use crate::pool_registration::UnitInterval;
 use crate::ptr::*;
 use crate::transaction_body::Epoch;
-use crate::{array::CArray, data::CData};
-use cardano_serialization_lib::utils::{from_bignum, to_bignum};
+use crate::transaction_builder::BigNum;
 use cardano_serialization_lib::{
-  crypto::Nonce as RNonce, ProtocolParamUpdate as RProtocolParamUpdate,
-  ProtocolVersion as RProtocolVersion, ProtocolVersions as RProtocolVersions,
+  crypto::Nonce as RNonce,
+  plutus::{
+    CostModel as RCostModel, Costmdls as RCostmdls, ExUnitPrices as RExUnitPrices,
+    ExUnits as RExUnits, Language as RLanguage, LanguageKind,
+  },
+  utils::{from_bignum, to_bignum},
+  ProtocolParamUpdate as RProtocolParamUpdate, ProtocolVersion as RProtocolVersion,
+  ProtocolVersions as RProtocolVersions,
 };
 use std::convert::{TryFrom, TryInto};
 
@@ -126,6 +134,168 @@ pub unsafe extern "C" fn cardano_protocol_versions_free(protocol_versions: &mut 
 }
 
 #[repr(C)]
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Language {
+  PlutusV1,
+}
+
+impl Free for Language {
+  unsafe fn free(&mut self) {}
+}
+
+impl From<Language> for RLanguage {
+  fn from(language: Language) -> Self {
+    match language {
+      Language::PlutusV1 => Self::new_plutus_v1(),
+    }
+  }
+}
+
+impl From<RLanguage> for Language {
+  fn from(language: RLanguage) -> Self {
+    match language.kind() {
+      LanguageKind::PlutusV1 => Self::PlutusV1,
+    }
+  }
+}
+
+const COST_MODEL_OP_COUNT: usize = 166;
+
+pub type CostModel = CArray<CInt128>;
+
+impl TryFrom<CostModel> for RCostModel {
+  type Error = CError;
+
+  fn try_from(cost_model: CostModel) -> Result<Self> {
+    let vec = unsafe { cost_model.unowned()? };
+    Ok(Self::new()).and_then(|mut cost_model| {
+      vec
+        .iter()
+        .enumerate()
+        .map(|(operation, &cost)| cost_model.set(operation, &cost.into()).into_result())
+        .collect::<Result<Vec<_>>>()
+        .map(|_| cost_model)
+    })
+  }
+}
+
+impl TryFrom<RCostModel> for CostModel {
+  type Error = CError;
+
+  fn try_from(cost_model: RCostModel) -> Result<Self> {
+    (0..COST_MODEL_OP_COUNT)
+      .map(|operation| {
+        cost_model
+          .get(operation)
+          .map(|cost| cost.into())
+          .into_result()
+      })
+      .collect::<Result<Vec<CInt128>>>()
+      .map(|cost_model| cost_model.into())
+  }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_cost_model_free(cost_model: &mut CostModel) {
+  cost_model.free();
+}
+
+pub type Costmdls = CArray<CKeyValue<Language, CostModel>>;
+
+impl TryFrom<Costmdls> for RCostmdls {
+  type Error = CError;
+
+  fn try_from(costmdls: Costmdls) -> Result<Self> {
+    let map = unsafe { costmdls.as_btree_map()? };
+    Ok(Self::new()).and_then(|mut costmdls| {
+      map
+        .into_iter()
+        .map(|(language, cost_model)| {
+          cost_model
+            .try_into()
+            .map(|cost_model| costmdls.insert(&language.into(), &cost_model))
+        })
+        .collect::<Result<Vec<_>>>()
+        .map(|_| costmdls)
+    })
+  }
+}
+
+impl TryFrom<RCostmdls> for Costmdls {
+  type Error = CError;
+
+  fn try_from(costmdls: RCostmdls) -> Result<Self> {
+    Ok(costmdls.keys()).and_then(|languages| {
+      (0..languages.len())
+        .map(|index| languages.get(index))
+        .map(|language| {
+          costmdls
+            .get(&language)
+            .ok_or("Cannot get CostModel by Language".into())
+            .and_then(|cost_model| cost_model.try_into())
+            .map(|cost_model| (language.into(), cost_model).into())
+        })
+        .collect::<Result<Vec<CKeyValue<Language, CostModel>>>>()
+        .map(|costmdls| costmdls.into())
+    })
+  }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_costmdls_free(costmdls: &mut Costmdls) {
+  costmdls.free();
+}
+
+pub type SubCoin = UnitInterval;
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct ExUnitPrices {
+  mem_price: SubCoin,
+  step_price: SubCoin,
+}
+
+impl From<ExUnitPrices> for RExUnitPrices {
+  fn from(ex_unit_prices: ExUnitPrices) -> Self {
+    Self::new(
+      &ex_unit_prices.mem_price.into(),
+      &ex_unit_prices.step_price.into(),
+    )
+  }
+}
+
+impl From<RExUnitPrices> for ExUnitPrices {
+  fn from(ex_unit_prices: RExUnitPrices) -> Self {
+    Self {
+      mem_price: ex_unit_prices.mem_price().into(),
+      step_price: ex_unit_prices.step_price().into(),
+    }
+  }
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct ExUnits {
+  mem: BigNum,
+  steps: BigNum,
+}
+
+impl From<ExUnits> for RExUnits {
+  fn from(ex_units: ExUnits) -> Self {
+    Self::new(&to_bignum(ex_units.mem), &to_bignum(ex_units.steps))
+  }
+}
+
+impl From<RExUnits> for ExUnits {
+  fn from(ex_units: RExUnits) -> Self {
+    Self {
+      mem: from_bignum(&ex_units.mem()),
+      steps: from_bignum(&ex_units.steps()),
+    }
+  }
+}
+
+#[repr(C)]
 #[derive(Copy, Clone)]
 pub struct ProtocolParamUpdate {
   minfee_a: COption<Coin>,
@@ -142,7 +312,14 @@ pub struct ProtocolParamUpdate {
   treasury_growth_rate: COption<UnitInterval>,
   d: COption<UnitInterval>,
   extra_entropy: COption<Nonce>,
-  protocol_version: COption<ProtocolVersions>
+  protocol_version: COption<ProtocolVersions>,
+  min_pool_cost: COption<Coin>,
+  ada_per_utxo_byte: COption<Coin>,
+  cost_models: COption<Costmdls>,
+  execution_costs: COption<ExUnitPrices>,
+  max_tx_ex_units: COption<ExUnits>,
+  max_block_ex_units: COption<ExUnits>,
+  max_value_size: COption<u32>,
 }
 
 impl Free for ProtocolParamUpdate {
@@ -163,7 +340,11 @@ impl TryFrom<ProtocolParamUpdate> for RProtocolParamUpdate {
         let protocol_version: Option<ProtocolVersions> = ppu.protocol_version.into();
         protocol_version.map(|pv| pv.try_into()).transpose()
       })
-      .map(|(extra_entropy, protocol_version)| {
+      .zip({
+        let cost_models: Option<Costmdls> = ppu.cost_models.into();
+        cost_models.map(|cm| cm.try_into()).transpose()
+      })
+      .map(|((extra_entropy, protocol_version), cost_models)| {
         let mut new_ppu = Self::new();
         let minfee_a: Option<Coin> = ppu.minfee_a.into();
         minfee_a.map(|minfee_a| new_ppu.set_minfee_a(&to_bignum(minfee_a)));
@@ -193,30 +374,59 @@ impl TryFrom<ProtocolParamUpdate> for RProtocolParamUpdate {
         d.map(|d| new_ppu.set_d(&d.into()));
         extra_entropy.map(|extra_entropy| new_ppu.set_extra_entropy(&extra_entropy));
         protocol_version.map(|pv| new_ppu.set_protocol_version(&pv));
+        let min_pool_cost: Option<Coin> = ppu.min_pool_cost.into();
+        min_pool_cost.map(|mpc| new_ppu.set_min_pool_cost(&to_bignum(mpc)));
+        let ada_per_utxo_byte: Option<Coin> = ppu.ada_per_utxo_byte.into();
+        ada_per_utxo_byte.map(|apub| new_ppu.set_ada_per_utxo_byte(&to_bignum(apub)));
+        cost_models.map(|cost_models| new_ppu.set_cost_models(&cost_models));
+        let execution_costs: Option<ExUnitPrices> = ppu.execution_costs.into();
+        execution_costs.map(|ec| new_ppu.set_execution_costs(&ec.into()));
+        let max_tx_ex_units: Option<ExUnits> = ppu.max_tx_ex_units.into();
+        max_tx_ex_units.map(|mteu| new_ppu.set_max_tx_ex_units(&mteu.into()));
+        let max_block_ex_units: Option<ExUnits> = ppu.max_block_ex_units.into();
+        max_block_ex_units.map(|mbeu| new_ppu.set_max_block_ex_units(&mbeu.into()));
+        let max_value_size: Option<u32> = ppu.max_value_size.into();
+        max_value_size.map(|mvs| new_ppu.set_max_value_size(mvs));
         new_ppu
       })
   }
 }
 
-impl From<RProtocolParamUpdate> for ProtocolParamUpdate {
-  fn from(ppu: RProtocolParamUpdate) -> Self {
-    Self {
-      minfee_a: ppu.minfee_a().map(|minfee_a| from_bignum(&minfee_a)).into(),
-      minfee_b: ppu.minfee_b().map(|minfee_b| from_bignum(&minfee_b)).into(),
-      max_block_body_size: ppu.max_block_body_size().into(),
-      max_tx_size: ppu.max_tx_size().into(),
-      max_block_header_size: ppu.max_block_header_size().into(),
-      key_deposit: ppu.key_deposit().map(|kd| from_bignum(&kd)).into(),
-      pool_deposit: ppu.pool_deposit().map(|pd| from_bignum(&pd)).into(),
-      max_epoch: ppu.max_epoch().into(),
-      n_opt: ppu.n_opt().into(),
-      pool_pledge_influence: ppu.pool_pledge_influence().map(|ppi| ppi.into()).into(),
-      expansion_rate: ppu.expansion_rate().map(|er| er.into()).into(),
-      treasury_growth_rate: ppu.treasury_growth_rate().map(|tgr| tgr.into()).into(),
-      d: ppu.d().map(|d| d.into()).into(),
-      extra_entropy: ppu.extra_entropy().map(|ee| ee.into()).into(),
-      protocol_version: ppu.protocol_version().map(|pv| pv.into()).into(),
-    }
+impl TryFrom<RProtocolParamUpdate> for ProtocolParamUpdate {
+  type Error = CError;
+
+  fn try_from(ppu: RProtocolParamUpdate) -> Result<Self> {
+    ppu
+      .cost_models()
+      .map(|costmdls| costmdls.try_into())
+      .transpose()
+      .map(|costmdls| Self {
+        minfee_a: ppu.minfee_a().map(|minfee_a| from_bignum(&minfee_a)).into(),
+        minfee_b: ppu.minfee_b().map(|minfee_b| from_bignum(&minfee_b)).into(),
+        max_block_body_size: ppu.max_block_body_size().into(),
+        max_tx_size: ppu.max_tx_size().into(),
+        max_block_header_size: ppu.max_block_header_size().into(),
+        key_deposit: ppu.key_deposit().map(|kd| from_bignum(&kd)).into(),
+        pool_deposit: ppu.pool_deposit().map(|pd| from_bignum(&pd)).into(),
+        max_epoch: ppu.max_epoch().into(),
+        n_opt: ppu.n_opt().into(),
+        pool_pledge_influence: ppu.pool_pledge_influence().map(|ppi| ppi.into()).into(),
+        expansion_rate: ppu.expansion_rate().map(|er| er.into()).into(),
+        treasury_growth_rate: ppu.treasury_growth_rate().map(|tgr| tgr.into()).into(),
+        d: ppu.d().map(|d| d.into()).into(),
+        extra_entropy: ppu.extra_entropy().map(|ee| ee.into()).into(),
+        protocol_version: ppu.protocol_version().map(|pv| pv.into()).into(),
+        min_pool_cost: ppu.min_pool_cost().map(|mpc| from_bignum(&mpc)).into(),
+        ada_per_utxo_byte: ppu
+          .ada_per_utxo_byte()
+          .map(|apub| from_bignum(&apub))
+          .into(),
+        cost_models: costmdls.into(),
+        execution_costs: ppu.execution_costs().map(|ec| ec.into()).into(),
+        max_tx_ex_units: ppu.max_tx_ex_units().map(|mteu| mteu.into()).into(),
+        max_block_ex_units: ppu.max_block_ex_units().map(|mbeu| mbeu.into()).into(),
+        max_value_size: ppu.max_value_size().into(),
+      })
   }
 }
 
@@ -228,7 +438,7 @@ pub unsafe extern "C" fn cardano_protocol_param_update_from_bytes(
     data
       .unowned()
       .and_then(|bytes| RProtocolParamUpdate::from_bytes(bytes.to_vec()).into_result())
-      .map(|protocol_param_update| protocol_param_update.into())
+      .and_then(|protocol_param_update| protocol_param_update.try_into())
   })
   .response(result, error)
 }

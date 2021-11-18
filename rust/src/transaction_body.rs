@@ -58,7 +58,7 @@ impl TryFrom<RProposedProtocolParameterUpdates> for ProposedProtocolParameterUpd
           pppu
             .get(&genesis_hash)
             .ok_or("Cannot get ProtocolParamUpdate by GenesisHash".into())
-            .map(|ppu| ppu.into())
+            .and_then(|ppu| ppu.try_into())
             .zip(genesis_hash.try_into())
             .map(|(ppu, genesis_hash)| (genesis_hash, ppu).into())
         })

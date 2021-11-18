@@ -7,6 +7,7 @@
 
 import Foundation
 import CCardano
+import BigInt
 
 public typealias Rational = CCardano.Rational
 
@@ -48,6 +49,70 @@ extension CCardano.ProtocolVersions: CArray {
 extension ProtocolVersions {
     func withCArray<T>(fn: @escaping (CCardano.ProtocolVersions) throws -> T) rethrows -> T {
         try withCArr(fn: fn)
+    }
+}
+
+public enum Language {
+    case plutusV1
+
+    init(language: CCardano.Language) {
+        switch language {
+        case PlutusV1: self = .plutusV1
+        default: fatalError("Unknown Language type")
+        }
+    }
+
+    func withCLanguage<T>(
+        fn: @escaping (CCardano.Language) throws -> T
+    ) rethrows -> T {
+        switch self {
+        case .plutusV1: return try fn(PlutusV1)
+        }
+    }
+}
+
+extension CCardano.Language: Hashable {}
+
+public typealias CostModel = Array<BigInt>
+
+extension CCardano.CostModel: CArray {
+    typealias CElement = CInt128
+
+    mutating func free() {
+        cardano_cost_model_free(&self)
+    }
+}
+
+extension CostModel {
+    func withCArray<T>(fn: @escaping (CCardano.CostModel) throws -> T) rethrows -> T {
+        try withCArray(with: { try $1($0.cInt128) }, fn: fn)
+    }
+}
+
+public typealias Costmdls = Dictionary<Language, CostModel>
+
+extension CKeyValue_Language__CostModel: CType {}
+
+extension CKeyValue_Language__CostModel: CKeyValue {
+    typealias Key = CCardano.Language
+    typealias Value = CCardano.CostModel
+}
+
+extension CCardano.Costmdls: CArray {
+    typealias CElement = CKeyValue_Language__CostModel
+
+    mutating func free() {
+        cardano_costmdls_free(&self)
+    }
+}
+
+extension Costmdls {
+    func withCKVArray<T>(fn: @escaping (CCardano.Costmdls) throws -> T) rethrows -> T {
+        try withCKVArray(
+            withKey: { try $0.withCLanguage(fn: $1) },
+            withValue: { try $0.withCArray(fn: $1) },
+            fn: fn
+        )
     }
 }
 
@@ -129,6 +194,45 @@ extension COption_ProtocolVersions: COption {
     }
 }
 
+extension COption_Costmdls: COption {
+    typealias Tag = COption_Costmdls_Tag
+    typealias Value = CCardano.Costmdls
+
+    func someTag() -> Tag {
+        Some_Costmdls
+    }
+
+    func noneTag() -> Tag {
+        None_Costmdls
+    }
+}
+
+extension COption_ExUnitPrices: COption {
+    typealias Tag = COption_ExUnitPrices_Tag
+    typealias Value = CCardano.ExUnitPrices
+
+    func someTag() -> Tag {
+        Some_ExUnitPrices
+    }
+
+    func noneTag() -> Tag {
+        None_ExUnitPrices
+    }
+}
+
+extension COption_ExUnits: COption {
+    typealias Tag = COption_ExUnits_Tag
+    typealias Value = CCardano.ExUnits
+
+    func someTag() -> Tag {
+        Some_ExUnits
+    }
+
+    func noneTag() -> Tag {
+        None_ExUnits
+    }
+}
+
 public struct ProtocolParamUpdate {
     public var minfeeA: Coin?
     public var minfeeB: Coin?
@@ -145,6 +249,13 @@ public struct ProtocolParamUpdate {
     public var d: UnitInterval?
     public var extraEntropy: Nonce?
     public var protocolVersion: ProtocolVersions?
+    public var minPoolCost: Coin?
+    public var adaPerUtxoByte: Coin?
+    public var costModels: Costmdls?
+    public var executionCosts: ExUnitPrices?
+    public var maxTxExUnits: ExUnits?
+    public var maxBlockExUnits: ExUnits?
+    public var maxValueSize: UInt32?
     
     init(protocolParamUpdate: CCardano.ProtocolParamUpdate) {
         minfeeA = protocolParamUpdate.minfee_a.get()
@@ -162,6 +273,15 @@ public struct ProtocolParamUpdate {
         d = protocolParamUpdate.d.get()
         extraEntropy = protocolParamUpdate.extra_entropy.get()
         protocolVersion = protocolParamUpdate.protocol_version.get()?.copied()
+        minPoolCost = protocolParamUpdate.min_pool_cost.get()
+        adaPerUtxoByte = protocolParamUpdate.ada_per_utxo_byte.get()
+        let costModels = protocolParamUpdate.cost_models.get()?.copiedDictionary().map { key, value in
+            (Language(language: key), value.copied().map { $0.bigInt })
+        }
+        if let costModels = costModels {
+            self.costModels = Dictionary(uniqueKeysWithValues: costModels)
+        }
+        executionCosts = protocolParamUpdate.execution_costs.get()
     }
     
     public init() {}
@@ -185,23 +305,34 @@ public struct ProtocolParamUpdate {
         try protocolVersion.withCOption(
             with: { try $0.withCArray(fn: $1) }
         ) { protocolVersion in
-            try fn(CCardano.ProtocolParamUpdate(
-                minfee_a: minfeeA.cOption(),
-                minfee_b: minfeeB.cOption(),
-                max_block_body_size: maxBlockBodySize.cOption(),
-                max_tx_size: maxTxSize.cOption(),
-                max_block_header_size: maxBlockHeaderSize.cOption(),
-                key_deposit: keyDeposit.cOption(),
-                pool_deposit: poolDeposit.cOption(),
-                max_epoch: maxEpoch.cOption(),
-                n_opt: nOpt.cOption(),
-                pool_pledge_influence: poolPledgeInfluence.cOption(),
-                expansion_rate: expansionRate.cOption(),
-                treasury_growth_rate: treasuryGrowthRate.cOption(),
-                d: d.cOption(),
-                extra_entropy: extraEntropy.cOption(),
-                protocol_version: protocolVersion
-            ))
+            try costModels.withCOption(with: {
+                try $0.withCKVArray(fn: $1)
+            }) { costModels in
+                try fn(CCardano.ProtocolParamUpdate(
+                    minfee_a: minfeeA.cOption(),
+                    minfee_b: minfeeB.cOption(),
+                    max_block_body_size: maxBlockBodySize.cOption(),
+                    max_tx_size: maxTxSize.cOption(),
+                    max_block_header_size: maxBlockHeaderSize.cOption(),
+                    key_deposit: keyDeposit.cOption(),
+                    pool_deposit: poolDeposit.cOption(),
+                    max_epoch: maxEpoch.cOption(),
+                    n_opt: nOpt.cOption(),
+                    pool_pledge_influence: poolPledgeInfluence.cOption(),
+                    expansion_rate: expansionRate.cOption(),
+                    treasury_growth_rate: treasuryGrowthRate.cOption(),
+                    d: d.cOption(),
+                    extra_entropy: extraEntropy.cOption(),
+                    protocol_version: protocolVersion,
+                    min_pool_cost: minPoolCost.cOption(),
+                    ada_per_utxo_byte: adaPerUtxoByte.cOption(),
+                    cost_models: costModels,
+                    execution_costs: executionCosts.cOption(),
+                    max_tx_ex_units: maxTxExUnits.cOption(),
+                    max_block_ex_units: maxBlockExUnits.cOption(),
+                    max_value_size: maxValueSize.cOption()
+                ))
+            }
         }
     }
 }
