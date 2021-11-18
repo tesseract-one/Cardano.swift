@@ -9,10 +9,11 @@ use crate::ptr::*;
 use crate::stake_credential::Ed25519KeyHash;
 use crate::stake_credential::ScriptHash;
 use cardano_serialization_lib::{
-  metadata::AuxiliaryData as RAuxiliaryData, NativeScript as RNativeScript, NativeScriptKind,
-  NativeScripts as RNativeScripts, ScriptAll as RScriptAll, ScriptAny as RScriptAny,
-  ScriptHashNamespace as RScriptHashNamespace, ScriptNOfK as RScriptNOfK,
-  ScriptPubkey as RScriptPubkey, TimelockExpiry as RTimelockExpiry,
+  metadata::AuxiliaryData as RAuxiliaryData,
+  plutus::{PlutusScript as RPlutusScript, PlutusScripts as RPlutusScripts},
+  NativeScript as RNativeScript, NativeScriptKind, NativeScripts as RNativeScripts,
+  ScriptAll as RScriptAll, ScriptAny as RScriptAny, ScriptHashNamespace as RScriptHashNamespace,
+  ScriptNOfK as RScriptNOfK, ScriptPubkey as RScriptPubkey, TimelockExpiry as RTimelockExpiry,
   TimelockStart as RTimelockStart,
 };
 use std::convert::{TryFrom, TryInto};
@@ -390,16 +391,97 @@ impl From<RTimelockExpiry> for TimelockExpiry {
 }
 
 #[repr(C)]
+#[derive(Copy)]
+pub struct PlutusScript(CData);
+
+impl Free for PlutusScript {
+  unsafe fn free(&mut self) {
+    self.0.free()
+  }
+}
+
+impl Clone for PlutusScript {
+  fn clone(&self) -> Self {
+    let bytes = unsafe { self.0.unowned().expect("Bad bytes pointer").into() };
+    Self(bytes)
+  }
+}
+
+impl TryFrom<PlutusScript> for RPlutusScript {
+  type Error = CError;
+
+  fn try_from(plutus_script: PlutusScript) -> Result<Self> {
+    let bytes = unsafe { plutus_script.0.unowned()? };
+    Ok(Self::new(bytes.to_vec()))
+  }
+}
+
+impl From<RPlutusScript> for PlutusScript {
+  fn from(plutus_script: RPlutusScript) -> Self {
+    Self(plutus_script.bytes().into())
+  }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_plutus_script_clone(
+  plutus_script: PlutusScript, result: &mut PlutusScript, error: &mut CError,
+) -> bool {
+  handle_exception(|| plutus_script.clone()).response(result, error)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_plutus_script_free(plutus_script: &mut PlutusScript) {
+  plutus_script.free()
+}
+
+pub type PlutusScripts = CArray<PlutusScript>;
+
+impl TryFrom<PlutusScripts> for RPlutusScripts {
+  type Error = CError;
+
+  fn try_from(plutus_scripts: PlutusScripts) -> Result<Self> {
+    let vec = unsafe { plutus_scripts.unowned()? };
+    Ok(Self::new()).and_then(|mut plutus_scripts| {
+      vec
+        .iter()
+        .map(|&plutus_script| {
+          plutus_script
+            .try_into()
+            .map(|plutus_script| plutus_scripts.add(&plutus_script))
+        })
+        .collect::<Result<Vec<_>>>()
+        .map(|_| plutus_scripts)
+    })
+  }
+}
+
+impl From<RPlutusScripts> for PlutusScripts {
+  fn from(plutus_scripts: RPlutusScripts) -> Self {
+    (0..plutus_scripts.len())
+      .map(|index| plutus_scripts.get(index).into())
+      .collect::<Vec<PlutusScript>>()
+      .into()
+  }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_plutus_scripts_free(plutus_scripts: &mut PlutusScripts) {
+  plutus_scripts.free()
+}
+
+#[repr(C)]
 #[derive(Copy, Clone)]
 pub struct AuxiliaryData {
   metadata: COption<GeneralTransactionMetadata>,
   native_scripts: COption<NativeScripts>,
+  plutus_scripts: COption<PlutusScripts>,
 }
 
 impl Free for AuxiliaryData {
   unsafe fn free(&mut self) {
     self.metadata.free();
     self.native_scripts.free();
+    self.plutus_scripts.free();
   }
 }
 
@@ -415,10 +497,15 @@ impl TryFrom<AuxiliaryData> for RAuxiliaryData {
         let native_scripts: Option<NativeScripts> = auxiliary_data.native_scripts.into();
         native_scripts.map(|ns| ns.try_into()).transpose()
       })
-      .map(|(metadata, native_scripts)| {
+      .zip({
+        let plutus_scripts: Option<PlutusScripts> = auxiliary_data.plutus_scripts.into();
+        plutus_scripts.map(|ps| ps.try_into()).transpose()
+      })
+      .map(|((metadata, native_scripts), plutus_scripts)| {
         let mut auxiliary_data = Self::new();
         metadata.map(|metadata| auxiliary_data.set_metadata(&metadata));
         native_scripts.map(|ns| auxiliary_data.set_native_scripts(&ns));
+        plutus_scripts.map(|ps| auxiliary_data.set_plutus_scripts(&ps));
         auxiliary_data
       })
   }
@@ -441,6 +528,10 @@ impl TryFrom<RAuxiliaryData> for AuxiliaryData {
       .map(|(metadata, native_scripts)| Self {
         metadata: metadata.into(),
         native_scripts: native_scripts.into(),
+        plutus_scripts: auxiliary_data
+          .plutus_scripts()
+          .map(|plutus_scripts| plutus_scripts.into())
+          .into(),
       })
   }
 }

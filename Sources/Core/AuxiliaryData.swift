@@ -290,6 +290,62 @@ extension NativeScripts {
     }
 }
 
+public struct PlutusScript {
+    public let data: Data
+    
+    init(plutusScript: CCardano.PlutusScript) {
+        data = plutusScript._0.copied()
+    }
+    
+    func clonedCPlutusScript() throws -> CCardano.PlutusScript {
+        try withCPlutusScript { try $0.clone() }
+    }
+    
+    func withCPlutusScript<T>(
+        fn: @escaping (CCardano.PlutusScript) throws -> T
+    ) rethrows -> T {
+        try data.withCData { data in
+            try fn(CCardano.PlutusScript(_0: data))
+        }
+    }
+}
+
+extension CCardano.PlutusScript: CPtr {
+    typealias Val = PlutusScript
+    
+    func copied() -> PlutusScript {
+        PlutusScript(plutusScript: self)
+    }
+    
+    mutating func free() {
+        cardano_plutus_script_free(&self)
+    }
+}
+
+extension CCardano.PlutusScript {
+    public func clone() throws -> Self {
+        try RustResult<Self>.wrap { result, error in
+            cardano_plutus_script_clone(self, result, error)
+        }.get()
+    }
+}
+
+public typealias PlutusScripts = Array<PlutusScript>
+
+extension CCardano.PlutusScripts: CArray {
+    typealias CElement = CCardano.PlutusScript
+
+    mutating func free() {
+        cardano_plutus_scripts_free(&self)
+    }
+}
+
+extension PlutusScripts {
+    func withCArray<T>(fn: @escaping (CCardano.PlutusScripts) throws -> T) rethrows -> T {
+        try withCArray(with: { try $0.withCPlutusScript(fn: $1) }, fn: fn)
+    }
+}
+
 extension COption_GeneralTransactionMetadata: COption {
     typealias Tag = COption_GeneralTransactionMetadata_Tag
     typealias Value = CCardano.GeneralTransactionMetadata
@@ -316,13 +372,28 @@ extension COption_NativeScripts: COption {
     }
 }
 
+extension COption_PlutusScripts: COption {
+    typealias Tag = COption_PlutusScripts_Tag
+    typealias Value = CCardano.PlutusScripts
+
+    func someTag() -> Tag {
+        Some_PlutusScripts
+    }
+
+    func noneTag() -> Tag {
+        None_PlutusScripts
+    }
+}
+
 public struct AuxiliaryData {
     public private(set) var metadata: GeneralTransactionMetadata?
     public var nativeScripts: NativeScripts?
+    public var plutusScripts: PlutusScripts?
     
     init(auxiliaryData: CCardano.AuxiliaryData) {
         metadata = auxiliaryData.metadata.get()?.copiedDictionary().mapValues { $0.copied() }
         nativeScripts = auxiliaryData.native_scripts.get()?.copied().map { $0.copied() }
+        plutusScripts = auxiliaryData.plutus_scripts.get()?.copied().map { $0.copied() }
     }
     
     public init() {
@@ -348,10 +419,15 @@ public struct AuxiliaryData {
             try nativeScripts.withCOption(
                 with: { try $0.withCArray(fn: $1) }
             ) { nativeScripts in
-                try fn(CCardano.AuxiliaryData(
-                    metadata: metadata,
-                    native_scripts: nativeScripts
-                ))
+                try plutusScripts.withCOption(
+                    with: { try $0.withCArray(fn: $1) }
+                ) { plutusScripts in
+                    try fn(CCardano.AuxiliaryData(
+                        metadata: metadata,
+                        native_scripts: nativeScripts,
+                        plutus_scripts: plutusScripts
+                    ))
+                }
             }
         }
     }
