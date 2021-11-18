@@ -2,19 +2,62 @@ use crate::address::address::Address;
 use crate::array::CArray;
 use crate::data::CData;
 use crate::error::CError;
+use crate::option::COption;
 use crate::panic::*;
 use crate::ptr::*;
 use crate::value::Value;
 use cardano_serialization_lib::{
-  TransactionOutput as RTransactionOutput, TransactionOutputs as RTransactionOutputs,
+  crypto::DataHash as RDataHash, TransactionOutput as RTransactionOutput,
+  TransactionOutputs as RTransactionOutputs,
 };
 use std::convert::{TryFrom, TryInto};
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct DataHash([u8; 32]);
+
+impl From<RDataHash> for DataHash {
+  fn from(hash: RDataHash) -> Self {
+    Self(hash.to_bytes().try_into().unwrap())
+  }
+}
+
+impl From<DataHash> for RDataHash {
+  fn from(hash: DataHash) -> Self {
+    hash.0.into()
+  }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_data_hash_to_bytes(
+  data_hash: DataHash, result: &mut CData, error: &mut CError,
+) -> bool {
+  handle_exception(|| {
+    let data_hash: RDataHash = data_hash.into();
+    data_hash.to_bytes().into()
+  })
+  .response(result, error)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_data_hash_from_bytes(
+  data: CData, result: &mut DataHash, error: &mut CError,
+) -> bool {
+  handle_exception_result(|| {
+    data
+      .unowned()
+      .and_then(|bytes| RDataHash::from_bytes(bytes.to_vec()).into_result())
+      .map(|data_hash| data_hash.into())
+  })
+  .response(result, error)
+}
 
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct TransactionOutput {
   address: Address,
   amount: Value,
+  data_hash: COption<DataHash>,
 }
 
 impl Free for TransactionOutput {
@@ -32,7 +75,12 @@ impl TryFrom<TransactionOutput> for RTransactionOutput {
       .address
       .try_into()
       .zip(transaction_output.amount.try_into())
-      .map(|(address, amount)| Self::new(&address, &amount))
+      .map(|(address, amount)| {
+        let mut to = Self::new(&address, &amount);
+        let data_hash: Option<DataHash> = transaction_output.data_hash.into();
+        data_hash.map(|data_hash| to.set_data_hash(&data_hash.into()));
+        to
+      })
   }
 }
 
@@ -44,7 +92,14 @@ impl TryFrom<RTransactionOutput> for TransactionOutput {
       .address()
       .try_into()
       .zip(transaction_output.amount().try_into())
-      .map(|(address, amount)| Self { address, amount })
+      .map(|(address, amount)| Self {
+        address,
+        amount,
+        data_hash: transaction_output
+          .data_hash()
+          .map(|data_hash| data_hash.into())
+          .into(),
+      })
   }
 }
 

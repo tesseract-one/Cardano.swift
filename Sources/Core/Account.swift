@@ -34,7 +34,7 @@ public struct Account: Hashable {
     
     public func baseAddress(index: UInt32,
                             change: Bool,
-                            networkID: NetworkID) throws -> ExtendedAddress {
+                            networkID: UInt8) throws -> ExtendedAddress {
         let path = try self.path
             .appending(change ? 1 : 0)
             .appending(index)

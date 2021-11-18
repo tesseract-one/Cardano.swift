@@ -12,7 +12,7 @@ import Cardano
 #endif
 
 public enum BlockfrostNetworkInfoError: Error {
-    case unknownNetworkID(NetworkID)
+    case unknownNetworkID(UInt8)
 }
 
 public extension NetworkApiInfo {

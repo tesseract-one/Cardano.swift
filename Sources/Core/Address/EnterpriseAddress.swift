@@ -9,7 +9,7 @@ import Foundation
 import CCardano
 
 public struct EnterpriseAddress: Hashable {
-    private var network: NetworkId
+    private var network: UInt8
     public private(set) var payment: StakeCredential
     
     init(enterpriseAddress: CCardano.EnterpriseAddress) {
@@ -17,7 +17,7 @@ public struct EnterpriseAddress: Hashable {
         payment = enterpriseAddress.payment.copied()
     }
     
-    public init(network: NetworkId, payment: StakeCredential) {
+    public init(network: UInt8, payment: StakeCredential) {
         self.network = network
         self.payment = payment
     }

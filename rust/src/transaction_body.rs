@@ -1,4 +1,3 @@
-use crate::address::pointer::Slot;
 use crate::array::*;
 use crate::asset_name::AssetName;
 use crate::certificate::Certificates;
@@ -15,10 +14,11 @@ use crate::ptr::*;
 use crate::transaction_input::TransactionInputs;
 use crate::transaction_output::TransactionOutputs;
 use crate::withdrawals::Withdrawals;
+use crate::{address::pointer::Slot, stake_credential::Ed25519KeyHashes};
 use cardano_serialization_lib::{
-  crypto::AuxiliaryDataHash as RAuxiliaryDataHash,
+  crypto::{AuxiliaryDataHash as RAuxiliaryDataHash, ScriptDataHash as RScriptDataHash},
   utils::{from_bignum, to_bignum},
-  Mint as RMint, MintAssets as RMintAssets,
+  Mint as RMint, MintAssets as RMintAssets, NetworkId as RNetworkId, NetworkIdKind,
   ProposedProtocolParameterUpdates as RProposedProtocolParameterUpdates,
   TransactionBody as RTransactionBody, Update as RUpdate,
 };
@@ -251,6 +251,73 @@ pub unsafe extern "C" fn cardano_mint_free(mint: &mut Mint) {
 
 #[repr(C)]
 #[derive(Copy, Clone)]
+pub struct ScriptDataHash([u8; 32]);
+
+impl From<RScriptDataHash> for ScriptDataHash {
+  fn from(hash: RScriptDataHash) -> Self {
+    Self(hash.to_bytes().try_into().unwrap())
+  }
+}
+
+impl From<ScriptDataHash> for RScriptDataHash {
+  fn from(hash: ScriptDataHash) -> Self {
+    hash.0.into()
+  }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_script_data_hash_to_bytes(
+  script_data_hash: ScriptDataHash, result: &mut CData, error: &mut CError,
+) -> bool {
+  handle_exception(|| {
+    let script_data_hash: RScriptDataHash = script_data_hash.into();
+    script_data_hash.to_bytes().into()
+  })
+  .response(result, error)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cardano_script_data_hash_from_bytes(
+  data: CData, result: &mut ScriptDataHash, error: &mut CError,
+) -> bool {
+  handle_exception_result(|| {
+    data
+      .unowned()
+      .and_then(|bytes| RScriptDataHash::from_bytes(bytes.to_vec()).into_result())
+      .map(|script_data_hash| script_data_hash.into())
+  })
+  .response(result, error)
+}
+
+pub type RequiredSigners = Ed25519KeyHashes;
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub enum NetworkId {
+  Testnet,
+  Mainnet,
+}
+
+impl From<NetworkId> for RNetworkId {
+  fn from(network_id: NetworkId) -> Self {
+    match network_id {
+      NetworkId::Testnet => Self::testnet(),
+      NetworkId::Mainnet => Self::mainnet(),
+    }
+  }
+}
+
+impl From<RNetworkId> for NetworkId {
+  fn from(network_id: RNetworkId) -> Self {
+    match network_id.kind() {
+      NetworkIdKind::Testnet => Self::Testnet,
+      NetworkIdKind::Mainnet => Self::Mainnet,
+    }
+  }
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
 pub struct TransactionBody {
   inputs: TransactionInputs,
   outputs: TransactionOutputs,
@@ -262,6 +329,10 @@ pub struct TransactionBody {
   auxiliary_data_hash: COption<AuxiliaryDataHash>,
   validity_start_interval: COption<Slot>,
   mint: COption<Mint>,
+  script_data_hash: COption<ScriptDataHash>,
+  collateral: COption<TransactionInputs>,
+  required_signers: COption<RequiredSigners>,
+  network_id: COption<NetworkId>,
 }
 
 impl Free for TransactionBody {
@@ -272,6 +343,8 @@ impl Free for TransactionBody {
     self.withdrawals.free();
     self.update.free();
     self.mint.free();
+    self.collateral.free();
+    self.required_signers.free();
   }
 }
 
@@ -299,17 +372,37 @@ impl TryFrom<TransactionBody> for RTransactionBody {
         let mint: Option<Mint> = tb.mint.into();
         mint.map(|mint| mint.try_into()).transpose()
       })
-      .map(|((((mut new_tb, certs), wls), update), mint)| {
-        let hash: Option<AuxiliaryDataHash> = tb.auxiliary_data_hash.into();
-        let vsi: Option<Slot> = tb.validity_start_interval.into();
-        certs.map(|certs| new_tb.set_certs(&certs));
-        wls.map(|wls| new_tb.set_withdrawals(&wls));
-        update.map(|update| new_tb.set_update(&update));
-        hash.map(|hash| new_tb.set_auxiliary_data_hash(&hash.into()));
-        vsi.map(|vsi| new_tb.set_validity_start_interval(vsi));
-        mint.map(|mint| new_tb.set_mint(&mint));
-        new_tb
+      .zip({
+        let collateral: Option<TransactionInputs> = tb.collateral.into();
+        collateral
+          .map(|collateral| collateral.try_into())
+          .transpose()
       })
+      .zip({
+        let required_signers: Option<RequiredSigners> = tb.required_signers.into();
+        required_signers
+          .map(|required_signers| required_signers.try_into())
+          .transpose()
+      })
+      .map(
+        |((((((mut new_tb, certs), wls), update), mint), collateral), required_signers)| {
+          let adh: Option<AuxiliaryDataHash> = tb.auxiliary_data_hash.into();
+          let vsi: Option<Slot> = tb.validity_start_interval.into();
+          let sdh: Option<ScriptDataHash> = tb.script_data_hash.into();
+          let network_id: Option<NetworkId> = tb.network_id.into();
+          certs.map(|certs| new_tb.set_certs(&certs));
+          wls.map(|wls| new_tb.set_withdrawals(&wls));
+          update.map(|update| new_tb.set_update(&update));
+          adh.map(|adh| new_tb.set_auxiliary_data_hash(&adh.into()));
+          vsi.map(|vsi| new_tb.set_validity_start_interval(vsi));
+          mint.map(|mint| new_tb.set_mint(&mint));
+          sdh.map(|sdh| new_tb.set_script_data_hash(&sdh.into()));
+          collateral.map(|collateral| new_tb.set_collateral(&collateral));
+          required_signers.map(|required_signers| new_tb.set_required_signers(&required_signers));
+          network_id.map(|network_id| new_tb.set_network_id(&network_id.into()));
+          new_tb
+        },
+      )
   }
 }
 
@@ -324,18 +417,34 @@ impl TryFrom<RTransactionBody> for TransactionBody {
       .zip(tb.withdrawals().map(|wls| wls.try_into()).transpose())
       .zip(tb.update().map(|update| update.try_into()).transpose())
       .zip(tb.multiassets().map(|mint| mint.try_into()).transpose())
+      .zip(
+        tb.collateral()
+          .map(|collateral| collateral.try_into())
+          .transpose(),
+      )
+      .zip(
+        tb.required_signers()
+          .map(|required_signers| required_signers.try_into())
+          .transpose(),
+      )
       .map(
-        |(((((inputs, outputs), certs), withdrawals), update), mint)| Self {
-          inputs,
-          outputs,
-          fee: from_bignum(&tb.fee()),
-          ttl: tb.ttl().into(),
-          certs: certs.into(),
-          withdrawals: withdrawals.into(),
-          update: update.into(),
-          auxiliary_data_hash: tb.auxiliary_data_hash().map(|hash| hash.into()).into(),
-          validity_start_interval: tb.validity_start_interval().map(|vsi| vsi.into()).into(),
-          mint: mint.into(),
+        |(((((((inputs, outputs), certs), withdrawals), update), mint), collateral), r_signers)| {
+          Self {
+            inputs,
+            outputs,
+            fee: from_bignum(&tb.fee()),
+            ttl: tb.ttl().into(),
+            certs: certs.into(),
+            withdrawals: withdrawals.into(),
+            update: update.into(),
+            auxiliary_data_hash: tb.auxiliary_data_hash().map(|hash| hash.into()).into(),
+            validity_start_interval: tb.validity_start_interval().map(|vsi| vsi.into()).into(),
+            mint: mint.into(),
+            script_data_hash: tb.script_data_hash().map(|hash| hash.into()).into(),
+            collateral: collateral.into(),
+            required_signers: r_signers.into(),
+            network_id: tb.network_id().map(|network_id| network_id.into()).into(),
+          }
         },
       )
   }

@@ -9,7 +9,6 @@ import Foundation
 import CCardano
 
 public typealias NetworkInfo = CCardano.NetworkInfo
-public typealias NetworkID = CCardano.NetworkId
 
 extension NetworkInfo: CType {}
 

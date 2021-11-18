@@ -8,13 +8,49 @@
 import Foundation
 import CCardano
 
+public typealias DataHash = CCardano.DataHash
+
+extension DataHash: CType {}
+
+extension DataHash {
+    public init(bytes: Data) throws {
+        self = try bytes.withCData { bytes in
+            RustResult<Self>.wrap { res, err in
+                cardano_data_hash_from_bytes(bytes, res, err)
+            }
+        }.get()
+    }
+    
+    public func data() throws -> Data {
+        var data = try RustResult<CData>.wrap { res, err in
+            cardano_data_hash_to_bytes(self, res, err)
+        }.get()
+        return data.owned()
+    }
+}
+
+extension COption_DataHash: COption {
+    typealias Tag = COption_DataHash_Tag
+    typealias Value = DataHash
+
+    func someTag() -> Tag {
+        Some_DataHash
+    }
+
+    func noneTag() -> Tag {
+        None_DataHash
+    }
+}
+
 public struct TransactionOutput {
-    public private(set) var address: Address
-    public private(set) var amount: Value
+    public let address: Address
+    public let amount: Value
+    public var dataHash: DataHash?
     
     init(transactionOutput: CCardano.TransactionOutput) {
         address = transactionOutput.address.copied()
         amount = transactionOutput.amount.copied()
+        dataHash = transactionOutput.data_hash.get()
     }
     
     public init(address: Address, amount: Value) {
@@ -33,7 +69,8 @@ public struct TransactionOutput {
             try amount.withCValue { amount in
                 try fn(CCardano.TransactionOutput(
                     address: address,
-                    amount: amount
+                    amount: amount,
+                    data_hash: dataHash.cOption()
                 ))
             }
         }

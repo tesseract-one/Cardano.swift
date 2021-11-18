@@ -97,7 +97,7 @@ public enum Address: Hashable {
         try withCAddress { try $0.bech32(prefix: prefix) }
     }
 
-    public func networkId() throws -> NetworkId {
+    public func networkId() throws -> UInt8 {
         try withCAddress { try $0.networkId() }
     }
     
@@ -146,8 +146,6 @@ public enum Address: Hashable {
     }
 }
 
-extension NetworkId: CType {}
-
 extension CCardano.Address: CPtr {
     typealias Val = Address
     
@@ -191,8 +189,8 @@ extension CCardano.Address {
         return chars.owned()
     }
     
-    public func networkId() throws -> NetworkId {
-        try RustResult<NetworkId>.wrap { id, error in
+    public func networkId() throws -> UInt8 {
+        try RustResult<UInt8>.wrap { id, error in
             cardano_address_network_id(self, id, error)
         }.get()
     }

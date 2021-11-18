@@ -11,7 +11,7 @@ import CardanoCore
 #endif
 
 public struct NetworkApiInfo: Equatable, Hashable {
-    public let networkID: NetworkID
+    public let networkID: UInt8
     public let protocolMagic: UInt32
     public let linearFee: LinearFee
     public let poolDeposit: UInt64

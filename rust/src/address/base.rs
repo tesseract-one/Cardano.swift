@@ -1,5 +1,4 @@
 use crate::stake_credential::StakeCredential;
-use crate::network_info::NetworkId;
 use crate::error::CError;
 use crate::panic::*;
 use std::convert::{TryInto, TryFrom};
@@ -11,7 +10,7 @@ use cardano_serialization_lib::address::{
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct BaseAddress {
-  network: NetworkId,
+  network: u8,
   payment: StakeCredential,
   stake: StakeCredential
 }

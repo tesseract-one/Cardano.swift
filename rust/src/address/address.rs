@@ -3,7 +3,6 @@ use crate::error::CError;
 use crate::panic::*;
 use crate::ptr::*;
 use crate::string::*;
-use crate::network_info::NetworkId;
 use super::addr_type::AddrType;
 use super::base::BaseAddress;
 use super::enterprise::EnterpriseAddress;
@@ -114,7 +113,7 @@ pub unsafe extern "C" fn cardano_address_from_bech32(
 
 #[no_mangle]
 pub unsafe extern "C" fn cardano_address_network_id(
-  address: Address, result: &mut NetworkId, error: &mut CError
+  address: Address, result: &mut u8, error: &mut CError
 ) -> bool {
   handle_exception_result(|| {
     address

@@ -3,7 +3,6 @@ use crate::panic::Result;
 use crate::transaction_input::TransactionIndex;
 use std::convert::{TryInto, TryFrom};
 use crate::stake_credential::StakeCredential;
-use crate::network_info::NetworkId;
 
 use cardano_serialization_lib::address::{
   Pointer as RPointer,
@@ -40,7 +39,7 @@ impl From<Pointer> for RPointer {
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct PointerAddress {
-  network: NetworkId,
+  network: u8,
   payment: StakeCredential,
   stake: Pointer,
 }

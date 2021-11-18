@@ -1,11 +1,9 @@
 use cardano_serialization_lib::address::{NetworkInfo as RNetworkInfo};
 
-pub type NetworkId = u8;
-
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct NetworkInfo {
-  network_id: NetworkId,
+  network_id: u8,
   protocol_magic: u32,
 }
 

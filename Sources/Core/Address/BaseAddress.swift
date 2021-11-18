@@ -20,7 +20,7 @@ extension BaseAddress {
         }
     }
     
-    public init(network: NetworkId, payment: StakeCredential, stake: StakeCredential) {
+    public init(network: UInt8, payment: StakeCredential, stake: StakeCredential) {
         self = payment.withCCredential { payment in
             stake.withCCredential { stake in
                 Self(network: network, payment: payment, stake: stake)

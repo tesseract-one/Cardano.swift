@@ -9,7 +9,7 @@ import Foundation
 import CCardano
 
 public struct PointerAddress {
-    private var network: NetworkId
+    private var network: UInt8
     public private(set) var payment: StakeCredential
     public private(set) var stake: Pointer
     
@@ -19,7 +19,7 @@ public struct PointerAddress {
         stake = pointerAddress.stake
     }
     
-    public init(network: NetworkId, payment: StakeCredential, stake: Pointer) {
+    public init(network: UInt8, payment: StakeCredential, stake: Pointer) {
         self.network = network
         self.payment = payment
         self.stake = stake

@@ -148,6 +148,51 @@ extension Mint {
     }
 }
 
+public typealias ScriptDataHash = CCardano.ScriptDataHash
+
+extension ScriptDataHash: CType {}
+
+extension ScriptDataHash {
+    public init(bytes: Data) throws {
+        self = try bytes.withCData { bytes in
+            RustResult<Self>.wrap { res, err in
+                cardano_script_data_hash_from_bytes(bytes, res, err)
+            }
+        }.get()
+    }
+    
+    public func data() throws -> Data {
+        var data = try RustResult<CData>.wrap { res, err in
+            cardano_script_data_hash_to_bytes(self, res, err)
+        }.get()
+        return data.owned()
+    }
+}
+
+public typealias RequiredSigners = Ed25519KeyHashes
+
+public enum NetworkId {
+    case testnet
+    case mainnet
+
+    init(networkId: CCardano.NetworkId) {
+        switch networkId {
+        case Testnet: self = .testnet
+        case Mainnet: self = .mainnet
+        default: fatalError("Unknown NetworkId type")
+        }
+    }
+
+    func withCNetworkId<T>(
+        fn: @escaping (CCardano.NetworkId) throws -> T
+    ) rethrows -> T {
+        switch self {
+        case .testnet: return try fn(Testnet)
+        case .mainnet: return try fn(Mainnet)
+        }
+    }
+}
+
 extension COption_Slot: COption {
     typealias Tag = COption_Slot_Tag
     typealias Value = Slot
@@ -226,6 +271,58 @@ extension COption_Mint: COption {
     }
 }
 
+extension COption_ScriptDataHash: COption {
+    typealias Tag = COption_ScriptDataHash_Tag
+    typealias Value = CCardano.ScriptDataHash
+
+    func someTag() -> Tag {
+        Some_ScriptDataHash
+    }
+
+    func noneTag() -> Tag {
+        None_ScriptDataHash
+    }
+}
+
+extension COption_TransactionInputs: COption {
+    typealias Tag = COption_TransactionInputs_Tag
+    typealias Value = CCardano.TransactionInputs
+
+    func someTag() -> Tag {
+        Some_TransactionInputs
+    }
+
+    func noneTag() -> Tag {
+        None_TransactionInputs
+    }
+}
+
+extension COption_RequiredSigners: COption {
+    typealias Tag = COption_RequiredSigners_Tag
+    typealias Value = CCardano.RequiredSigners
+
+    func someTag() -> Tag {
+        Some_RequiredSigners
+    }
+
+    func noneTag() -> Tag {
+        None_RequiredSigners
+    }
+}
+
+extension COption_NetworkId: COption {
+    typealias Tag = COption_NetworkId_Tag
+    typealias Value = CCardano.NetworkId
+
+    func someTag() -> Tag {
+        Some_NetworkId
+    }
+
+    func noneTag() -> Tag {
+        None_NetworkId
+    }
+}
+
 public struct TransactionBody {
     public private(set) var inputs: TransactionInputs
     public private(set) var outputs: TransactionOutputs
@@ -237,6 +334,10 @@ public struct TransactionBody {
     public var auxiliaryDataHash: AuxiliaryDataHash?
     public var validityStartInterval: Slot?
     public var mint: Mint?
+    public var scriptDataHash: ScriptDataHash?
+    public var collateral: TransactionInputs?
+    public var requiredSigners: RequiredSigners?
+    public var networkId: NetworkId?
     
     init(transactionBody: CCardano.TransactionBody) {
         inputs = transactionBody.inputs.copied()
@@ -254,6 +355,12 @@ public struct TransactionBody {
         validityStartInterval = transactionBody.validity_start_interval.get()
         mint = transactionBody.mint.get()?.copiedDictionary().mapValues {
             $0.copiedDictionary().mapValues { $0.bigInt }
+        }
+        scriptDataHash = transactionBody.script_data_hash.get()
+        collateral = transactionBody.collateral.get()?.copied()
+        requiredSigners = transactionBody.required_signers.get()?.copied()
+        if let networkId = transactionBody.network_id.get() {
+            self.networkId = NetworkId(networkId: networkId)
         }
     }
     
@@ -296,18 +403,34 @@ public struct TransactionBody {
                             try mint.withCOption(
                                 with: { try $0.withCKVArray(fn: $1) }
                             ) { mint in
-                                try fn(CCardano.TransactionBody(
-                                    inputs: inputs,
-                                    outputs: outputs,
-                                    fee: fee,
-                                    ttl: ttl.cOption(),
-                                    certs: certs,
-                                    withdrawals: withdrawals,
-                                    update: update,
-                                    auxiliary_data_hash: auxiliaryDataHash.cOption(),
-                                    validity_start_interval: validityStartInterval.cOption(),
-                                    mint: mint
-                                ))
+                                try collateral.withCOption(
+                                    with: { try $0.withCArray(fn: $1) }
+                                ) { collateral in
+                                    try requiredSigners.withCOption(
+                                        with: { try $0.withCArray(fn: $1) }
+                                    ) { requiredSigners in
+                                        try networkId.withCOption(
+                                            with: { try $0.withCNetworkId(fn: $1) }
+                                        ) { networkId in
+                                            try fn(CCardano.TransactionBody(
+                                                inputs: inputs,
+                                                outputs: outputs,
+                                                fee: fee,
+                                                ttl: ttl.cOption(),
+                                                certs: certs,
+                                                withdrawals: withdrawals,
+                                                update: update,
+                                                auxiliary_data_hash: auxiliaryDataHash.cOption(),
+                                                validity_start_interval: validityStartInterval.cOption(),
+                                                mint: mint,
+                                                script_data_hash: scriptDataHash.cOption(),
+                                                collateral: collateral,
+                                                required_signers: requiredSigners,
+                                                network_id: networkId
+                                            ))
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
