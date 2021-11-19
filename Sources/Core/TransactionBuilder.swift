@@ -292,18 +292,6 @@ public struct TransactionBuilder {
         preferPureChange = transactionBuilder.prefer_pure_change
     }
     
-    // TODO: remove
-    public init(
-        linearFee: LinearFee,
-        minimumUtxoVal: UInt64,
-        poolDeposit: BigNum,
-        keyDeposit: BigNum,
-        maxValueSize: UInt32,
-        maxTxSize: UInt32
-    ) throws {
-        fatalError()
-    }
-    
     public init(
         linearFee: LinearFee,
         poolDeposit: BigNum,
