@@ -91,8 +91,9 @@ public struct Value: Equatable {
         try withCValue { try $0.partialCmp(other: other) }
     }
     
-    public func minAdaRequired(minimumUtxoVal: UInt64) throws -> UInt64 {
-        try withCValue { try $0.minAdaRequired(minimumUtxoVal: minimumUtxoVal) }
+    public func minAdaRequired(hasDataHash: Bool, coinsPerUtxoWord: UInt64) throws -> UInt64 {
+        try withCValue { try $0.minAdaRequired(hasDataHash: hasDataHash,
+                                               coinsPerUtxoWord: coinsPerUtxoWord) }
     }
 
     func clonedCValue() throws -> CCardano.Value {
@@ -174,9 +175,9 @@ extension CCardano.Value {
         }
     }
     
-    public func minAdaRequired(minimumUtxoVal: UInt64) throws -> UInt64 {
+    public func minAdaRequired(hasDataHash: Bool, coinsPerUtxoWord: UInt64) throws -> UInt64 {
         try RustResult<UInt64>.wrap { result, error in
-            cardano_value_min_ada_required(self, minimumUtxoVal, result, error)
+            cardano_value_min_ada_required(self, hasDataHash, coinsPerUtxoWord, result, error)
         }.get()
     }
     
