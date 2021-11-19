@@ -35,7 +35,7 @@ final class CardanoTxApiTests: XCTestCase {
     private let addressManager = AddressManagerMock(extendedMock: { addresses in
         let address = addresses[0]
         guard address == testAddress else {
-            throw TestError.error
+            throw ApiTestError.error(from: "extended")
         }
         return [testExtendedAddress]
     })
@@ -85,10 +85,6 @@ final class CardanoTxApiTests: XCTestCase {
         witnessSet: TransactionWitnessSet(),
         auxiliaryData: nil
     )
-    
-    private enum TestError: Error {
-        case error
-    }
     
     func testGetTransaction() throws {
         let success = expectation(description: "success")

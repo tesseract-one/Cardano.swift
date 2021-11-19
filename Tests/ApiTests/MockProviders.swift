@@ -8,6 +8,10 @@
 import Foundation
 import Cardano
 
+enum ApiTestError: Error {
+    case error(from: String)
+}
+
 struct NetworkProviderMock: NetworkProvider {
     var getSlotNumberMock: ((_ cb: @escaping (Result<Int?, Error>) -> Void) -> Void)?
     var getBalanceMock: ((Address, _ cb: @escaping (Result<UInt64, Error>) -> Void) -> Void)?

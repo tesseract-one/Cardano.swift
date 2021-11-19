@@ -17,7 +17,7 @@ final class CardanoSendApiTests: XCTestCase {
         cb(.success(50000000))
     }, submitMock: { tx, cb in
         guard try! tx.bytes() == testTransaction.bytes() else {
-            cb(.failure(TestError.error))
+            cb(.failure(ApiTestError.error(from: "submit")))
             return
         }
         cb(.success(testTransactionHash))
@@ -29,12 +29,12 @@ final class CardanoSendApiTests: XCTestCase {
     
     private let addressManager = AddressManagerMock(newMock: { account, change in
         guard account == testAccount, change else {
-            throw TestError.error
+            throw ApiTestError.error(from: "new")
         }
         return testChangeAddress
     }, getCachedMock: { account in
         guard account == testAccount else {
-            throw TestError.error
+            throw ApiTestError.error(from: "get cached")
         }
         return [testExtendedAddress.address]
     }, extendedMock: { addresses in
@@ -99,10 +99,6 @@ final class CardanoSendApiTests: XCTestCase {
     
     private let dispatchQueue = DispatchQueue(label: "CardanoSendApiTests.Async.Queue", target: .global())
     
-    private enum TestError: Error {
-        case error
-    }
-
     private func getTransaction(cardano: Cardano,
                                 transactionHash: TransactionHash,
                                 _ cb: @escaping (ChainTransaction) -> Void) {

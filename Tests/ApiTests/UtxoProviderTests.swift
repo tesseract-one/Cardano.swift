@@ -13,13 +13,13 @@ import Bip39
 final class UtxoProviderTests: XCTestCase {
     private let networkProvider = NetworkProviderMock(getUtxosForAddressesMock: { addresses, page, cb in
         guard addresses[0] == testAddress, page == 1 else {
-            cb(.failure(TestError.error(from: "getUtxos for addresses")))
+            cb(.failure(ApiTestError.error(from: "getUtxos for addresses")))
             return
         }
         cb(.success([testUtxo]))
     }, getUtxosForTransactionMock: { transaction, cb in
         guard try! transaction.bytes() == testUtxo.input.transaction_id.bytes() else {
-            cb(.failure(TestError.error(from: "getUtxos for transaction")))
+            cb(.failure(ApiTestError.error(from: "getUtxos for transaction")))
             return
         }
         cb(.success([testUtxo]))
@@ -49,10 +49,6 @@ final class UtxoProviderTests: XCTestCase {
             amount: Value(coin: 1)
         )
     )
-    
-    private enum TestError: Error {
-        case error(from: String)
-    }
     
     private func getUtxos(iterator: UtxoProviderAsyncIterator,
                           all: [TransactionUnspentOutput],

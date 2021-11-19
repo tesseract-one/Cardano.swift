@@ -13,7 +13,7 @@ import Bip39
 final class CardanoBalanceApiTests: XCTestCase {
     private let networkProvider = NetworkProviderMock(getBalanceMock: { address, cb in
         guard [testAddress, testChangeAddress].contains(address) else {
-            cb(.failure(TestError.error(from: "getBalance")))
+            cb(.failure(ApiTestError.error(from: "getBalance")))
             return
         }
         if address == testAddress {
@@ -25,23 +25,17 @@ final class CardanoBalanceApiTests: XCTestCase {
     
     private let signatureProvider = SignatureProviderMock()
     
-    private let addressManager = AddressManagerMock(newMock: { account, change in
-        throw TestError.error(from: "new")
-    }, getCachedMock: { account in
+    private let addressManager = AddressManagerMock(getCachedMock: { account in
         guard account == testAccount else {
-            throw TestError.error(from: "get cached account")
+            throw ApiTestError.error(from: "get cached account")
         }
         return [testAddress, testChangeAddress]
     }, getForAccountMock: { account, cb in
         guard account == testAccount else {
-            cb(.failure(TestError.error(from: "get for account")))
+            cb(.failure(ApiTestError.error(from: "get for account")))
             return
         }
         cb(.success([testAddress, testChangeAddress]))
-    }, fetchedAccountsMock: {
-        []
-    }, extendedMock: { addresses in
-        throw TestError.error(from: "extended")
     })
     
     private static let testAmount: UInt64 = 100
@@ -67,10 +61,6 @@ final class CardanoBalanceApiTests: XCTestCase {
             change: true,
             networkID: NetworkInfo.testnet.network_id
         ).address
-    }
-    
-    private enum TestError: Error {
-        case error(from: String)
     }
     
     func testAdaInAccount() throws {
