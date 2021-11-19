@@ -62,7 +62,7 @@ final class UtxoProviderTests: XCTestCase {
         func getUtxos(for addresses: [Address],
                       page: Int,
                       _ cb: @escaping (Result<[TransactionUnspentOutput], Error>) -> Void) {
-            guard addresses[0] == testAddress, page == 0 else {
+            guard addresses[0] == testAddress, page == 1 else {
                 cb(.failure(TestError.error(from: "getUtxos for addresses")))
                 return
             }
