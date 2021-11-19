@@ -32,3 +32,41 @@ extension CUInt128 {
         (BigUInt(self.w1) << 64) | BigUInt(self.w2)
     }
 }
+
+extension CArray_u32: CArray {
+    typealias CElement = UInt32
+
+    mutating func free() {}
+}
+
+extension BigInt {
+    public func cBigInt<T>(fn: @escaping (CBigInt) throws -> T) rethrows -> T {
+        var sign: CCardano.Sign
+        switch self.sign {
+        case .plus: sign = Plus
+        case .minus: sign = Minus
+        }
+        if isZero {
+            sign = NoSign
+        }
+        return try magnitude.words.map { UInt32($0) }.withCArr { data in
+            try fn(CBigInt(sign: sign, data: data))
+        }
+    }
+}
+
+extension CBigInt {
+    public var bigInt: BigInt {
+        let sign: BigInt.Sign
+        switch self.sign {
+        case Minus: sign = .minus
+        case NoSign: sign = .plus
+        case Plus: sign = .plus
+        default: fatalError("Unknown Sign type")
+        }
+        return BigInt(
+            sign: sign,
+            magnitude: BigUInt(words: data.copied().map { UInt($0) })
+        )
+    }
+}

@@ -60,6 +60,7 @@ dependencies = [
  "cardano-serialization-lib",
  "cbindgen",
  "linked-hash-map",
+ "num-bigint",
  "serde_json",
 ]
 
