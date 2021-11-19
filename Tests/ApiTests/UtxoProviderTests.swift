@@ -23,11 +23,15 @@ final class UtxoProviderTests: XCTestCase {
         ).address
     }
     
-    private static let testUtxo = UTXO(
-        address: testAddress,
-        txHash: try! TransactionHash(bytes: Data(count: 32)),
-        index: 1,
-        value: Value(coin: 1)
+    private static let testUtxo = TransactionUnspentOutput(
+        input: TransactionInput(
+            transaction_id: try! TransactionHash(bytes: Data(count: 32)),
+            index: 1
+        ),
+        output: TransactionOutput(
+            address: testAddress,
+            amount: Value(coin: 1)
+        )
     )
     
     private enum TestError: Error {
@@ -57,7 +61,7 @@ final class UtxoProviderTests: XCTestCase {
         
         func getUtxos(for addresses: [Address],
                       page: Int,
-                      _ cb: @escaping (Result<[UTXO], Error>) -> Void) {
+                      _ cb: @escaping (Result<[TransactionUnspentOutput], Error>) -> Void) {
             guard addresses[0] == testAddress, page == 0 else {
                 cb(.failure(TestError.error(from: "getUtxos for addresses")))
                 return
@@ -66,8 +70,8 @@ final class UtxoProviderTests: XCTestCase {
         }
         
         func getUtxos(for transaction: TransactionHash,
-                      _ cb: @escaping (Result<[UTXO], Error>) -> Void) {
-            guard try! transaction.bytes() == testUtxo.txHash.bytes() else {
+                      _ cb: @escaping (Result<[TransactionUnspentOutput], Error>) -> Void) {
+            guard try! transaction.bytes() == testUtxo.input.transaction_id.bytes() else {
                 cb(.failure(TestError.error(from: "getUtxos for transaction")))
                 return
             }
@@ -79,8 +83,8 @@ final class UtxoProviderTests: XCTestCase {
     }
     
     private func getUtxos(iterator: UtxoProviderAsyncIterator,
-                          all: [UTXO],
-                          _ cb: @escaping (Result<[UTXO], Error>) -> Void) {
+                          all: [TransactionUnspentOutput],
+                          _ cb: @escaping (Result<[TransactionUnspentOutput], Error>) -> Void) {
         iterator.next { (res, iterator) in
             switch res {
             case .success(let utxos):
@@ -123,7 +127,7 @@ final class UtxoProviderTests: XCTestCase {
             addresses: SimpleAddressManager(),
             utxos: NonCachingUtxoProvider()
         )
-        cardano.utxos.get(for: Self.testUtxo.txHash) { res in
+        cardano.utxos.get(for: Self.testUtxo.input.transaction_id) { res in
             let utxos = try! res.get()
             let utxo = utxos[0]
             XCTAssertEqual(utxo, Self.testUtxo)

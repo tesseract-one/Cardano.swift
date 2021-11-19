@@ -61,10 +61,10 @@ final class AddressManagerTests: XCTestCase {
         
         func getUtxos(for addresses: [Address],
                       page: Int,
-                      _ cb: @escaping (Result<[UTXO], Error>) -> Void) {}
+                      _ cb: @escaping (Result<[TransactionUnspentOutput], Error>) -> Void) {}
         
         func getUtxos(for transaction: TransactionHash,
-                      _ cb: @escaping (Result<[UTXO], Error>) -> Void) {}
+                      _ cb: @escaping (Result<[TransactionUnspentOutput], Error>) -> Void) {}
         
         func submit(tx: Transaction,
                     _ cb: @escaping (Result<TransactionHash, Error>) -> Void) {}
@@ -92,10 +92,10 @@ final class AddressManagerTests: XCTestCase {
         
         func getUtxos(for addresses: [Address],
                       page: Int,
-                      _ cb: @escaping (Result<[UTXO], Error>) -> Void) {}
+                      _ cb: @escaping (Result<[TransactionUnspentOutput], Error>) -> Void) {}
         
         func getUtxos(for transaction: TransactionHash,
-                      _ cb: @escaping (Result<[UTXO], Error>) -> Void) {}
+                      _ cb: @escaping (Result<[TransactionUnspentOutput], Error>) -> Void) {}
         
         func submit(tx: Transaction,
                     _ cb: @escaping (Result<TransactionHash, Error>) -> Void) {}

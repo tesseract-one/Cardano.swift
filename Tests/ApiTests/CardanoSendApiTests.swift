@@ -45,14 +45,18 @@ final class CardanoSendApiTests: XCTestCase {
             networkID: NetworkInfo.testnet.network_id
         ).address
     }
-
-    private static let testUtxo = UTXO(
-        address: testExtendedAddress.address,
-        txHash: TransactionHash(),
-        index: 1,
-        value: Value(coin: 1000)
+    
+    private static let testUtxo = TransactionUnspentOutput(
+        input: TransactionInput(
+            transaction_id: TransactionHash(),
+            index: 1
+        ),
+        output: TransactionOutput(
+            address: testExtendedAddress.address,
+            amount: Value(coin: 1000)
+        )
     )
-
+    
     private static let testTransactionHash = try! TransactionHash(bytes: Data(repeating: 0, count: 32))
     
     private static let testTransaction = Transaction(
@@ -109,7 +113,7 @@ final class CardanoSendApiTests: XCTestCase {
     
     private struct UtxoProviderMock: UtxoProvider {
         struct TestUtxoIterator: UtxoProviderAsyncIterator {
-            func next(_ cb: @escaping (Result<[UTXO], Error>, Self?) -> Void) {
+            func next(_ cb: @escaping (Result<[TransactionUnspentOutput], Error>, Self?) -> Void) {
                 cb(.success([testUtxo]), nil)
             }
         }
@@ -118,7 +122,7 @@ final class CardanoSendApiTests: XCTestCase {
             TestUtxoIterator()
         }
         
-        func get(for transaction: TransactionHash, _ cb: @escaping (Result<[UTXO], Error>) -> Void) {}
+        func get(for transaction: TransactionHash, _ cb: @escaping (Result<[TransactionUnspentOutput], Error>) -> Void) {}
     }
     
     private struct NetworkProviderMock: NetworkProvider {
@@ -137,10 +141,10 @@ final class CardanoSendApiTests: XCTestCase {
         
         func getUtxos(for addresses: [Address],
                       page: Int,
-                      _ cb: @escaping (Result<[UTXO], Error>) -> Void) {}
+                      _ cb: @escaping (Result<[TransactionUnspentOutput], Error>) -> Void) {}
         
         func getUtxos(for transaction: TransactionHash,
-                      _ cb: @escaping (Result<[UTXO], Error>) -> Void) {}
+                      _ cb: @escaping (Result<[TransactionUnspentOutput], Error>) -> Void) {}
         
         func submit(tx: Transaction,
                     _ cb: @escaping (Result<TransactionHash, Error>) -> Void) {

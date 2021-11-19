@@ -27,6 +27,24 @@ extension DataHash {
         }.get()
         return data.owned()
     }
+    
+    public var bytesArray: [UInt8] {
+        withUnsafeBytes(of: _0) { ptr in
+            Array(ptr.bindMemory(to: UInt8.self).prefix(32))
+        }
+    }
+}
+
+extension DataHash: Equatable {
+    public static func == (lhs: DataHash, rhs: DataHash) -> Bool {
+        lhs.bytesArray == rhs.bytesArray
+    }
+}
+
+extension DataHash: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(bytesArray)
+    }
 }
 
 extension COption_DataHash: COption {
@@ -42,7 +60,7 @@ extension COption_DataHash: COption {
     }
 }
 
-public struct TransactionOutput {
+public struct TransactionOutput: Equatable {
     public let address: Address
     public let amount: Value
     public var dataHash: DataHash?

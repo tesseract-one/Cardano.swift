@@ -127,7 +127,7 @@ public struct BlockfrostNetworkProvider: NetworkProvider {
     
     public func getUtxos(for addresses: [Address],
                          page: Int,
-                         _ cb: @escaping (Result<[UTXO], Error>) -> Void) {
+                         _ cb: @escaping (Result<[TransactionUnspentOutput], Error>) -> Void) {
         let b32Addresses: Array<(Address, String)>
         do {
             b32Addresses = try addresses.map { try ($0, $0.bech32()) }
@@ -145,22 +145,26 @@ public struct BlockfrostNetworkProvider: NetworkProvider {
             ) { res in
                 switch res {
                 case .success(let utxos):
-                    mapped(Result { try utxos.map { try UTXO(address: address, blockfrost: $0) } })
+                    mapped(Result { try utxos.map {
+                        try TransactionUnspentOutput(address: address, blockfrost: $0)
+                    } })
                 case .failure(let error):
                     handleError(error: error, expectedStatus: 404, response: [], mapped)
                 }
             }
-        }.exec { (res: Result<[[UTXO]], Error>) in
+        }.exec { (res: Result<[[TransactionUnspentOutput]], Error>) in
             cb(res.map { utxo in utxo.flatMap { $0 } })
         }
     }
     
     public func getUtxos(for transaction: TransactionHash,
-                         _ cb: @escaping (Result<[UTXO], Error>) -> Void) {
+                         _ cb: @escaping (Result<[TransactionUnspentOutput], Error>) -> Void) {
         do {
             let _ = transactionsApi.getTransactionUtxos(hash: try transaction.bytes().hex()) { res in
                 cb(res.flatMap { txContentUtxo in
-                    Result { try txContentUtxo.inputs.map { try UTXO(blockfrost: $0) } }
+                    Result { try txContentUtxo.inputs.map {
+                        try TransactionUnspentOutput(blockfrost: $0)
+                    } }
                 })
             }
         } catch {

@@ -24,7 +24,7 @@ public class NonCachingUtxoProvider: UtxoProvider, CardanoBootstrapAware {
     }
     
     public func get(for transaction: TransactionHash,
-                    _ cb: @escaping (Result<[UTXO], Error>) -> Void) {
+                    _ cb: @escaping (Result<[TransactionUnspentOutput], Error>) -> Void) {
         cardano.network.getUtxos(for: transaction, cb)
     }
 }
@@ -42,7 +42,7 @@ public struct NonCachingUtxoProviderAsyncIterator: UtxoProviderAsyncIterator {
         self.page = page
     }
     
-    public func next(_ cb: @escaping (Result<[UTXO], Error>, Self?) -> Void) {
+    public func next(_ cb: @escaping (Result<[TransactionUnspentOutput], Error>, Self?) -> Void) {
         networkProvider.getUtxos(for: addresses, page: page) { res in
             switch res {
             case .failure(let err): cb(.failure(err), nil)

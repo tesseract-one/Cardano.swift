@@ -35,8 +35,8 @@ public struct CardanoSendApi: CardanoApi {
     }
     
     private func getAllUtxos(iterator: UtxoProviderAsyncIterator,
-                             all: [UTXO],
-                             _ cb: @escaping (Result<[UTXO], Error>) -> Void) {
+                             all: [TransactionUnspentOutput],
+                             _ cb: @escaping (Result<[TransactionUnspentOutput], Error>) -> Void) {
         iterator.next { (res, iterator) in
             switch res {
             case .success(let utxos):
@@ -81,24 +81,12 @@ public struct CardanoSendApi: CardanoApi {
                             if let slot = slot {
                                 transactionBuilder.ttl = UInt32(slot) + maxSlots
                             }
-                            let transactionUnspentOutputs = utxos.map { utxo in
-                                TransactionUnspentOutput(
-                                    input: TransactionInput(
-                                        transaction_id: utxo.txHash,
-                                        index: utxo.index
-                                    ),
-                                    output: TransactionOutput(
-                                        address: utxo.address,
-                                        amount: utxo.value
-                                    )
-                                )
-                            }
-                            try transactionBuilder.addInputsFrom(inputs: transactionUnspentOutputs,
+                            try transactionBuilder.addInputsFrom(inputs: utxos,
                                                                  strategy: .largestFirst)
                             let addresses = transactionBuilder.inputs.map { input in
-                                transactionUnspentOutputs.first { transactionUnspentOutput in
-                                    transactionUnspentOutput.input == input.input
-                                    && transactionUnspentOutput.output.amount == input.amount
+                                utxos.first { utxo in
+                                    utxo.input == input.input
+                                    && utxo.output.amount == input.amount
                                 }!.output.address
                             }
                             let _ = try transactionBuilder.addChangeIfNeeded(address: change)

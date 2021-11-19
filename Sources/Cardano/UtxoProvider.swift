@@ -15,9 +15,9 @@ public protocol UtxoProvider {
              asset: (PolicyID, AssetName)?) -> UtxoProviderAsyncIterator
     
     func get(for transaction: TransactionHash,
-             _ cb: @escaping (Result<[UTXO], Error>) -> Void)
+             _ cb: @escaping (Result<[TransactionUnspentOutput], Error>) -> Void)
 }
 
 public protocol UtxoProviderAsyncIterator {
-    func next(_ cb: @escaping (Result<[UTXO], Error>, Self?) -> Void)
+    func next(_ cb: @escaping (Result<[TransactionUnspentOutput], Error>, Self?) -> Void)
 }

@@ -179,7 +179,7 @@ public enum CoinSelectionStrategyCIP2 {
     }
 }
 
-public struct TransactionUnspentOutput {
+public struct TransactionUnspentOutput: Equatable {
     public let input: TransactionInput
     public let output: TransactionOutput
     
