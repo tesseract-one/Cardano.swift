@@ -59,9 +59,9 @@ final class KeychainTests: XCTestCase {
             .prefix
             .appending(0, hard: true)
         let keyPair = try root
-            .derive(index: path.purpose!)
-            .derive(index: path.coin!)
-            .derive(index: path.accountIndex!)
+            .derive(index: path.path[0])
+            .derive(index: path.path[1])
+            .derive(index: path.path[2])
             .derive(index: 0)
             .derive(index: 0)
         keychain.sign(tx: extendedTransaction) { res in
