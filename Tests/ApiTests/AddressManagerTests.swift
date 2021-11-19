@@ -13,6 +13,24 @@ import CardanoBlockfrost
 import Bip39
 
 final class AddressManagerTests: XCTestCase {
+    private let networkProvider = NetworkProviderMock(getTransactionCountMock: { address, cb in
+        guard address == testAddress.address || address == testChangeAddress.address else {
+            cb(.success(0))
+            return
+        }
+        cb(.success(1))
+    })
+    
+    private let networkProviderTestNew = NetworkProviderMock(getTransactionCountMock: { address, cb in
+        cb(.success(0))
+    })
+    
+    private let signatureProvider = SignatureProviderMock()
+    
+    private let signatureProviderWithAccounts = SignatureProviderMock(accountsMock: { cb in
+        cb(.success([testAccount]))
+    })
+    
     private static let testMnemonic = try! Mnemonic()
     
     private static var testAccount: Account {
@@ -36,76 +54,11 @@ final class AddressManagerTests: XCTestCase {
         )
     }
     
-    private struct TestSigner: SignatureProvider {
-        func accounts(_ cb: @escaping (Result<[Account], Error>) -> Void) {}
-        
-        func sign(tx: ExtendedTransaction,
-                  _ cb: @escaping (Result<Transaction, Error>) -> Void) {}
-    }
-    
-    private struct NetworkProviderMockTestNew: NetworkProvider {
-        func getSlotNumber(_ cb: @escaping (Result<Int?, Error>) -> Void) {}
-        
-        func getBalance(for address: Address, _ cb: @escaping (Result<UInt64, Error>) -> Void) {}
-        
-        func getTransactions(for address: Address,
-                             _ cb: @escaping (Result<[AddressTransaction], Error>) -> Void) {}
-        
-        func getTransactionCount(for address: Address,
-                                 _ cb: @escaping (Result<Int, Error>) -> Void) {
-            cb(.success(0))
-        }
-        
-        func getTransaction(hash: TransactionHash,
-                            _ cb: @escaping (Result<ChainTransaction?, Error>) -> Void) {}
-        
-        func getUtxos(for addresses: [Address],
-                      page: Int,
-                      _ cb: @escaping (Result<[TransactionUnspentOutput], Error>) -> Void) {}
-        
-        func getUtxos(for transaction: TransactionHash,
-                      _ cb: @escaping (Result<[TransactionUnspentOutput], Error>) -> Void) {}
-        
-        func submit(tx: Transaction,
-                    _ cb: @escaping (Result<TransactionHash, Error>) -> Void) {}
-    }
-    
-    private struct NetworkProviderMock: NetworkProvider {
-        func getSlotNumber(_ cb: @escaping (Result<Int?, Error>) -> Void) {}
-        
-        func getBalance(for address: Address, _ cb: @escaping (Result<UInt64, Error>) -> Void) {}
-        
-        func getTransactions(for address: Address,
-                             _ cb: @escaping (Result<[AddressTransaction], Error>) -> Void) {}
-        
-        func getTransactionCount(for address: Address,
-                                 _ cb: @escaping (Result<Int, Error>) -> Void) {
-            guard address == testAddress.address || address == testChangeAddress.address else {
-                cb(.success(0))
-                return
-            }
-            cb(.success(1))
-        }
-        
-        func getTransaction(hash: TransactionHash,
-                            _ cb: @escaping (Result<ChainTransaction?, Error>) -> Void) {}
-        
-        func getUtxos(for addresses: [Address],
-                      page: Int,
-                      _ cb: @escaping (Result<[TransactionUnspentOutput], Error>) -> Void) {}
-        
-        func getUtxos(for transaction: TransactionHash,
-                      _ cb: @escaping (Result<[TransactionUnspentOutput], Error>) -> Void) {}
-        
-        func submit(tx: Transaction,
-                    _ cb: @escaping (Result<TransactionHash, Error>) -> Void) {}
-    }
-    
     func testFetchOnTestnet() throws {
         let fetchSuccessful = expectation(description: "Fetch successful")
         let cardano = try Cardano(
             info: .testnet,
-            signer: TestSigner(),
+            signer: signatureProvider,
             network: BlockfrostNetworkProvider(config: BlockfrostConfig(
                 basePath: "https://cardano-testnet.blockfrost.io/api/v0",
                 projectId: TestEnvironment.instance.blockfrostProjectId
@@ -123,21 +76,12 @@ final class AddressManagerTests: XCTestCase {
         wait(for: [fetchSuccessful], timeout: 10)
     }
     
-    private struct TestSignerAccounts: SignatureProvider {
-        func accounts(_ cb: @escaping (Result<[Account], Error>) -> Void) {
-            cb(.success([testAccount]))
-        }
-        
-        func sign(tx: ExtendedTransaction,
-                  _ cb: @escaping (Result<Transaction, Error>) -> Void) {}
-    }
-    
     func testAccounts() throws {
         let success = expectation(description: "success")
         let cardano = try Cardano(
             info: .testnet,
-            signer: TestSignerAccounts(),
-            network: NetworkProviderMock(),
+            signer: signatureProviderWithAccounts,
+            network: networkProvider,
             addresses: SimpleAddressManager(),
             utxos: NonCachingUtxoProvider()
         )
@@ -153,8 +97,8 @@ final class AddressManagerTests: XCTestCase {
         let success = expectation(description: "success")
         let cardano = try Cardano(
             info: .testnet,
-            signer: TestSignerAccounts(),
-            network: NetworkProviderMockTestNew(),
+            signer: signatureProviderWithAccounts,
+            network: networkProviderTestNew,
             addresses: SimpleAddressManager(),
             utxos: NonCachingUtxoProvider()
         )
@@ -178,8 +122,8 @@ final class AddressManagerTests: XCTestCase {
         let success = expectation(description: "success")
         let cardano = try Cardano(
             info: .testnet,
-            signer: TestSignerAccounts(),
-            network: NetworkProviderMock(),
+            signer: signatureProviderWithAccounts,
+            network: networkProvider,
             addresses: SimpleAddressManager(),
             utxos: NonCachingUtxoProvider()
         )
@@ -206,8 +150,8 @@ final class AddressManagerTests: XCTestCase {
         let success = expectation(description: "success")
         let cardano = try Cardano(
             info: .testnet,
-            signer: TestSignerAccounts(),
-            network: NetworkProviderMock(),
+            signer: signatureProviderWithAccounts,
+            network: networkProvider,
             addresses: SimpleAddressManager(),
             utxos: NonCachingUtxoProvider()
         )
@@ -229,8 +173,8 @@ final class AddressManagerTests: XCTestCase {
         let success = expectation(description: "success")
         let cardano = try Cardano(
             info: .testnet,
-            signer: TestSignerAccounts(),
-            network: NetworkProviderMock(),
+            signer: signatureProviderWithAccounts,
+            network: networkProvider,
             addresses: SimpleAddressManager(),
             utxos: NonCachingUtxoProvider()
         )
@@ -258,8 +202,8 @@ final class AddressManagerTests: XCTestCase {
         let success = expectation(description: "success")
         let cardano = try Cardano(
             info: .testnet,
-            signer: TestSignerAccounts(),
-            network: NetworkProviderMockTestNew(),
+            signer: signatureProviderWithAccounts,
+            network: networkProviderTestNew,
             addresses: SimpleAddressManager(),
             utxos: NonCachingUtxoProvider()
         )

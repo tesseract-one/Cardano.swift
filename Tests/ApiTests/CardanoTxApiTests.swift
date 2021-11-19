@@ -11,6 +11,35 @@ import XCTest
 import Bip39
 
 final class CardanoTxApiTests: XCTestCase {
+    private let networkProvider = NetworkProviderMock(getTransactionMock: { hash, cb in
+        guard hash == testTransactionHash else {
+            cb(.success(nil))
+            return
+        }
+        cb(.success(testChainTransaction))
+    }, submitMock: { tx, cb in
+        guard try! tx.bytes() == testTransaction.bytes() else {
+            return
+        }
+        cb(.success(testTransactionHash))
+    })
+    
+    private let signatureProvider = SignatureProviderMock(signMock: { tx, cb in
+        guard try! tx.tx.bytes() == testTransaction.body.bytes(),
+              tx.addresses[0] == testExtendedAddress else {
+            return
+        }
+        cb(.success(testTransaction))
+    })
+    
+    private let addressManager = AddressManagerMock(extendedMock: { addresses in
+        let address = addresses[0]
+        guard address == testAddress else {
+            throw TestError.error
+        }
+        return [testExtendedAddress]
+    })
+    
     private static let testMnemonic = try! Mnemonic()
     
     private static var testAddress: Address {
@@ -61,93 +90,12 @@ final class CardanoTxApiTests: XCTestCase {
         case error
     }
     
-    private struct TestAddressManager: AddressManager {
-        func accounts(_ cb: @escaping (Result<[Account], Error>) -> Void) {}
-        
-        func new(for account: Account, change: Bool) throws -> Address {
-            throw TestError.error
-        }
-        
-        func get(cached account: Account) throws -> [Address] {
-            throw TestError.error
-        }
-        
-        func get(for account: Account,
-                 _ cb: @escaping (Result<[Address], Error>) -> Void) {}
-        
-        func fetch(for accounts: [Account],
-                   _ cb: @escaping (Result<Void, Error>) -> Void) {}
-        
-        func fetch(_ cb: @escaping (Result<Void, Error>) -> Void) {}
-        
-        func fetchedAccounts() -> [Account] {
-            []
-        }
-        
-        func extended(addresses: [Address]) throws -> [ExtendedAddress] {
-            let address = addresses[0]
-            guard address == testAddress else {
-                throw TestError.error
-            }
-            return [testExtendedAddress]
-        }
-    }
-    
-    private struct TestSigner: SignatureProvider {
-        func accounts(_ cb: @escaping (Result<[Account], Error>) -> Void) {}
-        
-        func sign(tx: ExtendedTransaction,
-                  _ cb: @escaping (Result<Transaction, Error>) -> Void) {
-            guard try! tx.tx.bytes() == testTransaction.body.bytes(),
-                  tx.addresses[0] == testExtendedAddress else {
-                return
-            }
-            cb(.success(testTransaction))
-        }
-    }
-    
-    private struct NetworkProviderMock: NetworkProvider {
-        func getSlotNumber(_ cb: @escaping (Result<Int?, Error>) -> Void) {}
-        
-        func getBalance(for address: Address, _ cb: @escaping (Result<UInt64, Error>) -> Void) {}
-        
-        func getTransactions(for address: Address,
-                             _ cb: @escaping (Result<[AddressTransaction], Error>) -> Void) {}
-        
-        func getTransactionCount(for address: Address,
-                                 _ cb: @escaping (Result<Int, Error>) -> Void) {}
-        
-        func getTransaction(hash: TransactionHash,
-                            _ cb: @escaping (Result<ChainTransaction?, Error>) -> Void) {
-            guard hash == testTransactionHash else {
-                cb(.success(nil))
-                return
-            }
-            cb(.success(testChainTransaction))
-        }
-        
-        func getUtxos(for addresses: [Address],
-                      page: Int,
-                      _ cb: @escaping (Result<[TransactionUnspentOutput], Error>) -> Void) {}
-        
-        func getUtxos(for transaction: TransactionHash,
-                      _ cb: @escaping (Result<[TransactionUnspentOutput], Error>) -> Void) {}
-        
-        func submit(tx: Transaction,
-                    _ cb: @escaping (Result<TransactionHash, Error>) -> Void) {
-            guard try! tx.bytes() == testTransaction.bytes() else {
-                return
-            }
-            cb(.success(testTransactionHash))
-        }
-    }
-    
     func testGetTransaction() throws {
         let success = expectation(description: "success")
         let cardano = try Cardano(
             info: .testnet,
-            signer: TestSigner(),
-            network: NetworkProviderMock(),
+            signer: signatureProvider,
+            network: networkProvider,
             addresses: SimpleAddressManager(),
             utxos: NonCachingUtxoProvider()
         )
@@ -163,8 +111,8 @@ final class CardanoTxApiTests: XCTestCase {
         let success = expectation(description: "success")
         let cardano = try Cardano(
             info: .testnet,
-            signer: TestSigner(),
-            network: NetworkProviderMock(),
+            signer: signatureProvider,
+            network: networkProvider,
             addresses: SimpleAddressManager(),
             utxos: NonCachingUtxoProvider()
         )
@@ -180,9 +128,9 @@ final class CardanoTxApiTests: XCTestCase {
         let success = expectation(description: "success")
         let cardano = try Cardano(
             info: .testnet,
-            signer: TestSigner(),
-            network: NetworkProviderMock(),
-            addresses: TestAddressManager(),
+            signer: signatureProvider,
+            network: networkProvider,
+            addresses: addressManager,
             utxos: NonCachingUtxoProvider()
         )
         cardano.tx.signAndSubmit(
