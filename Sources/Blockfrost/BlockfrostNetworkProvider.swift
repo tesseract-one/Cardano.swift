@@ -24,6 +24,32 @@ public struct BlockfrostNetworkProvider: NetworkProvider {
         blocksApi = CardanoBlocksAPI(config: config)
     }
     
+    private func handleError<R>(error: Error,
+                                expectedStatus: Int,
+                                response: R,
+                                _ cb: @escaping (Result<R, Error>) -> Void) {
+        guard let error = error as? ErrorResponse else {
+            self.config.apiResponseQueue.async {
+                cb(.failure(error))
+            }
+            return
+        }
+        switch error {
+        case .errorStatus(let int, _, _, _):
+            guard int == expectedStatus else {
+                self.config.apiResponseQueue.async {
+                    cb(.failure(error))
+                }
+                return
+            }
+            cb(.success(response))
+        default:
+            self.config.apiResponseQueue.async {
+                cb(.failure(error))
+            }
+        }
+    }
+    
     public func getSlotNumber(_ cb: @escaping (Result<Int?, Error>) -> Void) {
         let _ = blocksApi.getLatestBlock() { res in
             cb(res.map { block in
@@ -44,20 +70,7 @@ public struct BlockfrostNetworkProvider: NetworkProvider {
                         }).coin
                     })
                 case .failure(let error):
-                    guard let error = error as? ErrorResponse else {
-                        cb(.failure(error))
-                        return
-                    }
-                    switch error {
-                    case .errorStatus(let int, _, _, _):
-                        guard int == 404 else {
-                            cb(.failure(error))
-                            return
-                        }
-                        cb(.success(0))
-                    default:
-                        cb(.failure(error))
-                    }
+                    handleError(error: error, expectedStatus: 404, response: 0, cb)
                 }
             }
         } catch {
@@ -90,20 +103,7 @@ public struct BlockfrostNetworkProvider: NetworkProvider {
                 case .success(let details):
                     cb(.success(details.txCount))
                 case .failure(let error):
-                    guard let error = error as? ErrorResponse else {
-                        cb(.failure(error))
-                        return
-                    }
-                    switch error {
-                    case .errorStatus(let int, _, _, _):
-                        guard int == 404 else {
-                            cb(.failure(error))
-                            return
-                        }
-                        cb(.success(0))
-                    default:
-                        cb(.failure(error))
-                    }
+                    handleError(error: error, expectedStatus: 404, response: 0, cb)
                 }
             }
         } catch {
@@ -120,20 +120,7 @@ public struct BlockfrostNetworkProvider: NetworkProvider {
             case .success(let transactionContent):
                 cb(.success(ChainTransaction(blockfrost: transactionContent)))
             case .failure(let error):
-                guard let error = error as? ErrorResponse else {
-                    cb(.failure(error))
-                    return
-                }
-                switch error {
-                case .errorStatus(let int, _, _, _):
-                    guard int == 404 else {
-                        cb(.failure(error))
-                        return
-                    }
-                    cb(.success(nil))
-                default:
-                    cb(.failure(error))
-                }
+                handleError(error: error, expectedStatus: 404, response: nil, cb)
             }
         }
     }
@@ -160,20 +147,7 @@ public struct BlockfrostNetworkProvider: NetworkProvider {
                 case .success(let utxos):
                     mapped(Result { try utxos.map { try UTXO(address: address, blockfrost: $0) } })
                 case .failure(let error):
-                    guard let error = error as? ErrorResponse else {
-                        mapped(.failure(error))
-                        return
-                    }
-                    switch error {
-                    case .errorStatus(let int, _, _, _):
-                        guard int == 404 else {
-                            cb(.failure(error))
-                            return
-                        }
-                        mapped(.success([]))
-                    default:
-                        mapped(.failure(error))
-                    }
+                    handleError(error: error, expectedStatus: 404, response: [], mapped)
                 }
             }
         }.exec { (res: Result<[[UTXO]], Error>) in
