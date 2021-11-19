@@ -53,7 +53,7 @@ final class CardanoSendApiTests: XCTestCase {
         ),
         output: TransactionOutput(
             address: testExtendedAddress.address,
-            amount: Value(coin: 1000)
+            amount: Value(coin: 10000000)
         )
     )
     
@@ -126,7 +126,9 @@ final class CardanoSendApiTests: XCTestCase {
     }
     
     private struct NetworkProviderMock: NetworkProvider {
-        func getSlotNumber(_ cb: @escaping (Result<Int?, Error>) -> Void) {}
+        func getSlotNumber(_ cb: @escaping (Result<Int?, Error>) -> Void) {
+            cb(.success(50000000))
+        }
         
         func getBalance(for address: Address, _ cb: @escaping (Result<UInt64, Error>) -> Void) {}
         
@@ -223,7 +225,7 @@ final class CardanoSendApiTests: XCTestCase {
             addresses: AddressManagerMock(),
             utxos: UtxoProviderMock()
         )
-        cardano.send.ada(to: Self.testToAddress, lovelace: 100, from: Self.testAccount) { res in
+        cardano.send.ada(to: Self.testToAddress, lovelace: 1000000, from: Self.testAccount) { res in
             let transactionHash = try! res.get()
             XCTAssertEqual(transactionHash, Self.testTransactionHash)
             success.fulfill()
@@ -241,7 +243,7 @@ final class CardanoSendApiTests: XCTestCase {
             utxos: UtxoProviderMock()
         )
         cardano.send.ada(to: Self.testToAddress,
-                         lovelace: 100,
+                         lovelace: 1000000,
                          from: [Self.testExtendedAddress.address],
                          change: Self.testChangeAddress) { res in
             let transactionHash = try! res.get()
