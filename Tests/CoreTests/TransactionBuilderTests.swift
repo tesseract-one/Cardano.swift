@@ -63,7 +63,7 @@ final class TransactionBuilderTests: XCTestCase {
             input: TransactionInput(transaction_id: genesisId(), index: 0),
             amount: Value(coin: 1_000_000)
         )
-        try txBuilder.addOutput(output: TransactionOutput(address: addrNet0, amount: Value(coin: 10)))
+        try txBuilder.addOutput(output: TransactionOutput(address: addrNet0, amount: Value(coin: 29)))
         txBuilder.ttl = 1000
         let changeCred = StakeCredential.keyHash(try changeKey.toRawKey().hash())
         let changeAddr = BaseAddress(
@@ -219,7 +219,7 @@ final class TransactionBuilderTests: XCTestCase {
         try txBuilder.addKeyInput(
             hash: spend.toRawKey().hash(),
             input: TransactionInput(transaction_id: genesisId(), index: 0),
-            amount: Value(coin: 5)
+            amount: Value(coin: 100)
         )
         let spendCred = try StakeCredential.keyHash(spend.toRawKey().hash())
         let stakeCred = try StakeCredential.keyHash(stake.toRawKey().hash())
@@ -228,7 +228,7 @@ final class TransactionBuilderTests: XCTestCase {
             payment: spendCred,
             stake: stakeCred
         ).toAddress()
-        try txBuilder.addOutput(output: TransactionOutput(address: addrNet0, amount: Value(coin: 5)))
+        try txBuilder.addOutput(output: TransactionOutput(address: addrNet0, amount: Value(coin: 100)))
         txBuilder.ttl = 0
         let changeCred = StakeCredential.keyHash(try changeKey.toRawKey().hash())
         let changeAddr = BaseAddress(
@@ -269,7 +269,7 @@ final class TransactionBuilderTests: XCTestCase {
         try txBuilder.addKeyInput(
             hash: spend.toRawKey().hash(),
             input: TransactionInput(transaction_id: genesisId(), index: 0),
-            amount: Value(coin: 6)
+            amount: Value(coin: 58)
         )
         let spendCred = try StakeCredential.keyHash(spend.toRawKey().hash())
         let stakeCred = try StakeCredential.keyHash(stake.toRawKey().hash())
@@ -278,7 +278,7 @@ final class TransactionBuilderTests: XCTestCase {
             payment: spendCred,
             stake: stakeCred
         ).toAddress()
-        try txBuilder.addOutput(output: TransactionOutput(address: addrNet0, amount: Value(coin: 5)))
+        try txBuilder.addOutput(output: TransactionOutput(address: addrNet0, amount: Value(coin: 29)))
         txBuilder.ttl = 0
         let changeCred = StakeCredential.keyHash(try changeKey.toRawKey().hash())
         let changeAddr = BaseAddress(
@@ -290,7 +290,7 @@ final class TransactionBuilderTests: XCTestCase {
         assert(addedChange)
         let finalTx = try txBuilder.build()
         XCTAssertEqual(finalTx.outputs.count, 2)
-        XCTAssertEqual(finalTx.outputs[1].amount.coin, 1)
+        XCTAssertEqual(finalTx.outputs[1].amount.coin, 29)
     }
     
     func testBuildTxInsufficientDeposit() throws {
@@ -329,7 +329,7 @@ final class TransactionBuilderTests: XCTestCase {
             payment: spendCred,
             stake: stakeCred
         ).toAddress()
-        try txBuilder.addOutput(output: TransactionOutput(address: addrNet0, amount: Value(coin: 5)))
+        XCTAssertThrowsError(try txBuilder.addOutput(output: TransactionOutput(address: addrNet0, amount: Value(coin: 5))))
         txBuilder.ttl = 0
         let certs = [
             Certificate.stakeRegistration(StakeRegistration(stakeCredential: stakeCred))
@@ -341,7 +341,7 @@ final class TransactionBuilderTests: XCTestCase {
             payment: changeCred,
             stake: stakeCred
         ).toAddress()
-        XCTAssertThrowsError(try txBuilder.addChangeIfNeeded(address: changeAddr))
+        let _ = try txBuilder.addChangeIfNeeded(address: changeAddr)
     }
     
     func testBuildTxWithInputs() throws {
@@ -435,7 +435,7 @@ final class TransactionBuilderTests: XCTestCase {
         let maInput2 = 200
         let maOutput1 = 60
         let multiassets = [maInput1, maInput2, maOutput1].map { [policyId: [name: UInt64($0)]] }
-        for (multiasset, ada) in zip(multiassets, [UInt64(10), 10]) {
+        for (multiasset, ada) in zip(multiassets, [UInt64(100), 100]) {
             var inputAmount = Value(coin: ada)
             inputAmount.multiasset = multiasset
             try txBuilder.addKeyInput(
@@ -451,7 +451,7 @@ final class TransactionBuilderTests: XCTestCase {
             payment: spendCred,
             stake: stakeCred
         ).toAddress()
-        var outputAmount = Value(coin: 1)
+        var outputAmount = Value(coin: 100)
         outputAmount.multiasset = multiassets[2]
         try txBuilder.addOutput(output: TransactionOutput(address: addrNet0, amount: outputAmount))
         let changeCred = StakeCredential.keyHash(try changeKey.toRawKey().hash())
@@ -464,7 +464,7 @@ final class TransactionBuilderTests: XCTestCase {
         assert(addedChange)
         let finalTx = try txBuilder.build()
         XCTAssertEqual(finalTx.outputs.count, 2)
-        XCTAssertEqual(finalTx.outputs[0].amount.coin, 1)
+        XCTAssertEqual(finalTx.outputs[1].amount.coin, 99)
         XCTAssertEqual(finalTx.outputs[1].amount.multiasset?[policyId]?[name], UInt64(maInput1 + maInput2 - maOutput1))
     }
     
@@ -530,7 +530,7 @@ final class TransactionBuilderTests: XCTestCase {
             keyDeposit: 2000000,
             maxValueSize: maxValueSize,
             maxTxSize: maxTxSize,
-            coinsPerUtxoWord: 1
+            coinsPerUtxoWord: 34_482
         )
         let outputAddr = try ByronAddress(base58: "Ae2tdPwUPEZD9QQf2ZrcYV34pYJwxK4vqXaF8EXkup1eYH73zUScHReM42b")
         try txBuilder.addOutput(
@@ -561,7 +561,7 @@ final class TransactionBuilderTests: XCTestCase {
             keyDeposit: 2000000,
             maxValueSize: maxValueSize,
             maxTxSize: maxTxSize,
-            coinsPerUtxoWord: 1
+            coinsPerUtxoWord: 34_482
         )
         let outputAddr = try ByronAddress(base58: "Ae2tdPwUPEZD9QQf2ZrcYV34pYJwxK4vqXaF8EXkup1eYH73zUScHReM42b")
         try txBuilder.addOutput(
