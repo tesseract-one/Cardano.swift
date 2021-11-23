@@ -3,7 +3,7 @@
 
 import PackageDescription
 
-let useLocalBinary = true
+let useLocalBinary = false
 
 var package = Package(
     name: "Cardano",
@@ -73,8 +73,8 @@ var package = Package(
         package.targets.append(
             .binaryTarget(
                 name: "CCardano",
-                url: "https://github.com/tesseract-one/Cardano.swift/releases/download/0.0.1/CCardano.binaries.zip",
-                checksum: "08fcaf9e09b9c53a1823cc6131ed2d9b55f6ba595e4fd39cee7f77a51973921a")
+                url: "https://github.com/tesseract-one/Cardano.swift/releases/download/0.1.0/CCardano.binaries.zip",
+                checksum: "0b9a5e4d768da0edc7fe3834a03d2b463633c64121cc76bc2ec338006a500b77")
         )
     }
 #endif

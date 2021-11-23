@@ -4,6 +4,7 @@ set -e
 BUILD_SCRIPT="scripts/build_binary_macos.sh"
 BINARIES_DIR="binaries"
 OUTPUT_DIR="binaries"
+LICENSE="../LICENSE"
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 ROOT_DIR="${DIR}/.."
@@ -14,7 +15,7 @@ cd "${ROOT_DIR}/${BINARIES_DIR}"
 
 rm -f "${ROOT_DIR}/${OUTPUT_DIR}"/*.zip
 
-cp -f "${ROOT_DIR}/LICENSE" "${ROOT_DIR}/${OUTPUT_DIR}"/
+cp -f "${ROOT_DIR}/${LICENSE}" "${ROOT_DIR}/${OUTPUT_DIR}"/
 
 for frmwk in ./*.xcframework; do
   name="${frmwk%.*}"
