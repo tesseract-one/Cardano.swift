@@ -168,7 +168,6 @@ let tx = try builder.build()
 builder.tx.signAndSubmit(tx: tx, addresses: [/* used addresses in tx*/]) { res in
   print("Result: \(res)")
 }
-)
 ```
 
 ## Further Development
