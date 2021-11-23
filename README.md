@@ -22,14 +22,14 @@ Setup instructions:
   Add this to the dependency section of your `Package.swift` manifest:
 
     ```Swift
-    .package(url: "https://github.com/tesseract-one/Cardano.swift.git", from: "0.0.1")
+    .package(url: "https://github.com/tesseract-one/Cardano.swift.git", from: "0.1.0")
     ```
   SPM build provides 2 targets: `Cardano` and `CardanoBlockfrost` (networking library).
 
 - **CocoaPods:** Put this in your `Podfile`:
 
     ```Ruby
-    pod 'Cardano/Binary', '~> 0.0.1'
+    pod 'Cardano/Binary', '~> 0.1.0'
     pod 'Cardano/Blockfrost' # networking
     ```
   
@@ -37,7 +37,7 @@ Setup instructions:
   
   If you want to build Rust part from sources add this in your `Podfile`:
     ```Ruby
-    pod 'Cardano/Build', '~> 0.0.1'
+    pod 'Cardano/Build', '~> 0.1.0'
     pod 'Cardano/Blockfrost' # networking
     ```
   And install Rust targets:
