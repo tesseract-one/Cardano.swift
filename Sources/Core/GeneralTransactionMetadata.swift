@@ -8,7 +8,9 @@
 import Foundation
 import CCardano
 import BigInt
+#if !COCOAPODS
 import OrderedCollections
+#endif
 
 public enum MetadataJsonSchema {
     case noConversions

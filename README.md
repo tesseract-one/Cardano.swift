@@ -38,7 +38,7 @@ Setup instructions:
   If you want to build Rust part from sources add this in your `Podfile`:
     ```Ruby
     pod 'Cardano/Build', '~> 0.1.0'
-    pod 'Cardano/Blockfrost' # networking
+    pod 'Cardano/BlockfrostBuild' # networking
     ```
   And install Rust targets:
     ```sh

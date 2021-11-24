@@ -1,5 +1,9 @@
 import XCTest
+#if !COCOAPODS
 @testable import CardanoCore
+#else
+@testable import Cardano
+#endif
 
 internal let _initialize: Void = {
     InitCardanoCore()

@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'Cardano-Binaries'
-  s.version          = '0.1.0'
+  s.version          = '0.1.1'
   s.summary          = 'Compiled Rust files for Cardano.swift.'
 
   s.homepage         = 'https://github.com/tesseract-one/Cardano.swift'
@@ -15,5 +15,7 @@ Pod::Spec.new do |s|
   
   s.swift_versions = ['5.3', '5.4', '5.5']
   
-  s.vendored_frameworks = "CCardano.xcframework"
+  s.module_name = 'CCardano'
+  
+  s.vendored_frameworks = 'CCardano.xcframework'
 end

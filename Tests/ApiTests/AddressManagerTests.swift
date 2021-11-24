@@ -9,8 +9,10 @@ import Foundation
 import XCTest
 @testable import Cardano
 import BlockfrostSwiftSDK
-import CardanoBlockfrost
 import Bip39
+#if !COCOAPODS
+import CardanoBlockfrost
+#endif
 
 final class AddressManagerTests: XCTestCase {
     private let networkProvider = NetworkProviderMock(getTransactionCountMock: { address, cb in
@@ -67,10 +69,21 @@ final class AddressManagerTests: XCTestCase {
             utxos: NonCachingUtxoProvider()
         )
         let account = Account(publicKey: TestEnvironment.instance.publicKey, index: 0)
+        var testAddresses = (0..<45).map {
+            try! account.baseAddress(index: $0,
+                                     change: false,
+                                     networkID: cardano.info.networkID).address
+        }
+        let changeAddresses = (0..<4).map {
+            try! account.baseAddress(index: $0,
+                                     change: true,
+                                     networkID: cardano.info.networkID).address
+        }
+        testAddresses.append(contentsOf: changeAddresses)
         cardano.addresses.fetch(for: [account]) { res in
             try! res.get()
             let addresses = try! cardano.addresses.get(cached: account)
-            XCTAssertEqual(TestEnvironment.instance.addresses, addresses)
+            XCTAssertEqual(testAddresses, addresses)
             fetchSuccessful.fulfill()
         }
         wait(for: [fetchSuccessful], timeout: 10)

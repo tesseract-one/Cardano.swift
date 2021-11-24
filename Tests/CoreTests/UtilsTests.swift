@@ -7,7 +7,11 @@
 
 import Foundation
 import XCTest
+#if !COCOAPODS
 @testable import CardanoCore
+#else
+@testable import Cardano
+#endif
 
 final class UtilsTests: XCTestCase {
     let initialize: Void = _initialize

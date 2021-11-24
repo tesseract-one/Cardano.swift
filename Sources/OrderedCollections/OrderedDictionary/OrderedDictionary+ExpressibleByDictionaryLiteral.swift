@@ -10,6 +10,8 @@
 //===----------------------------------------------------------------------===//
 
 extension OrderedDictionary: ExpressibleByDictionaryLiteral {
+  public typealias Key = Key
+  public typealias Value = Value
   /// Creates a new ordered dictionary from the contents of a dictionary
   /// literal.
   ///

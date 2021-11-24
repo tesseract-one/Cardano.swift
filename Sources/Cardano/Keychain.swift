@@ -6,9 +6,9 @@
 //
 
 import Foundation
+import Bip39
 #if !COCOAPODS
 import CardanoCore
-import Bip39
 #endif
 
 struct KeyPair {

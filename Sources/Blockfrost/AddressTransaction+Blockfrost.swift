@@ -6,8 +6,10 @@
 //
 
 import Foundation
-import CardanoCore
 import BlockfrostSwiftSDK
+#if !COCOAPODS
+import Cardano
+#endif
 
 extension AddressTransaction {
     public init(blockfrost addressTransaction: AddressTransactionsContent) {

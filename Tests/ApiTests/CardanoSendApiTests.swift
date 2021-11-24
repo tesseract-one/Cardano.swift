@@ -9,8 +9,10 @@ import Foundation
 import XCTest
 @testable import Cardano
 import BlockfrostSwiftSDK
-import CardanoBlockfrost
 import Bip39
+#if !COCOAPODS
+import CardanoBlockfrost
+#endif
 
 final class CardanoSendApiTests: XCTestCase {
     private let networkProvider = NetworkProviderMock(getSlotNumberMock: { cb in
