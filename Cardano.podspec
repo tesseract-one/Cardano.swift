@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'Cardano'
-  s.version          = '0.1.0'
+  s.version          = '0.1.1'
   s.summary          = 'Swift APIs for Cardano network.'
 
   s.homepage         = 'https://github.com/tesseract-one/Cardano.swift'
@@ -24,8 +24,8 @@ Pod::Spec.new do |s|
   s.subspec 'CoreBinary' do |ss|
     ss.source_files = 'Sources/Core/**/*.swift'
 
-    ss.dependency 'Cardano-Binaries', '~> 0.1.0'
-    ss.dependency 'BigInt', '~> 5.2'
+    ss.dependency 'Cardano-Binaries', '~> 0.1.1'
+    ss.dependency 'BigInt', '~> 5.3'
     ss.dependency 'Cardano/OrderedCollections'
     
     ss.pod_target_xcconfig = {
@@ -42,7 +42,7 @@ Pod::Spec.new do |s|
     ss.source_files = 'Sources/Core/**/*.swift'
     ss.preserve_paths = "rust/**/*"
     
-    ss.dependency 'BigInt', '~> 5.2'
+    ss.dependency 'BigInt', '~> 5.3'
     ss.dependency 'Cardano/OrderedCollections'
     
     ss.script_phase = {
