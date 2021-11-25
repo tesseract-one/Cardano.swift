@@ -26,7 +26,7 @@ jobs:
       - name: Update Cocoa Pods repo
         run: pod repo update
       - name: Build and Test CocoaPods
-        run: pod lib lint --allow-warnings --fail-fast Cardano.podspec
+        run: pod lib lint --allow-warnings --fail-fast Cardano.swift.podspec
   linux:
     runs-on: ubuntu-latest
     container:
