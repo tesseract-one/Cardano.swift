@@ -165,7 +165,7 @@ builder.addOutput(....)
 let tx = try builder.build()
 
 // Sign and submit
-builder.tx.signAndSubmit(tx: tx, addresses: [/* used addresses in tx*/]) { res in
+cardano.tx.signAndSubmit(tx: tx, addresses: [/* used addresses in tx*/]) { res in
   print("Result: \(res)")
 }
 ```
