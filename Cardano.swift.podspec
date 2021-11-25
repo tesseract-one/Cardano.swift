@@ -26,7 +26,7 @@ Pod::Spec.new do |s|
 
     ss.dependency 'Cardano-Binaries', '~> 0.1.2'
     ss.dependency 'BigInt', '~> 5.2'
-    ss.dependency 'Cardano/OrderedCollections'
+    ss.dependency 'Cardano.swift/OrderedCollections'
     
     ss.pod_target_xcconfig = {
       'LIBRARY_SEARCH_PATHS' => '$(inherited) "${PODS_XCFRAMEWORKS_BUILD_DIR}/Cardano-Binaries"',
@@ -43,7 +43,7 @@ Pod::Spec.new do |s|
     ss.preserve_paths = "rust/**/*"
     
     ss.dependency 'BigInt', '~> 5.2'
-    ss.dependency 'Cardano/OrderedCollections'
+    ss.dependency 'Cardano.swift/OrderedCollections'
     
     ss.script_phase = {
       :name => "Build Rust Binary",
@@ -64,7 +64,7 @@ Pod::Spec.new do |s|
     ss.source_files = 'Sources/Cardano/**/*.swift'
     
     ss.dependency 'Bip39.swift', '~> 0.1'
-    ss.dependency 'Cardano/CoreBinary'
+    ss.dependency 'Cardano.swift/CoreBinary'
     
     ss.test_spec 'CardanoTests' do |test_spec|
       test_spec.source_files = 'Tests/CardanoTests/**/*.swift'
@@ -75,7 +75,7 @@ Pod::Spec.new do |s|
     ss.source_files = 'Sources/Cardano/**/*.swift'
     
     ss.dependency 'Bip39.swift', '~> 0.1'
-    ss.dependency 'Cardano/CoreBuild'
+    ss.dependency 'Cardano.swift/CoreBuild'
     
     ss.test_spec 'CardanoTests' do |test_spec|
       test_spec.source_files = 'Tests/CardanoTests/**/*.swift'
@@ -86,14 +86,14 @@ Pod::Spec.new do |s|
     ss.source_files = 'Sources/Blockfrost/**/*.swift'
     
     ss.dependency 'BlockfrostSwiftSDK', '~> 0.0.5'
-    ss.dependency 'Cardano/Binary'
+    ss.dependency 'Cardano.swift/Binary'
   end
   
   s.subspec 'BlockfrostBuild' do |ss|
     ss.source_files = 'Sources/Blockfrost/**/*.swift'
     
     ss.dependency 'BlockfrostSwiftSDK', '~> 0.0.5'
-    ss.dependency 'Cardano/Build'
+    ss.dependency 'Cardano.swift/Build'
   end
   
   s.default_subspecs = 'Binary'
