@@ -16,7 +16,7 @@ jobs:
         uses: ATiltedTree/setup-rust@v1
         with:
           rust-version: stable
-          targets: aarch64-apple-ios x86_64-apple-ios aarch64-apple-darwin x86_64-apple-darwin
+          targets: aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios aarch64-apple-darwin x86_64-apple-darwin
       - name: Uploading binaries pod if needed
         run: bash rust/scripts/push_binary_pod.sh
         env:

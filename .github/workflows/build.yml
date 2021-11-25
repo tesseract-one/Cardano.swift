@@ -14,7 +14,7 @@ jobs:
         uses: ATiltedTree/setup-rust@v1
         with:
           rust-version: stable
-          targets: aarch64-apple-ios x86_64-apple-ios aarch64-apple-darwin x86_64-apple-darwin
+          targets: aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios aarch64-apple-darwin x86_64-apple-darwin
       - name: Building XCFramework
         run: bash rust/scripts/build_binary_macos.sh release
         env:
@@ -23,10 +23,16 @@ jobs:
         run: sed -i '' 's/let[[:blank:]]useLocalBinary[[:blank:]]=[[:blank:]]false/let useLocalBinary = true/g' Package.swift
       - name: Build and Test SPM
         run: swift test
+        env:
+          CARDANO_TEST_MNEMONIC: ${{ secrets.CARDANO_TEST_MNEMONIC }}
+          CARDANO_TEST_BLOCKFROST_PROJECT_ID: ${{ secrets.CARDANO_TEST_BLOCKFROST_PROJECT_ID }}
+          CARDANO_TEST_PUBLIC_KEY: ${{ secrets.CARDANO_TEST_PUBLIC_KEY }}
       - name: Update Cocoa Pods repo
         run: pod repo update
+      - name: Copy binaries podspec for testing
+        run: cp Cardano-Binaries.podspec rust/binaries/
       - name: Build and Test CocoaPods
-        run: pod lib lint --allow-warnings --fail-fast Cardano.swift.podspec
+        run: pod lib lint --allow-warnings --fail-fast --include-podspecs=rust/binaries/Cardano-Binaries.podspec Cardano.swift.podspec
   linux:
     runs-on: ubuntu-latest
     container:
@@ -51,3 +57,7 @@ jobs:
           CARGO_NET_GIT_FETCH_WITH_CLI: true
       - name: Build and Test
         run: swift test -Xlinker -Lrust/binaries/lib -Xcc -Irust/binaries/include
+        env:
+          CARDANO_TEST_MNEMONIC: ${{ secrets.CARDANO_TEST_MNEMONIC }}
+          CARDANO_TEST_BLOCKFROST_PROJECT_ID: ${{ secrets.CARDANO_TEST_BLOCKFROST_PROJECT_ID }}
+          CARDANO_TEST_PUBLIC_KEY: ${{ secrets.CARDANO_TEST_PUBLIC_KEY }}
