@@ -120,7 +120,7 @@ if [ "${HAS_CARGO_IN_PATH}" -ne 0 ]; then
     source $HOME/.cargo/env
 fi
 
-if [ "$1" == "debug" ]; then
+if [[ "$1" == "debug" ]]; then
   RELEASE=""
   CONFIGURATION="debug"
 else
@@ -128,28 +128,19 @@ else
   CONFIGURATION="release"
 fi
 
-
-# Removed TV OS for now. TV OS target is Tier 3 target in Rust
-#
-#'tvos::arm64:aarch64-apple-ios'
-#'tvos:simulator:arm64,x86_64:aarch64-apple-tvos,x86_64-apple-tvos'
-
-if [ "$2" == "no-arm64" ]; then
-  readonly BUILD_TARGETS=(
-    'ios::arm64:aarch64-apple-ios'
-    'ios:simulator:arm64,x86_64:aarch64-apple-ios,x86_64-apple-ios'
-    'macos::x86_64:x86_64-apple-darwin'
-  )
-elif [ "$2" == "current" ]; then
+if [[ "$2" == "current" ]]; then
   arch="$(uname -m)"
-  rarch=$([ "$arch" == "arm64" ] && echo "aarch64" || echo "x86_64")
+  rarch=$([[ "$arch" == "arm64" ]] && echo "aarch64" || echo "x86_64")
   readonly BUILD_TARGETS=(
     "macos::${arch}:${rarch}-apple-darwin"
   )
 else
+  # Removed tvOS targets for now. Should be added when tvOS will have Tier 2 support.
+  #  'tvos::arm64:aarch64-apple-tvos'
+  #  'tvos:simulator:arm64,x86_64:aarch64-apple-tvos,x86_64-apple-tvos'
   readonly BUILD_TARGETS=(
     'ios::arm64:aarch64-apple-ios'
-    'ios:simulator:arm64,x86_64:aarch64-apple-ios,x86_64-apple-ios'
+    'ios:simulator:arm64,x86_64:aarch64-apple-ios-sim,x86_64-apple-ios'
     'macos::arm64,x86_64:aarch64-apple-darwin,x86_64-apple-darwin'
   )
 fi

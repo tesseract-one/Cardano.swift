@@ -53,7 +53,10 @@ var package = Package(
             name: "CoreTests",
             dependencies: ["CardanoCore"]),
         .testTarget(
-            name: "ApiTests",
+            name: "CardanoTests",
+            dependencies: ["Cardano"]),
+        .testTarget(
+            name: "BlockfrostTests",
             dependencies: ["CardanoBlockfrost"])
     ]
 )
@@ -73,8 +76,8 @@ var package = Package(
         package.targets.append(
             .binaryTarget(
                 name: "CCardano",
-                url: "https://github.com/tesseract-one/Cardano.swift/releases/download/0.1.0/CCardano.binaries.zip",
-                checksum: "0b9a5e4d768da0edc7fe3834a03d2b463633c64121cc76bc2ec338006a500b77")
+                url: "https://github.com/tesseract-one/Cardano.swift/releases/download/0.1.2/CCardano.binaries.zip",
+                checksum: "2352e340c34bea53d7a1877f9017d964f624b7a8d2a2fd41386ccdfa06846393")
         )
     }
 #endif

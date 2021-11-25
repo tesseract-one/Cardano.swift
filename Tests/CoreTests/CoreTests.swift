@@ -9,7 +9,7 @@ internal let _initialize: Void = {
     InitCardanoCore()
 }()
 
-final class CardanoTests: XCTestCase {
+final class CoreTests: XCTestCase {
     let initialize: Void = _initialize
     
     let publicKeyExample = "ed25519_pk1dgaagyh470y66p899txcl3r0jaeaxu6yd7z2dxyk55qcycdml8gszkxze2"
@@ -21,7 +21,6 @@ final class CardanoTests: XCTestCase {
     }
     
     func testValue() throws {
-        let _ = _initialize
         let v1 = Value(coin: 1)
         let v2 = Value(coin: 2)
         let added = try v1.checkedAdd(rhs: v2)
@@ -29,7 +28,6 @@ final class CardanoTests: XCTestCase {
     }
     
     func testTransactionWitnessSet() throws {
-        let _ = _initialize
         let data = Data(repeating: 1, count: 64)
         let vkeys = [
             Vkeywitness(

@@ -13,7 +13,7 @@ fi
 
 ROOT_DIR="${PODS_TARGET_SRCROOT}/rust"
 
-if [ "${CONFIGURATION}" == "Release" ]; then
+if [[ "${CONFIGURATION}" == "Release" ]]; then
   RELEASE="--release"
 else
   RELEASE=""
@@ -29,15 +29,22 @@ fi
 
 function get_platform_triplet() {
   arch="$1"
-  if [ "${arch}" == "arm64" ]; then
+  if [[ "${arch}" == "arm64" ]]; then
     arch="aarch64"
   fi
   case "${PLATFORM_NAME}" in
     macosx)
       echo "${arch}-apple-darwin"
     ;;
-    iphoneos | iphonesimulator)
+    iphoneos)
       echo "${arch}-apple-ios"
+    ;;
+    iphonesimulator)
+      if [[ "${arch}" == "aarch64" ]]; then
+        echo "aarch64-apple-ios-sim"
+      else
+        echo "${arch}-apple-ios"
+      fi
     ;;
     appletvos | appletvsimulator)
       echo "tvOS is unsupported"

@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
-  s.name             = 'Cardano'
-  s.version          = '0.1.1'
+  s.name             = 'Cardano.swift'
+  s.version          = '0.1.2'
   s.summary          = 'Swift APIs for Cardano network.'
 
   s.homepage         = 'https://github.com/tesseract-one/Cardano.swift'
@@ -25,11 +25,11 @@ Pod::Spec.new do |s|
     ss.source_files = 'Sources/Core/**/*.swift'
 
     ss.dependency 'Cardano-Binaries', '~> 0.1.1'
-    ss.dependency 'BigInt', '~> 5.3'
+    ss.dependency 'BigInt', '~> 5.2'
     ss.dependency 'Cardano/OrderedCollections'
     
     ss.pod_target_xcconfig = {
-      'LIBRARY_SEARCH_PATHS' => '$(inherited) "${PODS_XCFRAMEWORKS_BUILD_DIR}/CCardano"',
+      'LIBRARY_SEARCH_PATHS' => '$(inherited) "${PODS_XCFRAMEWORKS_BUILD_DIR}/Cardano-Binaries"',
       'ENABLE_BITCODE' => 'NO'
     }
     
@@ -42,7 +42,7 @@ Pod::Spec.new do |s|
     ss.source_files = 'Sources/Core/**/*.swift'
     ss.preserve_paths = "rust/**/*"
     
-    ss.dependency 'BigInt', '~> 5.3'
+    ss.dependency 'BigInt', '~> 5.2'
     ss.dependency 'Cardano/OrderedCollections'
     
     ss.script_phase = {
@@ -64,16 +64,22 @@ Pod::Spec.new do |s|
     ss.source_files = 'Sources/Cardano/**/*.swift'
     
     ss.dependency 'Bip39.swift', '~> 0.1'
-
     ss.dependency 'Cardano/CoreBinary'
+    
+    ss.test_spec 'CardanoTests' do |test_spec|
+      test_spec.source_files = 'Tests/CardanoTests/**/*.swift'
+    end
   end
   
   s.subspec 'Build' do |ss|
     ss.source_files = 'Sources/Cardano/**/*.swift'
     
     ss.dependency 'Bip39.swift', '~> 0.1'
-
     ss.dependency 'Cardano/CoreBuild'
+    
+    ss.test_spec 'CardanoTests' do |test_spec|
+      test_spec.source_files = 'Tests/CardanoTests/**/*.swift'
+    end
   end
   
   s.subspec 'Blockfrost' do |ss|
@@ -81,17 +87,6 @@ Pod::Spec.new do |s|
     
     ss.dependency 'BlockfrostSwiftSDK', '~> 0.0.5'
     ss.dependency 'Cardano/Binary'
-    
-    ss.test_spec 'ApiTests' do |test_spec|
-      test_spec.source_files = 'Tests/ApiTests/**/*.swift'
-      test_spec.scheme = {
-        :environment_variables => {
-          'CARDANO_TEST_MNEMONIC' => ENV['CARDANO_TEST_MNEMONIC'],
-          'CARDANO_TEST_BLOCKFROST_PROJECT_ID' => ENV['CARDANO_TEST_BLOCKFROST_PROJECT_ID'],
-          'CARDANO_TEST_PUBLIC_KEY' => ENV['CARDANO_TEST_PUBLIC_KEY']
-        }
-      }
-    end
   end
   
   s.subspec 'BlockfrostBuild' do |ss|
@@ -99,17 +94,6 @@ Pod::Spec.new do |s|
     
     ss.dependency 'BlockfrostSwiftSDK', '~> 0.0.5'
     ss.dependency 'Cardano/Build'
-    
-    ss.test_spec 'ApiTests' do |test_spec|
-      test_spec.source_files = 'Tests/ApiTests/**/*.swift'
-      test_spec.scheme = {
-        :environment_variables => {
-          'CARDANO_TEST_MNEMONIC' => ENV['CARDANO_TEST_MNEMONIC'],
-          'CARDANO_TEST_BLOCKFROST_PROJECT_ID' => ENV['CARDANO_TEST_BLOCKFROST_PROJECT_ID'],
-          'CARDANO_TEST_PUBLIC_KEY' => ENV['CARDANO_TEST_PUBLIC_KEY']
-        }
-      }
-    end
   end
   
   s.default_subspecs = 'Binary'

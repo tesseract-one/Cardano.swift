@@ -5,10 +5,10 @@
 [![Build Status](https://github.com/tesseract-one/Cardano.swift/workflows/Build%20&%20Tests/badge.svg?branch=main)](https://github.com/tesseract-one/Cardano.swift/actions/workflows/build.yml?query=branch%3Amain)
 [![GitHub release](https://img.shields.io/github/release/tesseract-one/Cardano.swift.svg)](https://github.com/tesseract-one/Cardano.swift/releases)
 [![SPM compatible](https://img.shields.io/badge/SwiftPM-Compatible-brightgreen.svg)](https://swift.org/package-manager/)
-[![CocoaPods version](https://img.shields.io/cocoapods/v/Cardano.svg)](https://cocoapods.org/pods/Cardano)
+[![CocoaPods version](https://img.shields.io/cocoapods/v/Cardano.swift.svg)](https://cocoapods.org/pods/Cardano.swift)
 ![Platform macOS | iOS | Linux](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20iOS-orange.svg)
 
-Swift SDK for Cardano network (Shelley).
+Swift SDK for Cardano network (Alonzo).
 
 ## Installation
 
@@ -29,20 +29,20 @@ Setup instructions:
 - **CocoaPods:** Put this in your `Podfile`:
 
     ```Ruby
-    pod 'Cardano/Binary', '~> 0.1.0'
-    pod 'Cardano/Blockfrost' # networking
+    pod 'Cardano.swift/Binary', '~> 0.1.0'
+    pod 'Cardano.swift/Blockfrost' # networking
     ```
   
 - **CocoaPods with Rust part built from sources:**
   
   If you want to build Rust part from sources add this in your `Podfile`:
     ```Ruby
-    pod 'Cardano/Build', '~> 0.1.0'
-    pod 'Cardano/BlockfrostBuild' # networking
+    pod 'Cardano.swift/Build', '~> 0.1.0'
+    pod 'Cardano.swift/BlockfrostBuild' # networking
     ```
   And install Rust targets:
     ```sh
-    rustup target add aarch64-apple-ios x86_64-apple-ios aarch64-apple-darwin x86_64-apple-darwin
+    rustup target add aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios aarch64-apple-darwin x86_64-apple-darwin
     ```
 
 - **Linux:**
