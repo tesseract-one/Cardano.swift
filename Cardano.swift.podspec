@@ -24,7 +24,7 @@ Pod::Spec.new do |s|
   s.subspec 'CoreBinary' do |ss|
     ss.source_files = 'Sources/Core/**/*.swift'
 
-    ss.dependency 'Cardano-Binaries', '~> 0.1.1'
+    ss.dependency 'Cardano-Binaries', '~> 0.1.2'
     ss.dependency 'BigInt', '~> 5.2'
     ss.dependency 'Cardano/OrderedCollections'
     
