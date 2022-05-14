@@ -8,13 +8,13 @@ keywords = [ "Tesseract", "Cardano", "C" ]
 edition = "2018"
 
 [dependencies]
-cardano-serialization-lib = { git = "https://github.com/Emurgo/cardano-serialization-lib.git" }
+cardano-serialization-lib = { git = "https://github.com/Emurgo/cardano-serialization-lib.git", tag = "10.0.4" }
 linked-hash-map = "0.5.3"
 serde_json = "1.0.57"
 num-bigint = "0.4.0"
 
 [build-dependencies]
-cbindgen = "0.20.0"
+cbindgen = "0.23.0"
 
 [lib]
 name = "cardano"

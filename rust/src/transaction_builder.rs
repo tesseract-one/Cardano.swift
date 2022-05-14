@@ -12,7 +12,7 @@ use crate::ptr::*;
 use crate::stake_credential::{Ed25519KeyHash, ScriptHash};
 use crate::transaction_body::{Mint, TransactionBody};
 use crate::transaction_input::TransactionInput;
-use crate::transaction_metadata::AuxiliaryData;
+use crate::transaction_metadata::{AuxiliaryData, NativeScripts};
 use crate::transaction_output::{TransactionOutput, TransactionOutputs};
 use crate::transaction_unspent_output::TransactionUnspentOutputs;
 use crate::value::Value;
@@ -25,14 +25,15 @@ use cardano_serialization_lib::{
   tx_builder::{
     CoinSelectionStrategyCIP2 as RCoinSelectionStrategyCIP2,
     TransactionBuilder as RTransactionBuilder,
+    TransactionBuilderConfig as RTransactionBuilderConfig,
   },
   utils::{
     from_bignum, to_bignum, BigNum as RBigNum, Coin as RCoin,
     TransactionUnspentOutputs as RTransactionUnspentOutputs, Value as RValue,
   },
-  Certificates as RCertificates, Mint as RMint, TransactionInput as RTransactionInput,
-  TransactionOutput as RTransactionOutput, TransactionOutputs as RTransactionOutputs,
-  Withdrawals as RWithdrawals,
+  Certificates as RCertificates, Mint as RMint, NativeScripts as RNativeScripts,
+  TransactionInput as RTransactionInput, TransactionOutput as RTransactionOutput,
+  TransactionOutputs as RTransactionOutputs, Withdrawals as RWithdrawals,
 };
 use std::collections::BTreeSet;
 use std::convert::{TryFrom, TryInto};
@@ -132,6 +133,71 @@ pub unsafe extern "C" fn cardano_mock_witness_set_free(mock_witness_set: &mut Mo
 
 #[repr(C)]
 #[derive(Copy, Clone)]
+pub struct TransactionBuilderConfig {
+  fee_algo: LinearFee,
+  pool_deposit: BigNum,
+  key_deposit: BigNum,
+  max_value_size: u32,
+  max_tx_size: u32,
+  coins_per_utxo_word: Coin,
+  prefer_pure_change: bool,
+}
+
+// for transmute
+pub struct TTransactionBuilderConfig {
+  fee_algo: RLinearFee,
+  pool_deposit: RBigNum,
+  key_deposit: RBigNum,
+  max_value_size: u32,
+  max_tx_size: u32,
+  coins_per_utxo_word: RCoin,
+  prefer_pure_change: bool,
+}
+
+impl From<TransactionBuilderConfig> for TTransactionBuilderConfig {
+  fn from(transaction_builder_config: TransactionBuilderConfig) -> Self {
+    Self {
+      fee_algo: transaction_builder_config.fee_algo.into(),
+      pool_deposit: to_bignum(transaction_builder_config.pool_deposit),
+      key_deposit: to_bignum(transaction_builder_config.key_deposit),
+      max_value_size: transaction_builder_config.max_value_size,
+      max_tx_size: transaction_builder_config.max_tx_size,
+      coins_per_utxo_word: to_bignum(transaction_builder_config.coins_per_utxo_word),
+      prefer_pure_change: transaction_builder_config.prefer_pure_change,
+    }
+  }
+}
+
+impl From<TTransactionBuilderConfig> for TransactionBuilderConfig {
+  fn from(transaction_builder_config: TTransactionBuilderConfig) -> Self {
+    Self {
+      fee_algo: transaction_builder_config.fee_algo.into(),
+      pool_deposit: from_bignum(&transaction_builder_config.pool_deposit),
+      key_deposit: from_bignum(&transaction_builder_config.key_deposit),
+      max_value_size: transaction_builder_config.max_value_size,
+      max_tx_size: transaction_builder_config.max_tx_size,
+      coins_per_utxo_word: from_bignum(&transaction_builder_config.coins_per_utxo_word),
+      prefer_pure_change: transaction_builder_config.prefer_pure_change,
+    }
+  }
+}
+
+impl From<TransactionBuilderConfig> for RTransactionBuilderConfig {
+  fn from(transaction_builder_config: TransactionBuilderConfig) -> Self {
+    let tbc: TTransactionBuilderConfig = transaction_builder_config.into();
+    unsafe { std::mem::transmute(tbc) }
+  }
+}
+
+impl From<RTransactionBuilderConfig> for TransactionBuilderConfig {
+  fn from(transaction_builder_config: RTransactionBuilderConfig) -> Self {
+    let tbc: TTransactionBuilderConfig = unsafe { std::mem::transmute(transaction_builder_config) };
+    tbc.into()
+  }
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
 pub struct TxBuilderInput {
   input: TransactionInput,
   amount: Value,
@@ -189,6 +255,8 @@ pub unsafe extern "C" fn cardano_tx_builder_input_free(tx_builder_input: &mut Tx
 pub enum CoinSelectionStrategyCIP2 {
   LargestFirst,
   RandomImprove,
+  LargestFirstMultiAsset,
+  RandomImproveMultiAsset,
 }
 
 impl From<CoinSelectionStrategyCIP2> for RCoinSelectionStrategyCIP2 {
@@ -196,6 +264,8 @@ impl From<CoinSelectionStrategyCIP2> for RCoinSelectionStrategyCIP2 {
     match coin_selection_strategy_cip2 {
       CoinSelectionStrategyCIP2::LargestFirst => Self::LargestFirst,
       CoinSelectionStrategyCIP2::RandomImprove => Self::RandomImprove,
+      CoinSelectionStrategyCIP2::LargestFirstMultiAsset => Self::LargestFirstMultiAsset,
+      CoinSelectionStrategyCIP2::RandomImproveMultiAsset => Self::RandomImproveMultiAsset,
     }
   }
 }
@@ -205,6 +275,8 @@ impl From<RCoinSelectionStrategyCIP2> for CoinSelectionStrategyCIP2 {
     match coin_selection_strategy_cip2 {
       RCoinSelectionStrategyCIP2::LargestFirst => Self::LargestFirst,
       RCoinSelectionStrategyCIP2::RandomImprove => Self::RandomImprove,
+      RCoinSelectionStrategyCIP2::LargestFirstMultiAsset => Self::LargestFirstMultiAsset,
+      RCoinSelectionStrategyCIP2::RandomImproveMultiAsset => Self::RandomImproveMultiAsset,
     }
   }
 }
@@ -212,12 +284,7 @@ impl From<RCoinSelectionStrategyCIP2> for CoinSelectionStrategyCIP2 {
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct TransactionBuilder {
-  coins_per_utxo_word: BigNum,
-  pool_deposit: BigNum,
-  key_deposit: BigNum,
-  max_value_size: u32,
-  max_tx_size: u32,
-  fee_algo: LinearFee,
+  config: TransactionBuilderConfig,
   inputs: CArray<TxBuilderInput>,
   outputs: TransactionOutputs,
   fee: COption<Coin>,
@@ -228,8 +295,7 @@ pub struct TransactionBuilder {
   validity_start_interval: COption<Slot>,
   input_types: MockWitnessSet,
   mint: COption<Mint>,
-  inputs_auto_added: bool,
-  prefer_pure_change: bool,
+  mint_scripts: COption<NativeScripts>,
 }
 
 impl Free for TransactionBuilder {
@@ -240,17 +306,13 @@ impl Free for TransactionBuilder {
     self.withdrawals.free();
     self.auxiliary_data.free();
     self.input_types.free();
+    self.mint_scripts.free();
   }
 }
 
 // for transmute
 pub struct TTransactionBuilder {
-  coins_per_utxo_word: RBigNum,
-  pool_deposit: RBigNum,
-  key_deposit: RBigNum,
-  max_value_size: u32,
-  max_tx_size: u32,
-  fee_algo: RLinearFee,
+  config: RTransactionBuilderConfig,
   inputs: Vec<TTxBuilderInput>,
   outputs: RTransactionOutputs,
   fee: Option<RCoin>,
@@ -261,8 +323,7 @@ pub struct TTransactionBuilder {
   validity_start_interval: Option<Slot>,
   input_types: TMockWitnessSet,
   mint: Option<RMint>,
-  inputs_auto_added: bool,
-  prefer_pure_change: bool,
+  mint_scripts: Option<RNativeScripts>,
 }
 
 impl TryFrom<TransactionBuilder> for TTransactionBuilder {
@@ -295,16 +356,20 @@ impl TryFrom<TransactionBuilder> for TTransactionBuilder {
         let mint: Option<Mint> = tb.mint.into();
         mint.map(|mint| mint.try_into()).transpose()
       })
+      .zip({
+        let mint_scripts: Option<NativeScripts> = tb.mint_scripts.into();
+        mint_scripts
+          .map(|mint_scripts| mint_scripts.try_into())
+          .transpose()
+      })
       .map(
-        |((((((inputs, outputs), certs), withdrawals), auxiliary_data), input_types), mint)| {
+        |(
+          ((((((inputs, outputs), certs), withdrawals), auxiliary_data), input_types), mint),
+          mint_scripts,
+        )| {
           let fee: Option<Coin> = tb.fee.into();
           Self {
-            coins_per_utxo_word: to_bignum(tb.coins_per_utxo_word),
-            pool_deposit: to_bignum(tb.pool_deposit),
-            key_deposit: to_bignum(tb.key_deposit),
-            max_value_size: tb.max_value_size,
-            max_tx_size: tb.max_tx_size,
-            fee_algo: tb.fee_algo.into(),
+            config: tb.config.into(),
             inputs,
             outputs,
             fee: fee.map(|fee| to_bignum(fee)),
@@ -315,8 +380,7 @@ impl TryFrom<TransactionBuilder> for TTransactionBuilder {
             validity_start_interval: tb.validity_start_interval.into(),
             input_types,
             mint: mint.into(),
-            inputs_auto_added: tb.inputs_auto_added,
-            prefer_pure_change: tb.prefer_pure_change,
+            mint_scripts: mint_scripts.into(),
           }
         },
       )
@@ -327,17 +391,10 @@ impl TryFrom<TTransactionBuilder> for TransactionBuilder {
   type Error = CError;
 
   fn try_from(tb: TTransactionBuilder) -> Result<Self> {
-    let coins_per_utxo_word = from_bignum(&tb.coins_per_utxo_word);
-    let pool_deposit = from_bignum(&tb.pool_deposit);
-    let key_deposit = from_bignum(&tb.key_deposit);
-    let max_value_size = tb.max_value_size;
-    let max_tx_size = tb.max_tx_size;
-    let fee_algo = tb.fee_algo.into();
+    let config = tb.config.into();
     let fee = tb.fee.map(|fee| from_bignum(&fee)).into();
     let ttl = tb.ttl.into();
     let validity_start_interval = tb.validity_start_interval.into();
-    let inputs_auto_added = tb.inputs_auto_added;
-    let prefer_pure_change = tb.prefer_pure_change;
     tb.inputs
       .into_iter()
       .map(|input| input.try_into())
@@ -352,14 +409,17 @@ impl TryFrom<TTransactionBuilder> for TransactionBuilder {
       )
       .zip(tb.input_types.try_into())
       .zip(tb.mint.map(|mint| mint.try_into()).transpose())
+      .zip(
+        tb.mint_scripts
+          .map(|mint_scripts| mint_scripts.try_into())
+          .transpose(),
+      )
       .map(
-        |((((((inputs, outputs), certs), withdrawals), auxiliary_data), input_types), mint)| Self {
-          coins_per_utxo_word,
-          pool_deposit,
-          key_deposit,
-          max_value_size,
-          max_tx_size,
-          fee_algo,
+        |(
+          ((((((inputs, outputs), certs), withdrawals), auxiliary_data), input_types), mint),
+          mint_scripts,
+        )| Self {
+          config,
           inputs: inputs.into(),
           outputs,
           fee,
@@ -370,8 +430,7 @@ impl TryFrom<TTransactionBuilder> for TransactionBuilder {
           validity_start_interval,
           input_types,
           mint: mint.into(),
-          inputs_auto_added,
-          prefer_pure_change,
+          mint_scripts: mint_scripts.into(),
         },
       )
   }
@@ -583,21 +642,10 @@ pub unsafe extern "C" fn cardano_transaction_builder_set_withdrawals(
 
 #[no_mangle]
 pub unsafe extern "C" fn cardano_transaction_builder_new(
-  linear_fee: LinearFee, pool_deposit: BigNum, key_deposit: BigNum, max_value_size: u32,
-  max_tx_size: u32, coins_per_utxo_word: Coin, result: &mut TransactionBuilder, error: &mut CError,
+  config: TransactionBuilderConfig, result: &mut TransactionBuilder, error: &mut CError,
 ) -> bool {
-  handle_exception_result(|| {
-    RTransactionBuilder::new(
-      &linear_fee.into(),
-      &to_bignum(pool_deposit),
-      &to_bignum(key_deposit),
-      max_value_size,
-      max_tx_size,
-      &to_bignum(coins_per_utxo_word),
-    )
-    .try_into()
-  })
-  .response(result, error)
+  handle_exception_result(|| RTransactionBuilder::new(&config.into()).try_into())
+    .response(result, error)
 }
 
 #[no_mangle]

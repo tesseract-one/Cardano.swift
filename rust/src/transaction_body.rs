@@ -416,7 +416,7 @@ impl TryFrom<RTransactionBody> for TransactionBody {
       .zip(tb.certs().map(|certs| certs.try_into()).transpose())
       .zip(tb.withdrawals().map(|wls| wls.try_into()).transpose())
       .zip(tb.update().map(|update| update.try_into()).transpose())
-      .zip(tb.multiassets().map(|mint| mint.try_into()).transpose())
+      .zip(tb.mint().map(|mint| mint.try_into()).transpose())
       .zip(
         tb.collateral()
           .map(|collateral| collateral.try_into())

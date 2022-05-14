@@ -67,14 +67,16 @@ public struct CardanoSendApi: CardanoApi {
                     switch res {
                     case .success(let utxos):
                         do {
-                            var transactionBuilder = try TransactionBuilder(
-                                linearFee: cardano.info.linearFee,
-                                poolDeposit: cardano.info.poolDeposit,
-                                keyDeposit: cardano.info.keyDeposit,
-                                maxValueSize: cardano.info.maxValueSize,
-                                maxTxSize: cardano.info.maxTxSize,
-                                coinsPerUtxoWord: cardano.info.coinsPerUtxoWord
+                            let config = TransactionBuilderConfig(
+                                fee_algo: cardano.info.linearFee,
+                                pool_deposit: cardano.info.poolDeposit,
+                                key_deposit: cardano.info.keyDeposit,
+                                max_value_size: cardano.info.maxValueSize,
+                                max_tx_size: cardano.info.maxTxSize,
+                                coins_per_utxo_word: cardano.info.coinsPerUtxoWord,
+                                prefer_pure_change: false
                             )
+                            var transactionBuilder = try TransactionBuilder(config: config)
                             try transactionBuilder.addOutput(
                                 output: TransactionOutput(address: to, amount: Value(coin: amount))
                             )

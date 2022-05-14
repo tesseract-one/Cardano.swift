@@ -90,6 +90,10 @@ extension CCardano.MockWitnessSet {
     }
 }
 
+public typealias TransactionBuilderConfig = CCardano.TransactionBuilderConfig
+
+extension TransactionBuilderConfig: CType {}
+
 public struct TxBuilderInput {
     public private(set) var input: TransactionInput
     public private(set) var amount: Value
@@ -160,11 +164,15 @@ extension COption_Coin: COption {
 public enum CoinSelectionStrategyCIP2 {
     case largestFirst
     case randomImprove
+    case largestFirstMultiAsset
+    case randomImproveMultiAsset
 
     init(coinSelectionStrategyCIP2: CCardano.CoinSelectionStrategyCIP2) {
         switch coinSelectionStrategyCIP2 {
         case LargestFirst: self = .largestFirst
         case RandomImprove: self = .randomImprove
+        case LargestFirstMultiAsset: self = .largestFirstMultiAsset
+        case RandomImproveMultiAsset: self = .randomImproveMultiAsset
         default: fatalError("Unknown CoinSelectionStrategyCIP2 type")
         }
     }
@@ -175,6 +183,8 @@ public enum CoinSelectionStrategyCIP2 {
         switch self {
         case .largestFirst: return try fn(LargestFirst)
         case .randomImprove: return try fn(RandomImprove)
+        case .largestFirstMultiAsset: return try fn(LargestFirstMultiAsset)
+        case .randomImproveMultiAsset: return try fn(RandomImproveMultiAsset)
         }
     }
 }
@@ -246,32 +256,21 @@ extension TransactionUnspentOutputs {
 }
 
 public struct TransactionBuilder {
-    public private(set) var coinsPerUtxoWord: BigNum
-    public private(set) var poolDeposit: BigNum
-    public private(set) var keyDeposit: BigNum
-    public private(set) var maxValueSize: UInt32
-    public private(set) var maxTxSize: UInt32
-    public private(set) var feeAlgo: LinearFee
-    public private(set) var inputs: Array<TxBuilderInput>
-    public private(set) var outputs: TransactionOutputs
+    public let config: TransactionBuilderConfig
+    public let inputs: Array<TxBuilderInput>
+    public let outputs: TransactionOutputs
     public var fee: Coin?
     public var ttl: Slot?
-    public private(set) var certs: Certificates?
-    public private(set) var withdrawals: Withdrawals?
+    public let certs: Certificates?
+    public let withdrawals: Withdrawals?
     public var auxiliaryData: AuxiliaryData?
     public var validityStartInterval: Slot?
-    public private(set) var inputTypes: MockWitnessSet
-    public private(set) var mint: Mint?
-    public private(set) var inputsAutoAdded: Bool
-    public private(set) var preferPureChange: Bool
+    public let inputTypes: MockWitnessSet
+    public let mint: Mint?
+    public let mintScripts: NativeScripts?
     
     init(transactionBuilder: CCardano.TransactionBuilder) {
-        coinsPerUtxoWord = transactionBuilder.coins_per_utxo_word
-        poolDeposit = transactionBuilder.pool_deposit
-        keyDeposit = transactionBuilder.key_deposit
-        maxValueSize = transactionBuilder.max_value_size
-        maxTxSize = transactionBuilder.max_tx_size
-        feeAlgo = transactionBuilder.fee_algo
+        config = transactionBuilder.config
         inputs = transactionBuilder.inputs.copied().map { $0.copied() }
         outputs = transactionBuilder.outputs.copied().map { $0.copied() }
         fee = transactionBuilder.fee.get()
@@ -288,26 +287,11 @@ public struct TransactionBuilder {
         mint = transactionBuilder.mint.get()?.copiedDictionary().mapValues {
             $0.copiedDictionary().mapValues { $0.bigInt }
         }
-        inputsAutoAdded = transactionBuilder.inputs_auto_added
-        preferPureChange = transactionBuilder.prefer_pure_change
+        mintScripts = transactionBuilder.mint_scripts.get()?.copied().map { $0.copied() }
     }
     
-    public init(
-        linearFee: LinearFee,
-        poolDeposit: BigNum,
-        keyDeposit: BigNum,
-        maxValueSize: UInt32,
-        maxTxSize: UInt32,
-        coinsPerUtxoWord: Coin
-    ) throws {
-        var transactionBuilder = try CCardano.TransactionBuilder(
-            linearFee: linearFee,
-            poolDeposit: poolDeposit,
-            keyDeposit: keyDeposit,
-            maxValueSize: maxValueSize,
-            maxTxSize: maxTxSize,
-            coinsPerUtxoWord: coinsPerUtxoWord
-        )
+    public init(config: TransactionBuilderConfig) throws {
+        var transactionBuilder = try CCardano.TransactionBuilder(config: config)
         self = transactionBuilder.owned()
     }
     
@@ -420,26 +404,24 @@ public struct TransactionBuilder {
                                 try mint.withCOption(
                                     with: { try $0.withCKVArray(fn: $1) }
                                 ) { mint in
-                                    try fn(CCardano.TransactionBuilder(
-                                        coins_per_utxo_word: coinsPerUtxoWord,
-                                        pool_deposit: poolDeposit,
-                                        key_deposit: keyDeposit,
-                                        max_value_size: maxValueSize,
-                                        max_tx_size: maxTxSize,
-                                        fee_algo: feeAlgo,
-                                        inputs: inputs,
-                                        outputs: outputs,
-                                        fee: fee.cOption(),
-                                        ttl: ttl.cOption(),
-                                        certs: certs,
-                                        withdrawals: withdrawals,
-                                        auxiliary_data: auxiliaryData,
-                                        validity_start_interval: validityStartInterval.cOption(),
-                                        input_types: inputTypes,
-                                        mint: mint,
-                                        inputs_auto_added: inputsAutoAdded,
-                                        prefer_pure_change: preferPureChange
-                                    ))
+                                    try mintScripts.withCOption(
+                                        with: { try $0.withCArray(fn: $1) }
+                                    ) { mintScripts in
+                                        try fn(CCardano.TransactionBuilder(
+                                            config: config,
+                                            inputs: inputs,
+                                            outputs: outputs,
+                                            fee: fee.cOption(),
+                                            ttl: ttl.cOption(),
+                                            certs: certs,
+                                            withdrawals: withdrawals,
+                                            auxiliary_data: auxiliaryData,
+                                            validity_start_interval: validityStartInterval.cOption(),
+                                            input_types: inputTypes,
+                                            mint: mint,
+                                            mint_scripts: mintScripts
+                                        ))
+                                    }
                                 }
                             }
                         }
@@ -465,25 +447,9 @@ extension CCardano.TransactionBuilder: CPtr {
 extension CCardano.TransactionBuilderBool: CType {}
 
 extension CCardano.TransactionBuilder {
-    public init(
-        linearFee: LinearFee,
-        poolDeposit: BigNum,
-        keyDeposit: BigNum,
-        maxValueSize: UInt32,
-        maxTxSize: UInt32,
-        coinsPerUtxoWord: Coin
-    ) throws {
+    public init(config: TransactionBuilderConfig) throws {
         self = try RustResult<Self>.wrap { result, error in
-            cardano_transaction_builder_new(
-                linearFee,
-                poolDeposit,
-                keyDeposit,
-                maxValueSize,
-                maxTxSize,
-                coinsPerUtxoWord,
-                result,
-                error
-            )
+            cardano_transaction_builder_new(config, result, error)
         }.get()
     }
     
