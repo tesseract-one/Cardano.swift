@@ -60,7 +60,8 @@ dependencies = [
 [[package]]
 name = "cardano-serialization-lib"
 version = "10.0.4"
-source = "git+https://github.com/Emurgo/cardano-serialization-lib.git?tag=10.0.4#423ae1e490c67efb4e078c2105f0d8fcbb5c9341"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f76518737a1cfc6c0b1e34b97faeebe5763343eb9a37269577681ad6becd61d9"
 dependencies = [
  "bech32",
  "cbor_event",
@@ -296,9 +297,9 @@ dependencies = [
 
 [[package]]
 name = "itoa"
-version = "1.0.1"
+version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1aab8fc367588b89dcee83ab0fd66b72b50b72fa1904d7095045ace2b0c81c35"
+checksum = "112c678d4050afce233f4f2852bb2eb519230b3cf12f33585275537d7e41578d"
 
 [[package]]
 name = "js-sys"
@@ -380,9 +381,9 @@ checksum = "624a8340c38c1b80fd549087862da4ba43e08858af025b236e509b6649fc13d5"
 
 [[package]]
 name = "os_str_bytes"
-version = "6.0.0"
+version = "6.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8e22443d1643a904602595ba1cd8f7d896afe56d26712531c5ff73a15b2fbf64"
+checksum = "029d8d0b2f198229de29dca79676f2738ff952edf3fde542eb8bf94d8c21b435"
 
 [[package]]
 name = "ppv-lite86"
@@ -497,9 +498,9 @@ dependencies = [
 
 [[package]]
 name = "ryu"
-version = "1.0.9"
+version = "1.0.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "73b4b750c782965c211b42f022f59af1fbceabdd026623714f104152f1ec149f"
+checksum = "f3f6f92acf49d1b98f7a81226834412ada05458b7364277387724a237f062695"
 
 [[package]]
 name = "serde"
