@@ -93,19 +93,10 @@ public struct CardanoSendApi: CardanoApi {
                             }
                             let _ = try transactionBuilder.addChangeIfNeeded(address: change)
                             let transactionBody = try transactionBuilder.build()
-                            let extendedTransaction = ExtendedTransaction(
-                                tx: transactionBody,
-                                addresses: try cardano.addresses.extended(addresses: addresses),
-                                auxiliaryData: nil
-                            )
-                            cardano.signer.sign(tx: extendedTransaction) { res in
-                                switch res {
-                                case .success(let transaction):
-                                    cardano.tx.submit(tx: transaction, cb)
-                                case .failure(let error):
-                                    cb(.failure(error))
-                                }
-                            }
+                            cardano.tx.signAndSubmit(tx: transactionBody,
+                                                     with: addresses,
+                                                     auxiliaryData: nil,
+                                                     cb)
                         } catch {
                             cb(.failure(error))
                         }
