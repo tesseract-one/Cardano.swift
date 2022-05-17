@@ -21,14 +21,9 @@ final class AddressManagerTests: XCTestCase {
     func testFetchOnTestnet() throws {
         let fetchSuccessful = expectation(description: "Fetch successful")
         let cardano = try Cardano(
+            blockfrost: TestEnvironment.instance.blockfrostProjectId,
             info: .testnet,
-            signer: signatureProvider,
-            network: BlockfrostNetworkProvider(config: BlockfrostConfig(
-                basePath: "https://cardano-testnet.blockfrost.io/api/v0",
-                projectId: TestEnvironment.instance.blockfrostProjectId
-            )),
-            addresses: SimpleAddressManager(),
-            utxos: NonCachingUtxoProvider()
+            signer: signatureProvider
         )
         let account = Account(publicKey: TestEnvironment.instance.publicKey, index: 0)
         var testAddresses = (0..<45).map {
@@ -48,6 +43,6 @@ final class AddressManagerTests: XCTestCase {
             XCTAssertEqual(testAddresses, addresses)
             fetchSuccessful.fulfill()
         }
-        wait(for: [fetchSuccessful], timeout: 10)
+        wait(for: [fetchSuccessful], timeout: 100)
     }
 }
