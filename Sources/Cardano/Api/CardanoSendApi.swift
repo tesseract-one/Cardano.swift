@@ -57,6 +57,7 @@ public struct CardanoSendApi: CardanoApi {
                     change: Address,
                     maxSlots: UInt32 = 300,
                     _ cb: @escaping ApiCallback<TransactionHash>) {
+        let cardano = self.cardano!
         cardano.network.getSlotNumber { res in
             switch res {
             case .success(let slot):

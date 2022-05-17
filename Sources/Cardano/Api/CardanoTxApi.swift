@@ -26,6 +26,7 @@ public struct CardanoTxApi: CardanoApi {
                               with addresses: [Address],
                               auxiliaryData: AuxiliaryData?,
                               _ cb: @escaping ApiCallback<TransactionHash>) {
+        let cardano = self.cardano!
         let extended: [ExtendedAddress]
         do {
             extended = try cardano.addresses.extended(addresses: addresses)
@@ -40,7 +41,7 @@ public struct CardanoTxApi: CardanoApi {
         )) { res in
             switch res {
             case .success(let signed):
-                submit(tx: signed, cb)
+                cardano.network.submit(tx: signed, cb)
             case .failure(let error):
                 cb(.failure(error))
             }
