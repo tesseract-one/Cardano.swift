@@ -36,8 +36,6 @@ public extension Cardano {
                      utxos: UtxoProvider = NonCachingUtxoProvider()) throws
     {
         let network = BlockfrostNetworkProvider(config: config)
-        // TODO: Remove this when BlockFrost will fix their bug
-        BlockfrostConfig.shared().projectId = config.projectId
         try self.init(info: info,
                       signer: signer,
                       network: network,
