@@ -21,7 +21,7 @@ public struct Account: Hashable {
     }
     
     public func stake() throws -> StakeCredential {
-        let path = try path
+        let path = try self.path
             .appending(2)
             .appending(0)
         let stake = try publicKey
