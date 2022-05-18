@@ -63,7 +63,7 @@ Pod::Spec.new do |s|
   s.subspec 'Binary' do |ss|
     ss.source_files = 'Sources/Cardano/**/*.swift'
     
-    ss.dependency 'Bip39.swift', '~> 0.1'
+    ss.dependency 'Bip39.swift', '~> 0.1.1'
     ss.dependency 'Cardano.swift/CoreBinary'
     
     ss.test_spec 'CardanoTests' do |test_spec|
@@ -74,7 +74,7 @@ Pod::Spec.new do |s|
   s.subspec 'Build' do |ss|
     ss.source_files = 'Sources/Cardano/**/*.swift'
     
-    ss.dependency 'Bip39.swift', '~> 0.1'
+    ss.dependency 'Bip39.swift', '~> 0.1.1'
     ss.dependency 'Cardano.swift/CoreBuild'
     
     ss.test_spec 'CardanoTests' do |test_spec|
@@ -85,14 +85,14 @@ Pod::Spec.new do |s|
   s.subspec 'Blockfrost' do |ss|
     ss.source_files = 'Sources/Blockfrost/**/*.swift'
     
-    ss.dependency 'BlockfrostSwiftSDK', '~> 0.0.5'
+    ss.dependency 'BlockfrostSwiftSDK', '~> 0.0.6'
     ss.dependency 'Cardano.swift/Binary'
   end
   
   s.subspec 'BlockfrostBuild' do |ss|
     ss.source_files = 'Sources/Blockfrost/**/*.swift'
     
-    ss.dependency 'BlockfrostSwiftSDK', '~> 0.0.5'
+    ss.dependency 'BlockfrostSwiftSDK', '~> 0.0.6'
     ss.dependency 'Cardano.swift/Build'
   end
   
