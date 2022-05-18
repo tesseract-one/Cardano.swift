@@ -20,16 +20,14 @@ public struct Account: Hashable {
         try! Bip32Path.prefix.appending(index, hard: true)
     }
     
-    public var stake: StakeCredential {
-        get throws {
-            let path = try! path
-                .appending(2)
-                .appending(0)
-            let stake = try publicKey
-                .derive(index: path.path[3])
-                .derive(index: path.path[4])
-            return StakeCredential.keyHash(try stake.toRawKey().hash())
-        }
+    public func stake() throws -> StakeCredential {
+        let path = try path
+            .appending(2)
+            .appending(0)
+        let stake = try publicKey
+            .derive(index: path.path[3])
+            .derive(index: path.path[4])
+        return StakeCredential.keyHash(try stake.toRawKey().hash())
     }
     
     public func baseAddress(index: UInt32,
@@ -49,7 +47,7 @@ public struct Account: Hashable {
             address: BaseAddress(
                 network: networkID,
                 payment: payment,
-                stake: try stake
+                stake: try stake()
             ).toAddress(),
             path: path
         )
