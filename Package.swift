@@ -24,15 +24,15 @@ var package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/attaswift/BigInt.git", from: "5.2.1"),
-        .package(url: "https://github.com/blockfrost/blockfrost-swift.git", from: "0.0.6"),
-        .package(url: "https://github.com/tesseract-one/Bip39.swift.git", from: "0.1.1"),
+        .package(name: "BlockfrostSwiftSDK", url: "https://github.com/blockfrost/blockfrost-swift.git", from: "0.0.6"),
+        .package(name: "Bip39", url: "https://github.com/tesseract-one/Bip39.swift.git", from: "0.1.1"),
     ],
     targets: [
         .target(
             name: "Cardano",
             dependencies: [
                 "CardanoCore",
-                .product(name: "Bip39", package: "Bip39.swift")
+                "Bip39"
             ]),
         .target(
             name: "CardanoCore",
@@ -42,7 +42,7 @@ var package = Package(
             name: "CardanoBlockfrost",
             dependencies: [
                 "Cardano",
-                .product(name: "BlockfrostSwiftSDK", package: "blockfrost-swift")
+                "BlockfrostSwiftSDK"
             ],
             path: "Sources/Blockfrost"),
         .target(
