@@ -20,6 +20,7 @@ extension CCardano.MultiAssetKeyValue: CKeyValue {
 
 extension CCardano.MultiAsset: CArray {
     typealias CElement = CCardano.MultiAssetKeyValue
+    typealias Val = [CCardano.MultiAssetKeyValue]
 
     mutating func free() {
         cardano_multi_asset_free(&self)

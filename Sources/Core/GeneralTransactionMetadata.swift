@@ -265,6 +265,7 @@ extension CCardano.GeneralTransactionMetadataKeyValue: CKeyValue {
 
 extension CCardano.GeneralTransactionMetadata: CArray {
     typealias CElement = CCardano.GeneralTransactionMetadataKeyValue
+    typealias Val = [CCardano.GeneralTransactionMetadataKeyValue]
 
     mutating func free() {
         cardano_general_transaction_metadata_free(&self)

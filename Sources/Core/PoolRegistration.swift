@@ -383,6 +383,7 @@ public typealias Relays = Array<Relay>
 
 extension CCardano.Relays: CArray {
     typealias CElement = CCardano.Relay
+    typealias Val = [CCardano.Relay]
 
     mutating func free() {
         cardano_relays_free(&self)

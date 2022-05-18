@@ -57,6 +57,7 @@ extension CCardano.JsonNumber: CPtr {
 
 extension CArray_JsonValue: CArray {
     typealias CElement = CCardano.JsonValue
+    typealias Val = [CCardano.JsonValue]
 
     mutating func free() {}
 }
@@ -86,6 +87,7 @@ extension JsonValueMapKeyValue: CKeyValue {
 
 extension CCardano.JsonValueMap: CArray {
     typealias CElement = JsonValueMapKeyValue
+    typealias Val = [JsonValueMapKeyValue]
     
     init(ptr: UnsafePointer<JsonValueMapKeyValue>!, len: UInt) {
         self.init(cptr: UnsafeRawPointer(ptr), len: len)
