@@ -134,6 +134,7 @@ public typealias TransactionOutputs = Array<TransactionOutput>
 
 extension CCardano.TransactionOutputs: CArray {
     typealias CElement = CCardano.TransactionOutput
+    typealias Val = [CCardano.TransactionOutput]
 
     mutating func free() {
         cardano_transaction_outputs_free(&self)

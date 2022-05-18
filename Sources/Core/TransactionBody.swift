@@ -20,6 +20,7 @@ extension CCardano.ProposedProtocolParameterUpdatesKeyValue: CKeyValue {
 
 extension CCardano.ProposedProtocolParameterUpdates: CArray {
     typealias CElement = CCardano.ProposedProtocolParameterUpdatesKeyValue
+    typealias Val = [CCardano.ProposedProtocolParameterUpdatesKeyValue]
 
     mutating func free() {
         cardano_proposed_protocol_parameter_updates_free(&self)
@@ -113,6 +114,7 @@ extension CCardano.MintAssetsKeyValue: CKeyValue {
 
 extension CCardano.MintAssets: CArray {
     typealias CElement = CCardano.MintAssetsKeyValue
+    typealias Val = [CCardano.MintAssetsKeyValue]
 
     mutating func free() {
         cardano_mint_assets_free(&self)
@@ -136,6 +138,7 @@ extension CCardano.MintKeyValue: CKeyValue {
 
 extension CCardano.Mint: CArray {
     typealias CElement = CCardano.MintKeyValue
+    typealias Val = [CCardano.MintKeyValue]
 
     mutating func free() {
         cardano_mint_free(&self)

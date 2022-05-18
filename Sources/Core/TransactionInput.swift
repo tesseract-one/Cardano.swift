@@ -40,6 +40,7 @@ public typealias TransactionInputs = Array<TransactionInput>
 
 extension CCardano.TransactionInputs: CArray {
     typealias CElement = CCardano.TransactionInput
+    typealias Val = [CCardano.TransactionInput]
 
     mutating func free() {
         cardano_transaction_inputs_free(&self)

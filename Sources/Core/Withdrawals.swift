@@ -19,6 +19,7 @@ extension CCardano.WithdrawalsKeyValue: CKeyValue {
 
 extension CCardano.Withdrawals: CArray {
     typealias CElement = CCardano.WithdrawalsKeyValue
+    typealias Val = [CCardano.WithdrawalsKeyValue]
 
     mutating func free() {
         cardano_withdrawals_free(&self)

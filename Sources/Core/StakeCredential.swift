@@ -53,6 +53,7 @@ public typealias Ed25519KeyHashes = Array<Ed25519KeyHash>
 
 extension CCardano.Ed25519KeyHashes: CArray {
     typealias CElement = Ed25519KeyHash
+    typealias Val = [Ed25519KeyHash]
 
     mutating func free() {
         cardano_ed25519_key_hashes_free(&self)

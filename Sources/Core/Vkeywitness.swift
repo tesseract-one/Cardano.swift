@@ -39,6 +39,7 @@ public typealias Vkeywitnesses = Array<Vkeywitness>
 
 extension CCardano.Vkeywitnesses: CArray {
     typealias CElement = CCardano.Vkeywitness
+    typealias Val = [CCardano.Vkeywitness]
 
     mutating func free() {
         cardano_vkeywitnesses_free(&self)

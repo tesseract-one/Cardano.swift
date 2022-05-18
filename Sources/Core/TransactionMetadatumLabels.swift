@@ -12,6 +12,7 @@ public typealias TransactionMetadatumLabels = Array<TransactionMetadatumLabel>
 
 extension CCardano.TransactionMetadatumLabels: CArray {
     typealias CElement = TransactionMetadatumLabel
+    typealias Val = [TransactionMetadatumLabel]
 
     mutating func free() {
         cardano_transaction_metadatum_labels_free(&self)

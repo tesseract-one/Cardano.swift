@@ -35,6 +35,7 @@ extension CUInt128 {
 
 extension CArray_u32: CArray {
     typealias CElement = UInt32
+    typealias Val = [UInt32]
 
     mutating func free() {}
 }

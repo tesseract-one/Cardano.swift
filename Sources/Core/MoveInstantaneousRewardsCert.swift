@@ -18,6 +18,7 @@ extension CKeyValue_StakeCredential__CInt128: CKeyValue {
 
 extension CArray_CKeyValue_StakeCredential__CInt128: CArray {
     typealias CElement = CKeyValue_StakeCredential__CInt128
+    typealias Val = [CKeyValue_StakeCredential__CInt128]
 
     mutating func free() {}
 }

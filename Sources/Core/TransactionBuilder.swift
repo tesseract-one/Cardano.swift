@@ -16,6 +16,7 @@ extension Set where Element == Ed25519KeyHash {
 
 extension CArray_ScriptHash: CArray {
     typealias CElement = CCardano.ScriptHash
+    typealias Val = [CCardano.ScriptHash]
 
     mutating func free() {}
 }
@@ -28,6 +29,7 @@ extension Set where Element == ScriptHash {
 
 extension CArray_CData: CArray {
     typealias CElement = CData
+    typealias Val = [CData]
 
     mutating func free() {}
 }
@@ -138,6 +140,7 @@ extension CCardano.TxBuilderInput {
 
 extension CArray_TxBuilderInput: CArray {
     typealias CElement = CCardano.TxBuilderInput
+    typealias Val = [CCardano.TxBuilderInput]
 
     mutating func free() {}
 }
@@ -243,6 +246,7 @@ public typealias TransactionUnspentOutputs = Array<TransactionUnspentOutput>
 
 extension CCardano.TransactionUnspentOutputs: CArray {
     typealias CElement = CCardano.TransactionUnspentOutput
+    typealias Val = [CCardano.TransactionUnspentOutput]
 
     mutating func free() {
         cardano_transaction_unspent_outputs_free(&self)

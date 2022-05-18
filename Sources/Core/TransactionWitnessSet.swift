@@ -62,6 +62,7 @@ extension PlutusMapKeyValue: CKeyValue {
 
 extension CCardano.PlutusMap: CArray {
     typealias CElement = PlutusMapKeyValue
+    typealias Val = [PlutusMapKeyValue]
     
     init(ptr: UnsafePointer<PlutusMapKeyValue>!, len: UInt) {
         self.init(cptr: UnsafeRawPointer(ptr), len: len)
@@ -91,6 +92,7 @@ public typealias PlutusList = Array<PlutusData>
 
 extension CCardano.PlutusList: CArray {
     typealias CElement = CCardano.PlutusData
+    typealias Val = [CCardano.PlutusData]
 
     mutating func free() {
         cardano_plutus_list_free(&self)
@@ -294,6 +296,7 @@ public typealias Redeemers = Array<Redeemer>
 
 extension CCardano.Redeemers: CArray {
     typealias CElement = CCardano.Redeemer
+    typealias Val = [CCardano.Redeemer]
 
     mutating func free() {
         cardano_redeemers_free(&self)

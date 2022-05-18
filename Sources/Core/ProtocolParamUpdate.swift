@@ -40,6 +40,7 @@ public typealias ProtocolVersions = Array<ProtocolVersion>
 
 extension CCardano.ProtocolVersions: CArray {
     typealias CElement = ProtocolVersion
+    typealias Val = [ProtocolVersion]
 
     mutating func free() {
         cardano_protocol_versions_free(&self)
@@ -77,6 +78,7 @@ public typealias CostModel = Array<BigInt>
 
 extension CCardano.CostModel: CArray {
     typealias CElement = CInt128
+    typealias Val = [CInt128]
 
     mutating func free() {
         cardano_cost_model_free(&self)
@@ -100,6 +102,7 @@ extension CKeyValue_Language__CostModel: CKeyValue {
 
 extension CCardano.Costmdls: CArray {
     typealias CElement = CKeyValue_Language__CostModel
+    typealias Val = [CKeyValue_Language__CostModel]
 
     mutating func free() {
         cardano_costmdls_free(&self)

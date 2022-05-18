@@ -23,6 +23,7 @@ extension MetadataMapKeyValue: CKeyValue {
 
 extension CCardano.MetadataMap: CArray {
     typealias CElement = MetadataMapKeyValue
+    typealias Val = [MetadataMapKeyValue]
     
     init(ptr: UnsafePointer<MetadataMapKeyValue>!, len: UInt) {
         self.init(cptr: UnsafeRawPointer(ptr), len: len)

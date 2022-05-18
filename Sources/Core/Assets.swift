@@ -13,6 +13,7 @@ public typealias AssetNames = Array<AssetName>
 
 extension CCardano.AssetNames: CArray {
     typealias CElement = CCardano.AssetName
+    typealias Val = [CCardano.AssetName]
 
     mutating func free() {
         cardano_asset_names_free(&self)
@@ -37,6 +38,7 @@ extension CCardano.AssetsKeyValue: CKeyValue {
 
 extension CCardano.Assets: CArray {
     typealias CElement = CCardano.AssetsKeyValue
+    typealias Val = [CCardano.AssetsKeyValue]
     
     mutating func free() {
         cardano_assets_free(&self)

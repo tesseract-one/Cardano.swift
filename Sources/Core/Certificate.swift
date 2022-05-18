@@ -105,6 +105,7 @@ public typealias Certificates = Array<Certificate>
 
 extension CCardano.Certificates: CArray {
     typealias CElement = CCardano.Certificate
+    typealias Val = [CCardano.Certificate]
 
     mutating func free() {
         cardano_certificates_free(&self)

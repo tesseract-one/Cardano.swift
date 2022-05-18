@@ -278,6 +278,7 @@ public typealias NativeScripts = Array<NativeScript>
 
 extension CCardano.NativeScripts: CArray {
     typealias CElement = CCardano.NativeScript
+    typealias Val = [CCardano.NativeScript]
 
     mutating func free() {
         cardano_native_scripts_free(&self)
@@ -334,6 +335,7 @@ public typealias PlutusScripts = Array<PlutusScript>
 
 extension CCardano.PlutusScripts: CArray {
     typealias CElement = CCardano.PlutusScript
+    typealias Val = [CCardano.PlutusScript]
 
     mutating func free() {
         cardano_plutus_scripts_free(&self)
