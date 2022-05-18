@@ -295,6 +295,26 @@ public struct TransactionBuilder {
         self = transactionBuilder.owned()
     }
     
+    public init(
+        feeAlgo: LinearFee,
+        poolDeposit: BigNum,
+        keyDeposit: BigNum,
+        maxValueSize: UInt32,
+        maxTxSize: UInt32,
+        coinsPerUtxoWord: Coin,
+        preferPureChange: Bool
+    ) throws {
+        try self.init(config: TransactionBuilderConfig(
+            fee_algo: feeAlgo,
+            pool_deposit: poolDeposit,
+            key_deposit: keyDeposit,
+            max_value_size: maxValueSize,
+            max_tx_size: maxTxSize,
+            coins_per_utxo_word: coinsPerUtxoWord,
+            prefer_pure_change: preferPureChange
+        ))
+    }
+    
     public mutating func addInputsFrom(inputs: TransactionUnspentOutputs,
                                        strategy: CoinSelectionStrategyCIP2) throws {
         self = try withCTransactionBuilder {
