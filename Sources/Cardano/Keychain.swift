@@ -59,10 +59,10 @@ public class Keychain {
         }
         let derived = try? keyPair.derive(index: path.isChange! ? 1 : 0)
             .derive(index: path.addressIndex!)
-        guard let derived = derived else {
+        guard let derivedKeyPair = derived else {
             return .failure(.derivationFailed(address: path))
         }
-        return .success(derived)
+        return .success(derivedKeyPair)
     }
     
     @discardableResult

@@ -28,24 +28,24 @@ public struct BlockfrostNetworkProvider: NetworkProvider {
                                 expectedStatus: Int,
                                 response: R,
                                 _ cb: @escaping (Result<R, Error>) -> Void) {
-        guard let error = error as? ErrorResponse else {
+        guard let errorResponse = error as? ErrorResponse else {
             self.config.apiResponseQueue.async {
                 cb(.failure(error))
             }
             return
         }
-        switch error {
+        switch errorResponse {
         case .errorStatus(let int, _, _, _):
             guard int == expectedStatus else {
                 self.config.apiResponseQueue.async {
-                    cb(.failure(error))
+                    cb(.failure(errorResponse))
                 }
                 return
             }
             cb(.success(response))
         default:
             self.config.apiResponseQueue.async {
-                cb(.failure(error))
+                cb(.failure(errorResponse))
             }
         }
     }
