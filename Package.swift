@@ -21,7 +21,6 @@ var package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/attaswift/BigInt.git", from: "5.2.1"),
-        .package(name: "BlockfrostSwiftSDK", url: "https://github.com/blockfrost/blockfrost-swift.git", from: "0.0.6"),
         .package(name: "Bip39", url: "https://github.com/tesseract-one/Bip39.swift.git", from: "0.1.1"),
     ],
     targets: [
@@ -73,5 +72,8 @@ package.products.append(
     .library(
         name: "CardanoBlockfrost",
         targets: ["CardanoBlockfrost"])
+)
+package.dependencies.append(
+    .package(name: "BlockfrostSwiftSDK", url: "https://github.com/blockfrost/blockfrost-swift.git", from: "0.0.6")
 )
 #endif
