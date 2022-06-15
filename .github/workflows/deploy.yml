@@ -24,7 +24,7 @@ jobs:
       - name: Update Cocoa Pods repo
         run: pod repo update
       - name: Publish Pod
-        run: pod trunk push --allow-warnings Cardano.swift.podspec
+        run: pod trunk push --allow-warnings --synchronous Cardano.swift.podspec
         env:
           COCOAPODS_TRUNK_TOKEN: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
           CARDANO_TEST_MNEMONIC: ${{ secrets.CARDANO_TEST_MNEMONIC }}
