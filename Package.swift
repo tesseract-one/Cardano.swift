@@ -1,4 +1,4 @@
-// swift-tools-version:5.3
+// swift-tools-version:5.4
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -16,9 +16,6 @@ var package = Package(
             name: "CardanoCore",
             targets: ["CardanoCore"]),
         .library(
-            name: "CardanoBlockfrost",
-            targets: ["CardanoBlockfrost"]),
-        .library(
             name: "OrderedCollections",
             targets: ["OrderedCollections"])
     ],
@@ -30,21 +27,12 @@ var package = Package(
     targets: [
         .target(
             name: "Cardano",
-            dependencies: [
-                "CardanoCore",
-                "Bip39"
-            ]),
+            dependencies: ["CardanoCore", "Bip39"]),
         .target(
             name: "CardanoCore",
             dependencies: ["CCardano", "BigInt", "OrderedCollections"],
             path: "Sources/Core"),
-        .target(
-            name: "CardanoBlockfrost",
-            dependencies: [
-                "Cardano",
-                "BlockfrostSwiftSDK"
-            ],
-            path: "Sources/Blockfrost"),
+        
         .target(
             name: "OrderedCollections",
             dependencies: [],
@@ -54,30 +42,36 @@ var package = Package(
             dependencies: ["CardanoCore"]),
         .testTarget(
             name: "CardanoTests",
-            dependencies: ["Cardano"]),
-        .testTarget(
-            name: "BlockfrostTests",
-            dependencies: ["CardanoBlockfrost"])
+            dependencies: ["Cardano"])
     ]
 )
 
 #if os(Linux)
-    package.targets.append(
-        .systemLibrary(name: "CCardano")
-    )
+package.targets.append(
+    .systemLibrary(name: "CCardano")
+)
 #else
-    if useLocalBinary {
-        package.targets.append(
-            .binaryTarget(
-                name: "CCardano",
-                path: "rust/binaries/CCardano.xcframework")
-        )
-    } else {
-        package.targets.append(
-            .binaryTarget(
-                name: "CCardano",
-                url: "https://github.com/tesseract-one/Cardano.swift/releases/download/0.1.2/CCardano.binaries.zip",
-                checksum: "2352e340c34bea53d7a1877f9017d964f624b7a8d2a2fd41386ccdfa06846393")
-        )
-    }
+let ccardano: Target = useLocalBinary ?
+    .binaryTarget(
+        name: "CCardano",
+        path: "rust/binaries/CCardano.xcframework") :
+    .binaryTarget(
+        name: "CCardano",
+        url: "https://github.com/tesseract-one/Cardano.swift/releases/download/0.1.2/CCardano.binaries.zip",
+        checksum: "2352e340c34bea53d7a1877f9017d964f624b7a8d2a2fd41386ccdfa06846393")
+package.targets.append(contentsOf: [
+    ccardano,
+    .target(
+        name: "CardanoBlockfrost",
+        dependencies: ["Cardano", "BlockfrostSwiftSDK"],
+        path: "Sources/Blockfrost"),
+    .testTarget(
+        name: "BlockfrostTests",
+        dependencies: ["CardanoBlockfrost"])
+])
+package.products.append(
+    .library(
+        name: "CardanoBlockfrost",
+        targets: ["CardanoBlockfrost"])
+)
 #endif
