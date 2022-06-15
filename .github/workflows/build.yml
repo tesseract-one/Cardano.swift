@@ -33,6 +33,10 @@ jobs:
         run: cp Cardano-Binaries.podspec LICENSE rust/binaries/
       - name: Build and Test CocoaPods
         run: pod lib lint --allow-warnings --fail-fast --include-podspecs=rust/binaries/Cardano-Binaries.podspec Cardano.swift.podspec
+        env:
+          CARDANO_TEST_MNEMONIC: ${{ secrets.CARDANO_TEST_MNEMONIC }}
+          CARDANO_TEST_BLOCKFROST_PROJECT_ID: ${{ secrets.CARDANO_TEST_BLOCKFROST_PROJECT_ID }}
+          CARDANO_TEST_PUBLIC_KEY: ${{ secrets.CARDANO_TEST_PUBLIC_KEY }}
   linux:
     runs-on: ubuntu-latest
     container:

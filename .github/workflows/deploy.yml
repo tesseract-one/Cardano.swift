@@ -27,4 +27,7 @@ jobs:
         run: pod trunk push --allow-warnings Cardano.swift.podspec
         env:
           COCOAPODS_TRUNK_TOKEN: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
+          CARDANO_TEST_MNEMONIC: ${{ secrets.CARDANO_TEST_MNEMONIC }}
+          CARDANO_TEST_BLOCKFROST_PROJECT_ID: ${{ secrets.CARDANO_TEST_BLOCKFROST_PROJECT_ID }}
+          CARDANO_TEST_PUBLIC_KEY: ${{ secrets.CARDANO_TEST_PUBLIC_KEY }}
         
