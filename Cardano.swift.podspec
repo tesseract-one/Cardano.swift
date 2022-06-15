@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'Cardano.swift'
-  s.version          = '0.1.2'
+  s.version          = '0.1.3'
   s.summary          = 'Swift APIs for Cardano network.'
 
   s.homepage         = 'https://github.com/tesseract-one/Cardano.swift'
@@ -24,7 +24,7 @@ Pod::Spec.new do |s|
   s.subspec 'CoreBinary' do |ss|
     ss.source_files = 'Sources/Core/**/*.swift'
 
-    ss.dependency 'Cardano-Binaries', '~> 0.1.2'
+    ss.dependency 'Cardano-Binaries', '~> 0.1.3'
     ss.dependency 'BigInt', '~> 5.2'
     ss.dependency 'Cardano.swift/OrderedCollections'
     
