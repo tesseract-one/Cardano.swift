@@ -30,7 +30,7 @@ jobs:
       - name: Update Cocoa Pods repo
         run: pod repo update
       - name: Copy binaries podspec for testing
-        run: cp Cardano-Binaries.podspec rust/binaries/
+        run: cp Cardano-Binaries.podspec LICENSE rust/binaries/
       - name: Build and Test CocoaPods
         run: pod lib lint --allow-warnings --fail-fast --include-podspecs=rust/binaries/Cardano-Binaries.podspec Cardano.swift.podspec
   linux:
