@@ -56,7 +56,7 @@ let ccardano: Target = useLocalBinary ?
         path: "rust/binaries/CCardano.xcframework") :
     .binaryTarget(
         name: "CCardano",
-        url: "https://github.com/tesseract-one/Cardano.swift/releases/download/0.1.3/CCardano.binaries.zip",
+        url: "https://github.com/tesseract-one/Cardano.swift/releases/download/0.1.4/CCardano.binaries.zip",
         checksum: "226023203151474e6c3788ef1c3acd677ac5f4b76dffab65080d280e8a2c37ee")
 package.targets.append(contentsOf: [
     ccardano,

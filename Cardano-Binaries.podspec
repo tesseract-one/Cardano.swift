@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'Cardano-Binaries'
-  s.version          = '0.1.3'
+  s.version          = '0.1.4'
   s.summary          = 'Compiled Rust files for Cardano.swift.'
 
   s.homepage         = 'https://github.com/tesseract-one/Cardano.swift'

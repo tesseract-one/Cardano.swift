@@ -32,18 +32,6 @@ Setup instructions:
     pod 'Cardano.swift/Binary', '~> 0.1.0'
     pod 'Cardano.swift/Blockfrost' # networking
     ```
-  
-- **CocoaPods with Rust part built from sources:**
-  
-  If you want to build Rust part from sources add this in your `Podfile`:
-    ```Ruby
-    pod 'Cardano.swift/Build', '~> 0.1.0'
-    pod 'Cardano.swift/BlockfrostBuild' # networking
-    ```
-  And install Rust targets:
-    ```sh
-    rustup target add aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios aarch64-apple-darwin x86_64-apple-darwin
-    ```
 
 - **Linux:**
   
