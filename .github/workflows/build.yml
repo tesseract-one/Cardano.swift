@@ -15,8 +15,8 @@ jobs:
         with:
           rust-version: stable
           targets: aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios aarch64-apple-darwin x86_64-apple-darwin
-      - name: Building XCFramework
-        run: bash rust/scripts/build_binary_macos.sh release
+      - name: Building XCFramework and binary zip
+        run: bash rust/scripts/compressed_binary_macos.sh release
         env:
           CARGO_NET_GIT_FETCH_WITH_CLI: true
       - name: Patching Package.swift for testing
@@ -27,12 +27,19 @@ jobs:
           CARDANO_TEST_MNEMONIC: ${{ secrets.CARDANO_TEST_MNEMONIC }}
           CARDANO_TEST_BLOCKFROST_PROJECT_ID: ${{ secrets.CARDANO_TEST_BLOCKFROST_PROJECT_ID }}
           CARDANO_TEST_PUBLIC_KEY: ${{ secrets.CARDANO_TEST_PUBLIC_KEY }}
-      - name: Update Cocoa Pods repo
-        run: pod repo update
-      - name: Copy binaries podspec for testing
-        run: cp Cardano-Binaries.podspec LICENSE rust/binaries/
+      - name: Configure CocoaPods repos
+        run: |
+          COCOAPODS_LOCAL_DIR=$(mktemp -d)
+          (cd "$COCOAPODS_LOCAL_DIR"; git init)
+          pod repo add local $COCOAPODS_LOCAL_DIR
+          pod repo update
+      - name: Patching Cardano-Binaries podspec and pushing it to the local repo
+      - run: |
+          ZIP_PATH="$(pwd)/rust/binaries/Cardano.binaries.zip"
+          sed -i '' "s|[[:blank:]]*s\.source.*|s.source = { :http = 'file://${ZIP_PATH}' \}|g" Cardano-Binaries.podspec
+          pod repo push local Cardano-Binaries.podspec
       - name: Build and Test CocoaPods
-        run: pod lib lint --allow-warnings --fail-fast --include-podspecs=rust/binaries/Cardano-Binaries.podspec Cardano.swift.podspec
+        run: pod lib lint --allow-warnings --fail-fast --sources=local,trunk Cardano.swift.podspec
         env:
           CARDANO_TEST_MNEMONIC: ${{ secrets.CARDANO_TEST_MNEMONIC }}
           CARDANO_TEST_BLOCKFROST_PROJECT_ID: ${{ secrets.CARDANO_TEST_BLOCKFROST_PROJECT_ID }}
