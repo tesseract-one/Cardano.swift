@@ -57,7 +57,7 @@ let ccardano: Target = useLocalBinary ?
     .binaryTarget(
         name: "CCardano",
         url: "https://github.com/tesseract-one/Cardano.swift/releases/download/0.1.4/CCardano.binaries.zip",
-        checksum: "226023203151474e6c3788ef1c3acd677ac5f4b76dffab65080d280e8a2c37ee")
+        checksum: "50fa4995483338bab59ae6abf6bbfe50f6e05507bbcf4128087b75d049b9590e")
 package.targets.append(contentsOf: [
     ccardano,
     .target(

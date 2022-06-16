@@ -7,7 +7,7 @@ Pod::Spec.new do |s|
 
   s.license          = { :type => 'Apache 2.0', :file => 'LICENSE' }
   s.author           = { 'Tesseract Systems, Inc.' => 'info@tesseract.one' }
-  s.source           = { :http => "https://github.com/tesseract-one/Cardano.swift/releases/download/#{s.version.to_s}/CCardano.binaries.zip", :sha256 => '226023203151474e6c3788ef1c3acd677ac5f4b76dffab65080d280e8a2c37ee' }
+  s.source           = { :http => "https://github.com/tesseract-one/Cardano.swift/releases/download/#{s.version.to_s}/CCardano.binaries.zip", :sha256 => '50fa4995483338bab59ae6abf6bbfe50f6e05507bbcf4128087b75d049b9590e' }
 
   s.ios.deployment_target = '11.0'
   s.osx.deployment_target = '10.12'
