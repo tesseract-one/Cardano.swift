@@ -39,7 +39,7 @@ jobs:
         run: |
           ZIP_PATH="$(pwd)/rust/binaries/CCardano.binaries.zip"
           VERSION=$(sed -n "s|[[:blank:]]*s\.version[[:blank:]]*=[[:blank:]]*[\"']\([0-9\.]*\)[\"']|\1|p" Cardano-Binaries.podspec)
-          NEXTVERSION=$(echo "${VERSION}" | awk -F. -v OFS=. '{$NF=$NF+1;print}')
+          NEXT_VERSION=$(echo "${VERSION}" | awk -F. -v OFS=. '{$NF=$NF+1;print}')
           sed -i '' "s|[[:blank:]]*s\.source.*|s.source = { :http => 'file://${ZIP_PATH}' \}|g" Cardano-Binaries.podspec
           sed -i '' "s|[[:blank:]]*s\.version.*|s.version = '${NEXT_VERSION}'|g" Cardano-Binaries.podspec
           pod repo push local Cardano-Binaries.podspec
