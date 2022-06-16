@@ -20,7 +20,7 @@ jobs:
         env:
           CARGO_NET_GIT_FETCH_WITH_CLI: true
       - name: Patching Package.swift for testing
-        run: sed -i '' 's/let[[:blank:]]useLocalBinary[[:blank:]]=[[:blank:]]false/let useLocalBinary = true/g' Package.swift
+        run: sed -i '' 's|let[[:blank:]]useLocalBinary[[:blank:]]=[[:blank:]]false|let useLocalBinary = true|g' Package.swift
       - name: Build and Test SPM
         run: swift test
         env:
@@ -32,13 +32,16 @@ jobs:
           COCOAPODS_LOCAL_DIR=$(mktemp -d)
           cd "$COCOAPODS_LOCAL_DIR"
           touch .gitignore
-          git init && git commit -a -m "repo init"
+          git init && git add .gitignore && git commit -a -m "repo init"
           pod repo add local $COCOAPODS_LOCAL_DIR
           pod repo update
       - name: Patching Cardano-Binaries podspec and pushing it to the local repo
         run: |
           ZIP_PATH="$(pwd)/rust/binaries/CCardano.binaries.zip"
+          VERSION=$(sed -n "s|[[:blank:]]*s\.version[[:blank:]]*=[[:blank:]]*[\"']\([0-9\.]*\)[\"']|\1|p" Cardano-Binaries.podspec)
+          NEXTVERSION=$(echo "${VERSION}" | awk -F. -v OFS=. '{$NF=$NF+1;print}')
           sed -i '' "s|[[:blank:]]*s\.source.*|s.source = { :http => 'file://${ZIP_PATH}' \}|g" Cardano-Binaries.podspec
+          sed -i '' "s|[[:blank:]]*s\.version.*|s.version = '${NEXT_VERSION}'|g" Cardano-Binaries.podspec
           pod repo push local Cardano-Binaries.podspec
           pod repo update
       - name: Build and Test CocoaPods
