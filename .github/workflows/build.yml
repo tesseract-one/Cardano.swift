@@ -30,9 +30,11 @@ jobs:
       - name: Configure CocoaPods repos
         run: |
           COCOAPODS_LOCAL_DIR=$(mktemp -d)
-          cd "$COCOAPODS_LOCAL_DIR"
-          touch .gitignore
-          git init && git add .gitignore && git commit -a -m "repo init"
+          git init --bare -b main "$COCOAPODS_LOCAL_DIR"
+          git clone "$COCOAPODS_LOCAL_DIR" git_temp_dir
+          cd git_temp_dir
+          touch .gitignore && git add .gitignore && git commit -a -m "repo init" && git push
+          cd ../ && rm -r git_temp_dir
           pod repo add local $COCOAPODS_LOCAL_DIR
           pod repo update
       - name: Patching Cardano-Binaries podspec and pushing it to the local repo
