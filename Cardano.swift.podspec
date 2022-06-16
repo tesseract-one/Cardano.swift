@@ -29,7 +29,6 @@ Pod::Spec.new do |s|
     ss.source_files = 'Sources/Cardano/**/*.swift', 'Sources/Core/**/*.swift'
     
     ss.pod_target_xcconfig = {
-      'CARDANO_BINARIES_INSTALLATION_PATH' => '${PODS_XCFRAMEWORKS_BUILD_DIR}/Cardano-Binaries',
       'ENABLE_BITCODE' => 'NO'
     }
     
@@ -37,7 +36,8 @@ Pod::Spec.new do |s|
       sss.dependency 'Cardano-Binaries', '~> 0.1.4'
       
       sss.pod_target_xcconfig = {
-        'LIBRARY_SEARCH_PATHS' => '$(inherited) "${CARDANO_BINARIES_INSTALLATION_PATH}"'
+        'LIBRARY_SEARCH_PATHS' => '$(inherited) "${PODS_XCFRAMEWORKS_BUILD_DIR}/Cardano-Binaries"',
+        'CARDANO_USES_BINARY_RUST_XCFRAMEWORK' => 'YES'
       }
     end
     

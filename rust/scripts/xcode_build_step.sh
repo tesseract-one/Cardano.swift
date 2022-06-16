@@ -4,7 +4,7 @@ set -e
 MODULE_NAME="CCardano"
 C_LIB_NAME="cardano"
 
-if [ -d "${CARDANO_BINARIES_INSTALLATION_PATH}" ]; then
+if [[ "${CARDANO_USES_BINARY_RUST_XCFRAMEWORK}" == "YES" ]]; then
   echo "warning: Project already has binary xcframework. Check your target configuration."
   exit 0
 fi

@@ -74,6 +74,6 @@ package.products.append(
         targets: ["CardanoBlockfrost"])
 )
 package.dependencies.append(
-    .package(name: "BlockfrostSwiftSDK", url: "https://github.com/blockfrost/blockfrost-swift.git", from: "0.0.6")
+    .package(name: "BlockfrostSwiftSDK", url: "https://github.com/blockfrost/blockfrost-swift.git", from: "0.0.7")
 )
 #endif

@@ -47,7 +47,7 @@ jobs:
           pod repo push local Cardano-Binaries.podspec
           pod repo update
       - name: Build and Test CocoaPods
-        run: pod lib lint --allow-warnings --fail-fast --sources=local,trunk Cardano.swift.podspec
+        run: pod lib lint --allow-warnings --fail-fast --sources="local,https://cdn.cocoapods.org" Cardano.swift.podspec
         env:
           CARDANO_TEST_MNEMONIC: ${{ secrets.CARDANO_TEST_MNEMONIC }}
           CARDANO_TEST_BLOCKFROST_PROJECT_ID: ${{ secrets.CARDANO_TEST_BLOCKFROST_PROJECT_ID }}
