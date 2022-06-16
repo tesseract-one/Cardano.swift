@@ -17,5 +17,7 @@ Pod::Spec.new do |s|
   
   s.module_name = 'CCardano'
   
+  s.pod_target_xcconfig = { 'ENABLE_BITCODE' => 'NO' }
+  
   s.vendored_frameworks = 'CCardano.xcframework'
 end

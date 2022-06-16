@@ -4,6 +4,11 @@ set -e
 MODULE_NAME="CCardano"
 C_LIB_NAME="cardano"
 
+if [ -d "${CARDANO_BINARIES_INSTALLATION_PATH}" ]; then
+  echo "warning: Project already has binary xcframework. Check your target configuration."
+  exit 0
+fi
+
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 HAS_CARGO_IN_PATH=`command -v cargo >/dev/null 2>&1; echo $?`
 

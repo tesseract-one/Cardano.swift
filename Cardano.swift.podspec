@@ -21,80 +21,50 @@ Pod::Spec.new do |s|
     ss.source_files = 'Sources/OrderedCollections/**/*.swift'
   end
   
-  s.subspec 'CoreBinary' do |ss|
-    ss.source_files = 'Sources/Core/**/*.swift'
-
-    ss.dependency 'Cardano-Binaries', '~> 0.1.4'
-    ss.dependency 'BigInt', '~> 5.2'
+  s.subspec 'Cardano' do |ss|
     ss.dependency 'Cardano.swift/OrderedCollections'
+    ss.dependency 'BigInt', '~> 5.2'
+    ss.dependency 'Bip39.swift', '~> 0.1.1'
+    
+    ss.source_files = 'Sources/Cardano/**/*.swift', 'Sources/Core/**/*.swift'
     
     ss.pod_target_xcconfig = {
-      'LIBRARY_SEARCH_PATHS' => '$(inherited) "${PODS_XCFRAMEWORKS_BUILD_DIR}/Cardano-Binaries"',
+      'CARDANO_BINARIES_INSTALLATION_PATH' => '${PODS_XCFRAMEWORKS_BUILD_DIR}/Cardano-Binaries',
       'ENABLE_BITCODE' => 'NO'
     }
+    
+    ss.subspec 'Binary' do |sss|
+      sss.dependency 'Cardano-Binaries', '~> 0.1.4'
+      
+      sss.pod_target_xcconfig = {
+        'LIBRARY_SEARCH_PATHS' => '$(inherited) "${CARDANO_BINARIES_INSTALLATION_PATH}"'
+      }
+    end
+    
+    ss.subspec 'Build' do |sss|
+      sss.preserve_paths = "rust/**/*"
+    
+      sss.script_phase = {
+        :name => "Build Rust Binary",
+        :script => 'bash "${PODS_TARGET_SRCROOT}/rust/scripts/xcode_build_step.sh"',
+        :execution_position => :before_compile
+      }
+    end
     
     ss.test_spec 'CoreTests' do |test_spec|
       test_spec.source_files = 'Tests/CoreTests/**/*.swift'
     end
-  end
-
-  #s.subspec 'CoreBuild' do |ss|
-  #  ss.source_files = 'Sources/Core/**/*.swift'
-  #  ss.preserve_paths = "rust/**/*"
-  #
-  #  ss.dependency 'BigInt', '~> 5.2'
-  #  ss.dependency 'Cardano.swift/OrderedCollections'
-  #
-  #  ss.script_phase = {
-  #    :name => "Build Rust Binary",
-  #    :script => 'bash "${PODS_TARGET_SRCROOT}/rust/scripts/xcode_build_step.sh"',
-  #    :execution_position => :before_compile
-  #  }
-  #
-  #  ss.pod_target_xcconfig = {
-  #    'ENABLE_BITCODE' => 'NO'
-  #  }
-  #
-  #  ss.test_spec 'CoreTests' do |test_spec|
-  #    test_spec.source_files = 'Tests/CoreTests/**/*.swift'
-  #  end
-  #end
-  
-  s.subspec 'Binary' do |ss|
-    ss.source_files = 'Sources/Cardano/**/*.swift'
-    
-    ss.dependency 'Bip39.swift', '~> 0.1.1'
-    ss.dependency 'Cardano.swift/CoreBinary'
     
     ss.test_spec 'CardanoTests' do |test_spec|
       test_spec.source_files = 'Tests/CardanoTests/**/*.swift'
     end
   end
   
-  #s.subspec 'Build' do |ss|
-  #  ss.source_files = 'Sources/Cardano/**/*.swift'
-  #
-  #  ss.dependency 'Bip39.swift', '~> 0.1.1'
-  #  ss.dependency 'Cardano.swift/CoreBuild'
-  #
-  #  ss.test_spec 'CardanoTests' do |test_spec|
-  #    test_spec.source_files = 'Tests/CardanoTests/**/*.swift'
-  #  end
-  #end
-  
   s.subspec 'Blockfrost' do |ss|
     ss.source_files = 'Sources/Blockfrost/**/*.swift'
-    
     ss.dependency 'BlockfrostSwiftSDK', '~> 0.0.6'
-    ss.dependency 'Cardano.swift/Binary'
+    ss.dependency 'Cardano.swift/Cardano'
   end
   
-  #s.subspec 'BlockfrostBuild' do |ss|
-  #  ss.source_files = 'Sources/Blockfrost/**/*.swift'
-  #
-  #  ss.dependency 'BlockfrostSwiftSDK', '~> 0.0.6'
-  #  ss.dependency 'Cardano.swift/Build'
-  #end
-  
-  s.default_subspecs = 'Binary'
+  s.default_subspecs = 'Cardano/Binary', 'Blockfrost'
 end
