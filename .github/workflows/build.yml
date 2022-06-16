@@ -34,7 +34,7 @@ jobs:
           pod repo add local $COCOAPODS_LOCAL_DIR
           pod repo update
       - name: Patching Cardano-Binaries podspec and pushing it to the local repo
-      - run: |
+        run: |
           ZIP_PATH="$(pwd)/rust/binaries/Cardano.binaries.zip"
           sed -i '' "s|[[:blank:]]*s\.source.*|s.source = { :http = 'file://${ZIP_PATH}' \}|g" Cardano-Binaries.podspec
           pod repo push local Cardano-Binaries.podspec
