@@ -62,7 +62,7 @@ Pod::Spec.new do |s|
   
   s.subspec 'Blockfrost' do |ss|
     ss.source_files = 'Sources/Blockfrost/**/*.swift'
-    ss.dependency 'BlockfrostSwiftSDK', '~> 0.0.6'
+    ss.dependency 'BlockfrostSwiftSDK', '~> 0.0.7'
     ss.dependency 'Cardano.swift/Cardano'
   end
   
