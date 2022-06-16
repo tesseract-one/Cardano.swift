@@ -31,8 +31,8 @@ jobs:
         run: |
           COCOAPODS_LOCAL_DIR=$(mktemp -d)
           (cd "$COCOAPODS_LOCAL_DIR"; git init)
-          pod repo add local $COCOAPODS_LOCAL_DIR
           pod repo update
+          pod repo add local $COCOAPODS_LOCAL_DIR
       - name: Patching Cardano-Binaries podspec and pushing it to the local repo
         run: |
           ZIP_PATH="$(pwd)/rust/binaries/Cardano.binaries.zip"
