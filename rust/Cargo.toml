@@ -20,3 +20,7 @@ cbindgen = "0.23.0"
 name = "cardano"
 path = "src/lib.rs"
 crate-type = ["staticlib"]
+
+[profile.release]
+strip = true
+lto = true
