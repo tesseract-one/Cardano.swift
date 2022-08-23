@@ -17,12 +17,8 @@ Pod::Spec.new do |s|
   
   s.module_name = 'Cardano'
   
-  s.subspec 'OrderedCollections' do |ss|
-    ss.source_files = 'Sources/OrderedCollections/**/*.swift'
-  end
-  
   s.subspec 'Cardano' do |ss|
-    ss.dependency 'Cardano.swift/OrderedCollections'
+    ss.dependency 'OrderedCollections', '~> 1.0.2'
     ss.dependency 'BigInt', '~> 5.2'
     ss.dependency 'Bip39.swift', '~> 0.1.1'
     
