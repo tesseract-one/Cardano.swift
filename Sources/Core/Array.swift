@@ -6,9 +6,7 @@
 //
 
 import Foundation
-#if !COCOAPODS
 import OrderedCollections
-#endif
 
 protocol CArray: CPtr where Val == [CElement] {
     associatedtype CElement

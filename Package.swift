@@ -14,12 +14,7 @@ var package = Package(
             targets: ["Cardano"]),
         .library(
             name: "CardanoCore",
-            targets: ["CardanoCore"]),
-        /*
-        .library(
-            name: "OrderedCollections",
-            targets: ["OrderedCollections"])
-         */
+            targets: ["CardanoCore"])
     ],
     dependencies: [
         .package(url: "https://github.com/attaswift/BigInt.git", from: "5.2.1"),
@@ -29,11 +24,7 @@ var package = Package(
     targets: [
         .target(
             name: "Cardano",
-            dependencies: [
-                "CardanoCore",
-                "Bip39",
-                .product(name: "OrderedCollections", package: "swift-collections")
-            ]),
+            dependencies: ["CardanoCore", "Bip39"]),
         .target(
             name: "CardanoCore",
             dependencies: [
@@ -42,12 +33,6 @@ var package = Package(
                 .product(name: "OrderedCollections", package: "swift-collections")
             ],
             path: "Sources/Core"),
-        /*
-        .target(
-            name: "OrderedCollections",
-            dependencies: [],
-            exclude: ["CMakeLists.txt", "LICENSE.txt"]),
-         */
         .testTarget(
             name: "CoreTests",
             dependencies: ["CardanoCore"]),

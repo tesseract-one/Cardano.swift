@@ -6,9 +6,9 @@
 //
 
 import Foundation
+import OrderedCollections
 #if !COCOAPODS
 import CardanoCore
-import OrderedCollections
 #endif
 
 public class SimpleAddressManager: AddressManager, CardanoBootstrapAware {
